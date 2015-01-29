@@ -1,0 +1,9 @@
+{
+    "name" : "Terminal::Print",
+    "version" : "0.01",
+    "description" : "Access terminfo-based console escape sequences",
+    "author" : "John Haltiwanger",
+    "depends" : [ "Term::Color" ],
+    "source-url" : ""
+}
+
