@@ -1,3 +1,4 @@
+# Terminal::Print
 
 ## History
 
@@ -12,7 +13,7 @@ Right now it only provides a grid with some nice access semantics.
   $screen[9][23];               # returns "%"
   $screen[9][23].print-cell     # prints "%" on the 23rd column of the 9th row
   
-  $screen(9,23,"%");       # another way, designed for golfing. there should be a whole sub-module to support golfing (hello, `enum`)
+  $screen(9,23,"%");            # another way, designed for golfing. there should be a whole sub-module to support golfing (hello, `enum`)
 
 (Note that these are subject to change as the library more fully develops).
 
@@ -27,3 +28,8 @@ But if you want to see a pretty display of hearts filling your terminal, just `p
   specific sections of the screen)
 - complete the zig-zag example and add others
 - split tests into visual and functional. only run functional on install
+- add Terminal::Print::Golf module which provides some quick-access constants and functionality
+
+## Copryright
+
+Copyright 2015, John Haltiwanger. Released under the Artistic License 2.0.
