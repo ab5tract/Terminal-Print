@@ -54,6 +54,7 @@ method !bind-buffer( $grid, $new-buffer is rw ) {
     }
 }
 
+
 method add-grid( $name? ) {
     my $new-grid = Terminal::Print::Element::Grid.new( :$!max-columns, :$!max-rows );
 
@@ -74,17 +75,18 @@ method blit( $grid-identifier = 0 ) {
 
 # 'clear' will also work through the FALLBACK
 method clear-screen {
-    print %T::human-controls<clear>;
+    print %T::human-commands<clear>;
 }
 
 method initialize-screen {
-    print %T::human-controls<save-screen>;
+    print %T::human-commands<save-screen>;
     self.hide-cursor;
     self.clear-screen;
 }
 
 method shutdown-screen {
-    print %T::human-controls<restore-screen>;
+    self.clear-screen;
+    print %T::human-commands<restore-screen>;
     self.show-cursor;
 }
 
@@ -171,4 +173,14 @@ multi method print-grid( Int $index ) {
 multi method print-grid( Str $name ) {
     die "No grid has been named $name" unless my $grid-index = %!grid-map{$name};
     @!grids[$grid-index].print-grid;
+}
+
+
+
+method column-range {
+    $!current-grid.column-range; # TODO: we can make the grids reflect specific subsets of these ranges
+}
+
+method row-range {
+    $!current-grid.row-range;
 }
