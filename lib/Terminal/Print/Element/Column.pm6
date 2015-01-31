@@ -11,7 +11,6 @@ method new( :$max-rows, :$column ) {
     self.bless( :$max-rows, :$column, :@cells );
 }
 
-
 method at_pos( $y ) {
     @!cells[$y];
 }

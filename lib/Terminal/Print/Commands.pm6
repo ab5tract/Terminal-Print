@@ -1,8 +1,8 @@
 module Terminal::Print::Commands;
 
+our %human-command-names;
 our %human-commands;
-our %human-controls;
-our %tput-controls;
+our %tput-commands;
 our %attributes;
 our %attribute-values;
 
@@ -21,7 +21,7 @@ BEGIN {
         return &cursor-template;
     }
 
-    %human-commands = %(
+    %human-command-names = %(
         'clear'              => 'clear',
         'save-screen'        => 'smcup',
         'restore-screen'     => 'rmcup',
@@ -33,13 +33,13 @@ BEGIN {
         'erase-char'         => 'ech',
     );
 
-    for %human-commands.kv -> $human,$command {
+    for %human-command-names.kv -> $human,$command {
         given $human {
-            when 'move-cursor'  { %tput-controls{$command} = &( build-cursor-to-template ) }
-            when 'erase-char'   { %tput-controls{$command} = qq:x{ tput $command 1 } }
-            default             { %tput-controls{$command} = qq:x{ tput $command } }
+            when 'move-cursor'  { %tput-commands{$command} = &( build-cursor-to-template ) }
+            when 'erase-char'   { %tput-commands{$command} = qq:x{ tput $command 1 } }
+            default             { %tput-commands{$command} = qq:x{ tput $command } }
         }
-        %human-controls{$human} = &( %tput-controls{$command} );
+        %human-command-names{$human} = &( %tput-commands{$command} );
     }
 
     %attributes = %(
@@ -53,21 +53,20 @@ BEGIN {
 }
 
 sub move-cursor-template returns Code is export {
-    %human-controls<move-cursor>;
+    %human-commands<move-cursor>;
 }
 
 sub move-cursor( Int $x, Int $y ) is export {
-    %human-controls<move-cursor>( :$x, :$y );
+    %human-commands<move-cursor>( :$x, :$y );
 }
 
 sub cursor_to( Int $x, Int $y ) is export {
-#    %human-controls<move-cursor>( :$x, :$y );
-    qq:x{ tput cup $y $x };
+    %human-commands<move-cursor>( :$x, :$y );
 }
 
 sub tput( Str $command ) is export {
     die "Not a supported (or perhaps even valid) tput command"
-        unless %tput-controls{$command};
+        unless %tput-commands{$command};
 
-    %tput-controls{$command};
+    %tput-commands{$command};
 }

@@ -11,6 +11,7 @@ has Terminal::Print::Element::Grid $!current-grid;
 has @!buffers;
 has Terminal::Print::Element::Grid @!grids;
 
+
 has @.grid-indices;
 has %!grid-map;
 
@@ -115,8 +116,8 @@ method postcircumfix:<( )> ($t) {
 }
 
 multi method FALLBACK( Str $command-name ) {
-    die "Do not know command $command-name" unless %T::human-controls{$command-name};
-    print %T::human-controls{$command-name};
+    die "Do not know command $command-name" unless %T::human-command-names{$command-name};
+    print %T::human-commands{$command-name};
 }
 
 
