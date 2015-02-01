@@ -39,7 +39,7 @@ BEGIN {
             when 'erase-char'   { %tput-commands{$command} = qq:x{ tput $command 1 } }
             default             { %tput-commands{$command} = qq:x{ tput $command } }
         }
-        %human-command-names{$human} = &( %tput-commands{$command} );
+        %human-commands{$human} = &( %tput-commands{$command} );
     }
 
     %attributes = %(

@@ -24,7 +24,7 @@ method cell-string {
 
 method clear-cell-string {
     $!char = ' ';
-    $!print-string = '';
+    $!print-string = '';  # regen on next print
 }
 
 method blank-cell {

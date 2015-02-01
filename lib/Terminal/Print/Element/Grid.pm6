@@ -1,12 +1,14 @@
 class Terminal::Print::Element::Grid;
 
 use Terminal::Print::Element::Column;
+use Terminal::Print::Element::Row;
 use Terminal::Print::Commands;
 
 my constant T = Terminal::Print::Commands;
 
 has @.grid;
 has @.buffer;
+has @.rows;
 
 has $.max-columns;
 has $.max-rows;
@@ -18,8 +20,8 @@ has @.row-range;
 has $!grid-string;
 
 method new( :$max-columns, :$max-rows ) {
-    my @column-range = (0..^$max-columns).values;
-    my @row-range = (0..^$max-rows).values;
+    my @column-range = ^$max-columns;
+    my @row-range    = ^$max-rows;
     my @grid-indices = (@column-range X @row-range).map({ [$^x, $^y] });
 
     my (@grid, @buffer);
@@ -36,8 +38,13 @@ method new( :$max-columns, :$max-rows ) {
         @buffer[$x + ($y * $max-columns)] := @grid[ $x ][ $y ];
     }
 
+    my @rows;
+    for @row-range -> $y {
+        push @rows, Terminal::Print::Element::Row.new( @grid[][$y] );
+    }
+
     self.bless( :$max-columns, :$max-rows, :@grid-indices,
-                :@column-range, :@row-range, :@grid, :@buffer );
+                :@column-range, :@row-range, :@grid, :@buffer, :@rows );
 }
 
 method at_pos( $column ) {
@@ -49,8 +56,8 @@ method print-grid {
 }
 
 method print-row( $y ) {
-    my $row-string = [~] @!grid[*][$y] for ^$!max-columns;
-    print move-cursor(0,$y) ~ $row-string;
+#    my $row-string = [~] @!grid[*][$y] for ^$!max-columns;
+    print move-cursor(0,$y) ~ ~@!rows[$y];
 }
 
 method Str {

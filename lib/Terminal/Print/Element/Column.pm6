@@ -7,7 +7,8 @@ has $.column;
 has $!max-rows;
 
 method new( :$max-rows, :$column ) {
-    my @cells; for 0..$max-rows { @cells[$_] = Terminal::Print::Element::Cell.new };
+    my @cells;
+    for ^$max-rows { @cells[$_] = Terminal::Print::Element::Cell.new };
     self.bless( :$max-rows, :$column, :@cells );
 }
 

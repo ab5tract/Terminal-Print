@@ -18,10 +18,10 @@ for $b.grid-indices -> [$x,$y] {
 
 for @hearts.pick( +@hearts ) -> [$x,$y] {
     $b[$x][$y].print-cell;
-#    my $range = 0..0.010;
-#    sleep 0.05 + $range.pick;   # longer hug
+    my $range = ^0.010;
+    sleep 0.05 + $range.pick;   # longer hug
 }
 
 sleep 5;
 
-$b.shutdown-screen;
+LEAVE { $b.shutdown-screen }

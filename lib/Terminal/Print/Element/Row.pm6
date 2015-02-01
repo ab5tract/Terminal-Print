@@ -12,11 +12,20 @@ submethod BUILD( :@cells ) {
 }
 
 method row-escape-sequence {
-    [~] @!cells>>.cell-string;
+    [~] @!cells[].map: *.cell-string;
+}
+
+method print-row {
+    print self.row-escape-sequence;
 }
 
 method at_pos( $pos ) {
      ~  @!cells[$pos];
+}
+
+method at_assign( $pos, Str $char ) {
+    @!cells[$pos].clear-cell;
+    @!cells[$pos].char = $char;
 }
 
 method Str {
