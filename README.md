@@ -38,6 +38,6 @@ perl6 -Ilib examples/zig-zag.p6
 - split tests into visual and functional. only run functional on install
 - add Terminal::Print::Golf module which provides some quick-access constants and functionality
 
-## Copryright
+
 
 Copyright 2015, John Haltiwanger. Released under the Artistic License 2.0.
