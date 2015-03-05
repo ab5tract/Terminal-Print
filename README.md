@@ -20,15 +20,18 @@ Right now it only provides a grid with some nice access semantics.
 
 (Please note that these are are still subject to change as the library develops further).
 
-The idea is that in the long-term you will be able to specify views either programmatically or through a JSON structure. These views will support async updates from whatever sources one might desire, allowing for quick hacking together of different "command center"-style scripts.
+Terminal::Print intends to provide the essential underpinnings of command-line printing, to be the fuel for the fire, so to speak, for libraries which might aim towards 'command-line user interfaces' (CUI), asynchronous monitoring, rogue-like adventures, screensavers, video art, etc.
 
-I believe there is also a strong opportunity for frameworks towards command-line animation, random screensavers. 
-
-But if you want to see a pretty display of hearts filling your terminal, just `perl6 Boxbrain.pm` and enjoy. (Even more fun if you set your font size really small ;) ).
+Check out some animations:
+````
+perl6 -Ilib examples/show-love.p6
+perl6 -Ilib examples/zig-zag.p6
+````
 
 ## TODO ##
 
-- add row access ($row := $grid[\*][$y] for $cols)
+- pass a single 'printer' supply as a build argument to all the columns/cells
+- add row access ($row := $grid[\*][$y] for $cols) [WIP]
 - add async mechanisms for printing "channels" (guardian processes which update
   specific sections of the screen)
 - complete the zig-zag example and add others
