@@ -16,7 +16,7 @@ my sub zig-zag( Int $start_y? ) {
         $cur_y++ and next if $cur_y <  0;
         if $cur_y >= $b.max-rows {
             $b[$x-1][$cur_y-1].blank-cell
-                        unless $x-1 >= $b.max-columns or $cur_y-1 >= $b.max-rows;
+                        unless $x-1|$cur_y-1 < 0 or $x-1 >= $b.max-columns or $cur_y-1 >= $b.max-rows;
             last;
         }
 
