@@ -19,7 +19,7 @@ method print-row {
     print self.row-escape-sequence;
 }
 
-method at_pos( $pos ) {
+method AT-POS( $pos ) {
      ~  @!cells[$pos];
 }
 

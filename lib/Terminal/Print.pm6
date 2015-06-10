@@ -90,20 +90,20 @@ method shutdown-screen {
     self.show-cursor;
 }
 
-# at_pos hands back a Terminal::Print::Column
+# AT-POS hands back a Terminal::Print::Column
 #   $b[$x]
-# Because we have at_pos on the column object as well,
+# Because we have AT-POS on the column object as well,
 # we get
 #   $b[$x][$y]
 #
 # TODO: implement $!current-grid switching
-method at_pos( $column ) {
+method AT-POS( $column ) {
     $!current-grid.grid[ $column ];
 }
 
-# at_key returns the Terminal::Print::Element::Grid.grid of whichever the key specifies
+# AT-KEY returns the Terminal::Print::Element::Grid.grid of whichever the key specifies
 #   $b<specific-grid>[$x][$y]
-method at_key( $grid-identifier ) {
+method AT-KEY( $grid-identifier ) {
     self.grid( $grid-identifier );
 }
 

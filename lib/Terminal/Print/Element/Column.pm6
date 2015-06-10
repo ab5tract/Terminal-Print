@@ -12,11 +12,11 @@ method new( :$max-rows, :$column ) {
     self.bless( :$max-rows, :$column, :@cells );
 }
 
-method at_pos( $y ) {
+method AT-POS( $y ) {
     @!cells[$y];
 }
 
-method assign_pos ( $y, Str $char ) {
+method ASSIGN-POS ( $y, Str $char ) {
     @!cells[$y].clear-cell-string;
     @!cells[$y].char = $char;
 }

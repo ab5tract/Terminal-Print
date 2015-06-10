@@ -1,4 +1,3 @@
-
 use Terminal::Print;
 use Term::ANSIColor;
 my @colors = <red magenta yellow white>;

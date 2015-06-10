@@ -47,7 +47,7 @@ method new( :$max-columns, :$max-rows ) {
                 :@column-range, :@row-range, :@grid, :@buffer, :@rows );
 }
 
-method at_pos( $column ) {
+method AT-POS( $column ) {
     @!grid[ $column ];
 }
 
