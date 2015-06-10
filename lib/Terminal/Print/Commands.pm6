@@ -1,4 +1,4 @@
-module Terminal::Print::Commands;
+unit module Terminal::Print::Commands;
 
 our %human-command-names;
 our %human-commands;

@@ -1,4 +1,4 @@
-class Terminal::Print::Element::Column;
+unit class Terminal::Print::Element::Column;
 
 use Terminal::Print::Element::Cell;
 

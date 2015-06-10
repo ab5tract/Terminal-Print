@@ -1,4 +1,4 @@
-class Terminal::Print::Element::Row;
+unit class Terminal::Print::Element::Row;
 
 
 has @!cells;

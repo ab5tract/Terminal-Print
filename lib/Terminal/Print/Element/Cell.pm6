@@ -1,4 +1,4 @@
-class Terminal::Print::Element::Cell; 
+unit class Terminal::Print::Element::Cell; 
 
 use Terminal::Print::Commands;
 my constant T = Terminal::Print::Commands;

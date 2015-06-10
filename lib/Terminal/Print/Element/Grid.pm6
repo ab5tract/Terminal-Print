@@ -1,4 +1,4 @@
-class Terminal::Print::Element::Grid;
+unit class Terminal::Print::Element::Grid;
 
 use Terminal::Print::Element::Column;
 use Terminal::Print::Element::Row;
