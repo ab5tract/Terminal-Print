@@ -22,7 +22,7 @@ has $!grid-string;
 method new( :$max-columns, :$max-rows ) {
     my @column-range = ^$max-columns;
     my @row-range    = ^$max-rows;
-    my @grid-indices = (@column-range X @row-range).map(-> [$x,$y] { [$x, $y] });
+    my @grid-indices = (@column-range X @row-range).map({ [$^x, $^y] });
 
     my (@grid, @buffer);
     for @column-range -> $x {

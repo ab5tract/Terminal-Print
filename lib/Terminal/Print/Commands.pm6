@@ -14,8 +14,8 @@ BEGIN {
     
         my Str sub cursor-template( Int :$x,  Int :$y ) {
             # there may be single digit numbers in the escape preamble
-            $raw ~~ s:nth(*-2)[\d+] = $y+1;
-            $raw ~~ s:nth(*-1)[\d+] = $x+1;
+            $raw ~~ s:nth(*-1)[\d+] = $y+1;
+            $raw ~~ s:nth(*)[\d+]   = $x+1;
             return $raw;
         }
         return &cursor-template;
