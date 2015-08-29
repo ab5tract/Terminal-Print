@@ -5,7 +5,7 @@ plan 7;
 
 use Terminal::Print; pass "Import Terminal::Print";
 
-use Term::ANSIColor;
+#use Term::ANSIColor;
 
 my @colors = <red magenta yellow white>;
 

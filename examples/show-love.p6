@@ -1,5 +1,5 @@
 use Terminal::Print;
-use Term::ANSIColor;
+#use Term::ANSIColor;
 my @colors = <red magenta yellow white>;
 
 my $b = Terminal::Print.new;
@@ -9,7 +9,8 @@ $b.initialize-screen;
 my @hearts;
 for $b.grid-indices -> [$x,$y] {
     if $x %% 3 {
-        $b[$x][$y] = colored('♥', @colors.roll);
+        #        $b[$x][$y] = colored('♥', @colors.roll);
+        $b[$x][$y] ='♥';
         push @hearts, [$x,$y];
     }
 }
