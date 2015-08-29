@@ -10,11 +10,11 @@ use Term::ANSIColor;
 my @colors = <red magenta yellow white>;
 
 my $b;
-lives_ok { $b = Terminal::Print.new; }, "Can create a Terminal::Print object";
+lives-ok { $b = Terminal::Print.new; }, "Can create a Terminal::Print object";
 
-lives_ok { do { sleep 1; $b.initialize-screen;  $b.shutdown-screen; } }, "Can initialize and shutdown screen";
+lives-ok { do { sleep 1; $b.initialize-screen;  $b.shutdown-screen; } }, "Can initialize and shutdown screen";
 
-lives_ok {
+lives-ok {
     do {
         sleep 1;
         $b.initialize-screen;
@@ -29,7 +29,7 @@ lives_ok {
     }
 }, "Can print a screen full of hearts one at a time";
 
-lives_ok {
+lives-ok {
     do {
         sleep 1;
         $b.initialize-screen;
@@ -39,7 +39,7 @@ lives_ok {
     }
 }, "Can print the whole screen by stringifying the default grid object";
 
-lives_ok {
+lives-ok {
     do {
         sleep 1;
         $b.initialize-screen;
@@ -49,7 +49,7 @@ lives_ok {
     }
 }, "Can print the whole screen by using .print-screen with a grid index";
 
-lives_ok {
+lives-ok {
     $b.add-grid('4s');
 }, "Can add a (named) grid";
 
