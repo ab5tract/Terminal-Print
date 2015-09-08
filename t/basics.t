@@ -1,7 +1,7 @@
 use Test;
 use lib 'lib';
 
-plan 13;
+plan 16;
 
 use Terminal::Print; pass "Import Terminal::Print";
 
@@ -83,7 +83,7 @@ ok +$b.grids[*] == 6, 'There are the expected number of grids available through 
 lives-ok {
     do {
         $b.initialize-screen;
-        $b.grid-object('hearts-again').grep-grid({$^x %% 3 and $^y %% 2 || $x %% 2 and $y %% 3 || so $x|$y %% 7}, :p, :o);
+        $b.grid-object('hearts-again').grep-grid({$^x %% 3 and $^y %% 2 || $x %% 2 and $y %% 3 || so $x|$y %% 7}, :o);
         sleep 1;
         $b.shutdown-screen;
     }
@@ -92,8 +92,11 @@ lives-ok {
 lives-ok {
     do {
         $b.initialize-screen;
+        sleep 1;
         $b.print-grid('hearts-again');
         sleep 1;
         $b.shutdown-screen;
     }
 }, "The hearts are the same as the previous run";
+
+ok $b.clone-grid(0) === $b.grids[*-1], ".clone-grid returns the clone itself";

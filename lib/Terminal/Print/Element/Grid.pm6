@@ -73,7 +73,7 @@ multi method grep-grid( $test, :$p! ) {
     }
 }
 
-multi method grep-grid( $test, :$p!, :$o! ) {
+multi method grep-grid( $test, :$o! ) {
     for @!grid-indices -> [$x,$y] {
         if $test($x,$y) {
             @!grid[$x][$y].print-cell;

@@ -24,7 +24,7 @@ $b.clone-grid(0,'hearts');
 
 my $hg := $b.grid-object('hearts');
 
-$hg.grep-grid: {$^x %% 3 and $^y %% 3 || $x %% 2 and $y %% 2}, :p, :o;
+$hg.grep-grid: {$^x %% 3 and $^y %% 3 || $x %% 2 and $y %% 2}, :o;
 
 sleep 5;
 
@@ -32,7 +32,7 @@ my $og := $b.grid-object(0);
 $b.clone-grid('hearts','h3');
 my $h3 := $b.grid-object('h3');
 
-$h3.grep-grid: {$^x %% 3 and $^y %% 3 || $x %% 2 and $y %% 2 || so $x|$y %% 7}, :p, :o;
+$h3.grep-grid: {$^x %% 3 and $^y %% 3 || $x %% 2 and $y %% 2 || so $x|$y %% 7}, :o;
 
 sleep 5;
 
