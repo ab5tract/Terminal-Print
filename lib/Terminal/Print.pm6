@@ -105,9 +105,9 @@ method postcircumfix:<( )> (*@t) {
     die "Can only specify x, y, and char" if @t > 3;
     my ($x,$y,$char) = @t;
     given +@t {
-        when 3 { $!current-grid[ $x ][ $y ] = $char }
-        when 2 { $!current-grid[ $x ][ $y ] }
-        when 1 { $!current-grid[ $x ] }
+        when 3 { $!current-grid[$x][$y] = $char; $!current-grid[$x][$y].print-cell }
+        when 2 { $!current-grid[$x][$y].print-cell }
+        when 1 { $!current-grid[$x] }
     }
 }
 
@@ -176,6 +176,7 @@ method !clone-grid-index( $origin, $dest? ) {
     } else {
         @!grids.push: @!grids[$origin].clone;
     }
+    return @!grids[*-1];
 }
 
 #### clone-grid stuff

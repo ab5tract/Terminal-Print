@@ -17,6 +17,8 @@ has @.grid-indices;
 has @.column-range;
 has @.row-range;
 
+has %!grep-cache;
+
 has Str $!grid-string;
 
 method new( :$max-columns, :$max-rows ) {
@@ -56,8 +58,29 @@ method print-grid {
 }
 
 method print-row( $y ) {
-#    my $row-string = [~] @!grid[*][$y] for ^$!max-columns;
     print move-cursor(0,$y) ~ ~@!rows[$y];
+}
+
+multi method grep-grid( $test ) {
+    %!grep-cache{$test.WHICH} //= do for @!grid-indices -> [$x,$y] {
+        [$x,$y] if $test($x,$y);
+    }
+}
+         
+multi method grep-grid( $test, :$p! ) {
+    %!grep-cache{$test.WHICH} //= do for @!grid-indices -> [$x,$y] {
+        @!grid[$x][$y].print-cell if $test($x,$y);
+    }
+}
+
+multi method grep-grid( $test, :$p!, :$o! ) {
+    %!grep-cache{$test.WHICH} //= do for @!grid-indices -> [$x,$y] {
+        if $test($x,$y) {
+            @!grid[$x][$y].print-cell;
+        } else {
+            @!grid[$x][$y].clear-cell-string;
+        }
+    }
 }
 
 method Str {

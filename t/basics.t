@@ -20,8 +20,8 @@ lives-ok {
         $b.initialize-screen;
         for $b.grid-indices -> [$x,$y] {
             # pretty, .. but slow.
-            $b[$x][$y] = colored('♥', @colors.roll);
-            #            $b[$x][$y] = '♥';
+            #            $b[$x][$y] = colored('♥', @colors.roll);
+            $b[$x][$y] = '♥';
             $b[$x][$y].print-cell;
         }
         sleep 1;
@@ -79,3 +79,16 @@ lives-ok {
 }, "Cloned screen 'hearts-again' prints the same hearts again";
 
 ok +$b.grids[*] == 6, 'There are the expected number of grids available through $b.grids';
+
+lives-ok {
+    do {
+        $b.initialize-screen;
+        for $b.grid-indices -> [$x,$y] {
+            if $x %% 3 and $y %% 5 {
+                $b($x,$y);
+            }
+        }
+        sleep 1;
+        $b.shutdown-screen;
+    }
+}, "Printing individual hearts based on grid-indices-grep";
