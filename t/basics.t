@@ -83,8 +83,17 @@ ok +$b.grids[*] == 6, 'There are the expected number of grids available through 
 lives-ok {
     do {
         $b.initialize-screen;
-        $b.grid-object('hearts-again').grep-grid({$^x %% 3 and $^y %% 2 || $x %% 2 and $y %% 3 || so $x|$y %% 7}, :p);
+        $b.grid-object('hearts-again').grep-grid({$^x %% 3 and $^y %% 2 || $x %% 2 and $y %% 3 || so $x|$y %% 7}, :p, :o);
         sleep 1;
         $b.shutdown-screen;
     }
 }, "Printing individual hearts based on grep-grid";
+
+lives-ok {
+    do {
+        $b.initialize-screen;
+        $b.print-grid('hearts-again');
+        sleep 1;
+        $b.shutdown-screen;
+    }
+}, "The hearts are the same as the previous run";
