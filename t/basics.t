@@ -83,12 +83,8 @@ ok +$b.grids[*] == 6, 'There are the expected number of grids available through 
 lives-ok {
     do {
         $b.initialize-screen;
-        for $b.grid-indices -> [$x,$y] {
-            if $x %% 3 and $y %% 5 {
-                $b($x,$y);
-            }
-        }
+        $b.grid-object('hearts-again').grep-grid({$^x %% 3 and $^y %% 2 || $x %% 2 and $y %% 3 || so $x|$y %% 7}, :p);
         sleep 1;
         $b.shutdown-screen;
     }
-}, "Printing individual hearts based on grid-indices-grep";
+}, "Printing individual hearts based on grep-grid";
