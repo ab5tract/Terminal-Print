@@ -17,7 +17,7 @@ has @.grid-indices;
 has @.column-range;
 has @.row-range;
 
-has $!grid-string;
+has Str $!grid-string;
 
 method new( :$max-columns, :$max-rows ) {
     my @column-range = ^$max-columns;

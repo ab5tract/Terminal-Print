@@ -9,11 +9,11 @@ has $!current-buffer;
 has Terminal::Print::Element::Grid $!current-grid;
 
 has @!buffers;
-has Terminal::Print::Element::Grid @!grids;
+has Terminal::Print::Element::Grid @.grids;
 
 
 has @.grid-indices;
-has %!grid-map;
+has %!grid-name-map;
 
 has $.max-columns;
 has $.max-rows;
@@ -34,17 +34,13 @@ method new {
               );
 }
 
-submethod BUILD( :$current-grid, :$current-buffer, :$max-columns, :$max-rows, :@grid-indices ) {
+submethod BUILD( :$current-grid, :$current-buffer, :$!max-columns, :$!max-rows, :@grid-indices ) {
     push @!buffers, $current-buffer;
     push @!grids, $current-grid;
 
     $!current-grid   := @!grids[0];
     $!current-buffer := @!buffers[0];
 
-    # this part feels like it should be unnecessary, and in perl 6 that usually means that it is, 
-    # ... i'm just missing the syntax
-    $!max-columns = $max-columns;
-    $!max-rows = $max-rows;
     @!grid-indices = @grid-indices;  # TODO: bind this to @!grids[0].grid-indices?
 }
 
@@ -55,16 +51,14 @@ method !bind-buffer( $grid, $new-buffer is rw ) {
 }
 
 
-method add-grid( $name? ) {
-    my $new-grid = Terminal::Print::Element::Grid.new( :$!max-columns, :$!max-rows );
-
+method add-grid( $name?, :$new-grid = Terminal::Print::Element::Grid.new( :$!max-columns, :$!max-rows ) ) {
     self!bind-buffer( $new-grid, my $new-buffer = [] );
 
     push @!grids, $new-grid;
     push @!buffers, $new-buffer;
 
     if $name {
-        %!grid-map{$name} = +@!grids-1;
+        %!grid-name-map{$name} = +@!grids-1;
     }
 }
 
@@ -97,8 +91,8 @@ method shutdown-screen {
 #   $b[$x][$y]
 #
 # TODO: implement $!current-grid switching
-method AT-POS( $column ) {
-    $!current-grid.grid[ $column ];
+method AT-POS( $column-idx ) {
+    $!current-grid.grid[ $column-idx ];
 }
 
 # AT-KEY returns the Terminal::Print::Element::Grid.grid of whichever the key specifies
@@ -107,10 +101,10 @@ method AT-KEY( $grid-identifier ) {
     self.grid( $grid-identifier );
 }
 
-method postcircumfix:<( )> ($t) {
-    die "Can only specify x, y, and char" if @$t > 3;
-    my ($x,$y,$char) = @$t;
-    given +@$t {
+method postcircumfix:<( )> (*@t) {
+    die "Can only specify x, y, and char" if @t > 3;
+    my ($x,$y,$char) = @t;
+    given +@t {
         when 3 { $!current-grid[ $x ][ $y ] = $char }
         when 2 { $!current-grid[ $x ][ $y ] }
         when 1 { $!current-grid[ $x ] }
@@ -136,11 +130,11 @@ multi method grid( Int $index ) {
 }
 
 multi method grid( Str $name ) {
-    die "No grid has been named $name" unless my $grid-index = %!grid-map{$name};
+    die "No grid has been named $name" unless my $grid-index = %!grid-name-map{$name};
     @!grids[$grid-index].grid;
 }
 
-
+#### grid-object stuff
 
 #   Sometimes you simply want the object back (for stringification, or
 #   introspection on things like column-range)
@@ -149,33 +143,56 @@ multi method grid-object( Int $index ) {
 }
 
 multi method grid-object( Str $name ) {
-    die "No grid has been named $name" unless my $grid-index = %!grid-map{$name};
+    die "No grid has been named $name" unless my $grid-index = %!grid-name-map{$name};
     @!grids[$grid-index];
 } 
 
 
+#### buffer stuff
 
 multi method buffer( Int $index ) {
     @!buffers[$index];
 }
 
 multi method buffer( Str $name ) {
-    die "No buffer has been named $name" unless my $buffer-index = %!grid-map{$name};
+    die "No buffer has been named $name" unless my $buffer-index = %!grid-name-map{$name};
     @!buffers[$buffer-index];
 }
 
-
+#### print-grid stuff
 
 multi method print-grid( Int $index ) {
     @!grids[$index].print-grid;
 }
 
 multi method print-grid( Str $name ) {
-    die "No grid has been named $name" unless my $grid-index = %!grid-map{$name};
+    die "No grid has been named $name" unless my $grid-index = %!grid-name-map{$name};
     @!grids[$grid-index].print-grid;
 }
 
+method !clone-grid-index( $origin, $dest? ) {
+    if $dest {
+        self.add-grid($dest, new-grid => @!grids[$origin].clone);
+    } else {
+        @!grids.push: @!grids[$origin].clone;
+    }
+}
 
+#### clone-grid stuff
+
+multi method clone-grid( Int $origin, Str $dest? ) {
+    die "Invalid grid '$origin'" unless @!grids[$origin]:exists;
+    self!clone-grid-index($origin, $dest);
+}
+
+multi method clone-grid( Str $origin, Str $dest? ) {
+    die "Invalid grid '$origin'" unless my $grid-index = %!grid-name-map{$origin};
+    self!clone-grid-index($grid-index, $dest);
+}
+
+#### range stuffs
+#
+# TODO: add hooks to dynamically bind $!current-grid to @!grids
 
 method column-range {
     $!current-grid.column-range; # TODO: we can make the grids reflect specific subsets of these ranges
