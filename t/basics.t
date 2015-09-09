@@ -1,7 +1,7 @@
 use Test;
 use lib 'lib';
 
-plan 16;
+plan 17;
 
 use Terminal::Print; pass "Import Terminal::Print";
 
@@ -80,6 +80,8 @@ lives-ok {
 
 ok +$b.grids[*] == 6, 'There are the expected number of grids available through $b.grids';
 
+ok $b.clone-grid(0,'h4') === $b.grids[*-1], ".clone-grid returns the clone itself";
+
 lives-ok {
     do {
         $b.initialize-screen;
@@ -97,6 +99,31 @@ lives-ok {
         sleep 1;
         $b.shutdown-screen;
     }
-}, "The hearts are the same as the previous run";
+}, "print-grid('hearts-again') (aka the same grid) prints the same as the previous run";
 
-ok $b.clone-grid(0) === $b.grids[*-1], ".clone-grid returns the clone itself";
+lives-ok {
+    do {
+        $b.initialize-screen;
+        sleep 1;
+        $b.blit(0);
+        sleep 1;
+        $b.blit('hearts-again');
+        sleep 1;
+        $b.blit(0);
+        sleep 0.5;
+        $b.blit('hearts-again');
+        sleep 0.5;
+        $b.blit(0);
+        sleep 0.5;
+        $b.blit('hearts-again');
+        sleep 0.5;
+        $b.blit(0);
+        sleep 0.5;
+        $b.blit('hearts-again');
+        sleep 0.5;
+        $b.blit(0);
+        sleep 0.5;
+        $b.blit('hearts-again');
+        sleep 1;
+    }
+}, "blitting between grids works";
