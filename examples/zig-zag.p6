@@ -16,28 +16,30 @@ my sub zig-zag( Int $start_y? ) {
     for 1..$b.max-columns -> $x {
         $cur_y++ and next if $cur_y <  0;
         if $cur_y >= $b.max-rows {
-            $b[$x-1][$cur_y-1].blank-cell
-                        unless $x-1|$cur_y-1 < 0 or $x-1 >= $b.max-columns or $cur_y-1 >= $b.max-rows;
+            ( $b[$x-1][$cur_y-1] = ' ' and $b.print-cell($x-1,$cur_y-1) )
+                        unless so $x-1|$cur_y-1 < 0 or $x > $b.max-columns or $cur_y > $b.max-rows;
             last;
         }
 
         if is-odd($x) {
             $b[$x][$cur_y] = '_';
-            $b[$x][$cur_y].print-cell;
-            $b[$x-1][$cur_y].blank-cell;
+            $b.print-cell($x,$cur_y);
+            $b[$x-1][$cur_y] = ' ';
+            $b.print-cell($x-1,$cur_y);
             $cur_y++;
         } else {
             $b[$x][$cur_y] = '|';
-            $b[$x][$cur_y].print-cell;
-            $b[$x-1][$cur_y-1].blank-cell;
-            $b[$x-2][$cur_y-1].blank-cell;
+            $b[$x-1][$cur_y-1] = ' ';
+            $b.print-cell($x-1,$cur_y-1);
+            $b[$x-2][$cur_y-1] = ' ';
+            $b.print-cell($x-2,$cur_y-1);
         }
         sleep 0.05;
     }
 }
 
 # TODO: support async writing. this produces weird (random?) 'artifacting';
-# await do for ^5 { start { is-odd($_) ?? zig-zag($_*3) !! zig-zag(-$_*3) } }
+#await do for ^5 { start { is-odd($_) ?? zig-zag($_*3) !! zig-zag((-$_)*3) } }
 
 # waiting patiently produces expected outputs
 await do for 0...7 { await do start { is-odd($_) ?? zig-zag($_*3) !! zig-zag(-$_*10) } }

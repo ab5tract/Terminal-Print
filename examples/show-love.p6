@@ -11,7 +11,7 @@ my @hearts;
 for $b.grid-indices -> [$x,$y] {
     next unless $x %% 3;
     $b[$x][$y] = colored('♥', @colors.roll);
-    $b[$x][$y].print-cell;
+    $b.print-cell($x,$y);
     # $b[$x][$y] ='♥';
     push @hearts, [$x,$y];
 }
@@ -24,7 +24,7 @@ $b.clone-grid(0,'hearts');
 
 my $hg := $b.grid-object('hearts');
 
-$hg.grep-grid: {$^x %% 3 and $^y %% 3 || $x %% 2 and $y %% 2}, :o;
+#$hg.grep-grid: {$^x %% 3 and $^y %% 3 || $x %% 2 and $y %% 2}, :o;
 
 my $og := $b.grid-object(0);
 my $h3 := $b.clone-grid(0,'h3');
