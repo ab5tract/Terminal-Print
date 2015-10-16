@@ -1,7 +1,7 @@
 use Test;
 use lib 'lib';
 
-plan 17;
+plan 16;
 
 use Terminal::Print; pass "Import Terminal::Print";
 
@@ -16,7 +16,7 @@ lives-ok { do { sleep 1; $b.initialize-screen;  $b.shutdown-screen; } }, "Can in
 
 lives-ok {
     do {
-        sleep 1;
+        sleep 0.5;
         $b.initialize-screen;
         for $b.grid-indices -> [$x,$y] {
             # pretty, .. but slow.
@@ -24,27 +24,27 @@ lives-ok {
             $b[$x][$y] = '♥';
             $b.print-cell($x,$y);
         }
-        sleep 1;
+        sleep 0.5;
         $b.shutdown-screen;
     }
 }, "Can print a screen full of hearts one at a time";
 
 lives-ok {
     do {
-        sleep 1;
+        sleep 0.5;
         $b.initialize-screen;
         print ~$b.grid-object(0);
-        sleep 1;
+        sleep 0.5;
         $b.shutdown-screen;
     }
 }, "Can print the whole screen by stringifying the default grid object";
 
 lives-ok {
     do {
-        sleep 1;
+        sleep 0.5;
         $b.initialize-screen;
         $b.print-grid(0);
-        sleep 1;
+        sleep 0.5;
         $b.shutdown-screen;
     }
 }, "Can print the whole screen by using .print-screen with a grid index";
@@ -73,7 +73,7 @@ lives-ok {
     do {
         $b.initialize-screen;
         $b.print-grid('hearts-again');
-        sleep 1;
+        sleep 0.5;
         $b.shutdown-screen;
     }
 }, "Cloned screen 'hearts-again' prints the same hearts again";
@@ -82,14 +82,16 @@ ok +$b.grids[*] == 6, 'There are the expected number of grids available through 
 
 ok $b.clone-grid(0,'h4') === $b.grids[*-1], ".clone-grid returns the clone itself";
 
-lives-ok {
-    do {
-        $b.initialize-screen;
-        $b.grid-object('hearts-again').grep-grid({$^x %% 3 and $^y %% 2 || $x %% 2 and $y %% 3 || so $x|$y %% 7}, :o);
-        sleep 1;
-        $b.shutdown-screen;
-    }
-}, "Printing individual hearts based on grep-grid";
+# TODO: Bring back grep-grid !!
+
+#lives-ok {
+#    do {
+#        $b.initialize-screen;
+#        $b.grid-object('hearts-again').grep-grid({$^x %% 3 and $^y %% 2 || $x %% 2 and $y %% 3 || so $x|$y %% 7}, :o);
+#        sleep 1;
+#        $b.shutdown-screen;
+#    }
+#}, "Printing individual hearts based on grep-grid";
 
 lives-ok {
     do {
@@ -124,6 +126,6 @@ lives-ok {
         $b.blit(0);
         sleep 0.5;
         $b.blit('hearts-again');
-        sleep 1;
+        sleep 0.5;
     }
 }, "blitting between grids works";
