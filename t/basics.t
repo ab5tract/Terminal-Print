@@ -22,7 +22,7 @@ lives-ok {
             # pretty, .. but slow.
             #            $b[$x][$y] = colored('♥', @colors.roll);
             $b[$x][$y] = '♥';
-            $b[$x][$y].print-cell;
+            $b.print-cell($x,$y);
         }
         sleep 1;
         $b.shutdown-screen;
