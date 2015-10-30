@@ -8,7 +8,7 @@ $b.initialize-screen;
 
 my @hearts;
 #for $b.grep-grid({$^x %% 3 && $^y}) -> [$x,$y] {
-for $b.grid-indices -> [$x,$y] {
+for $b.grid-indices.pick(*) -> [$x,$y] {
     next unless $x %% 3;
     $b[$x][$y] = colored('♥', @colors.roll);
     $b.print-cell($x,$y);

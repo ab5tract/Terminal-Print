@@ -17,7 +17,8 @@ my sub zig-zag( Int $start_y? ) {
         $cur_y++ and next if $cur_y <  0;
         if $cur_y >= $b.max-rows {
             ( $b[$x-1][$cur_y-1] = ' ' and $b.print-cell($x-1,$cur_y-1) )
-                        unless so $x-1|$cur_y-1 < 0 or $x > $b.max-columns or $cur_y > $b.max-rows;
+                        unless so $x-1|$cur_y-1 < 0 or $x > $b.max-columns
+                            or $cur_y > $b.max-rows;
             last;
         }
 
@@ -34,7 +35,7 @@ my sub zig-zag( Int $start_y? ) {
             $b[$x-2][$cur_y-1] = ' ';
             $b.print-cell($x-2,$cur_y-1);
         }
-        sleep 0.05;
+        sleep 0.1;
     }
 }
 
@@ -42,6 +43,6 @@ my sub zig-zag( Int $start_y? ) {
 #await do for ^5 { start { is-odd($_) ?? zig-zag($_*3) !! zig-zag((-$_)*3) } }
 
 # waiting patiently produces expected outputs
-await do for 0...7 { await do start { is-odd($_) ?? zig-zag($_*3) !! zig-zag(-$_*10) } }
+#await do for 0...7 { await do start { is-odd($_) ?? zig-zag($_*3) !! zig-zag(-$_*10) } }
 
 LEAVE { $b.shutdown-screen }

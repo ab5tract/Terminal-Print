@@ -36,7 +36,7 @@ has $.max-rows;
 has @.grid-indices;
 
 submethod BUILD( :$!max-columns, :$!max-rows ) {
-    @!grid-indices = ^$!max-columns X ^$!max-rows;
+    @!grid-indices = (^$!max-columns X ^$!max-rows)>>.Array;
     for @!grid-indices -> [$x,$y] {
         @!grid[$x;$y] = Str.new(:value(" "));
     }
