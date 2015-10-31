@@ -13,7 +13,9 @@ my @hearts;
 for $b.grid-indices.pick(*) -> [$x,$y] {
     next unless $x %% 3;
     #    $b[$x][$y] = colored('♥', @colors.roll);
+    my $t = now;
     $b.print-cell($x,$y,colored('♥', @colors.roll));
+    print "\e[1;1H\e[32m{ now - $t }\e[0m";
     # $b[$x][$y] ='♥';
     push @hearts, [$x,$y];
 }

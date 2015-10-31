@@ -14,10 +14,7 @@ my $alphabet = '─'..'╿';
 #for @char-ranges[0].pick(*) -> $alphabet {
 for ^10 {
     for $p.grid-indices -> [$x,$y] {
-        if $x %% (0..5).roll || $y %% (0..6).roll {
-            $p[$x][$y] = $alphabet.roll;
-            $p.print-cell($x,$y);
-        } elsif $y %% 7 { 
+        if $x %% (0..5).roll || $y %% (0..6).roll || $y %% 7 {
             $p[$x][$y] = $alphabet.roll;
             $p.print-cell($x,$y);
         }
