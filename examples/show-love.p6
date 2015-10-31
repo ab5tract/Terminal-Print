@@ -1,3 +1,5 @@
+use lib './lib';
+
 use Terminal::Print;
 use Terminal::ANSIColor;
 my @colors = <red magenta yellow white>;
@@ -10,8 +12,8 @@ my @hearts;
 #for $b.grep-grid({$^x %% 3 && $^y}) -> [$x,$y] {
 for $b.grid-indices.pick(*) -> [$x,$y] {
     next unless $x %% 3;
-    $b[$x][$y] = colored('♥', @colors.roll);
-    $b.print-cell($x,$y);
+    #    $b[$x][$y] = colored('♥', @colors.roll);
+    $b.print-cell($x,$y,colored('♥', @colors.roll));
     # $b[$x][$y] ='♥';
     push @hearts, [$x,$y];
 }

@@ -150,8 +150,16 @@ multi method grid-object( Str $name ) {
     @!grids[$grid-index];
 } 
 
-method print-cell( Int $x, Int $y ) {
+multi method print-cell( Int $x, Int $y ) {
     $!current-grid.print-cell($x,$y);
+}
+
+# TODO: provide reasonable constraint?
+#   where *.comb == 1 means that you can't add escape chars
+#   of any kind before sending to print-cell. but maybe that's
+#   not such a bad thing?
+multi method print-cell( Int $x, Int $y, Str $char ) {
+    $!current-grid.print-cell($x,$y,$char);
 }
 
 #### buffer stuff

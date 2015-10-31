@@ -1,5 +1,6 @@
 use fatal;
 
+use lib './lib';
 use Terminal::Print;
 
 my $b = Terminal::Print.new;   # TODO: take named parameter for grid name of default grid

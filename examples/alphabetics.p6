@@ -9,15 +9,20 @@ $p.initialize-screen;
 
 #say $p.grid-indices.perl;
 
-my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ';
-
-for @char-ranges.pick(*) -> $alphabet {
+#my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
+my $alphabet = '─'..'╿';
+#for @char-ranges[0].pick(*) -> $alphabet {
+for ^10 {
     for $p.grid-indices -> [$x,$y] {
-        next if $x %% (1..5).roll || $y %% (1..6);
-        $p[$x][$y] = $alphabet.roll(1);
-        $p.print-cell($x,$y);
+        if $x %% (0..5).roll || $y %% (0..6).roll {
+            $p[$x][$y] = $alphabet.roll;
+            $p.print-cell($x,$y);
+        } elsif $y %% 7 { 
+            $p[$x][$y] = $alphabet.roll;
+            $p.print-cell($x,$y);
+        }
     }
-    sleep 5;
+    #    sleep 5;
     $p.clear-screen;
 }
 

@@ -83,8 +83,13 @@ method change-cell($x,$y,$c) {
     $!grid-string = '' if $!grid-string;
 }
 
-method print-cell($x,$y) {
+multi method print-cell(Int $x, Int $y) {
     print "{move-cursor($x,$y)}{@!grid[$x;$y]}";
+}
+
+multi method print-cell(Int $x, Int $y, Str $char  ) {
+    self.change-cell($x,$y,$char);
+    print "{move-cursor($x,$y)}{$char}";
 }
 
 method print-grid {
