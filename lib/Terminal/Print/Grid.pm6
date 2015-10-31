@@ -78,7 +78,7 @@ method shutdown {
     $!control-supply.emit('close');
 }
 
-method change-cell($x,$y,$c) {
+method change-cell($x, $y, $c) {
     $!character-supply.emit([$x,$y,$c]);
     $!grid-string = '' if $!grid-string;
 }
@@ -93,7 +93,7 @@ multi method print-cell(Int $x, Int $y, Str $char) {
 }
 
 method print-grid {
-    print move-cursor(0,0) ~ self;
+    print move-cursor(0, 0) ~ self;
 }
 
 method Str {
