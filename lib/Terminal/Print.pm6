@@ -1,6 +1,7 @@
 unit class Terminal::Print;
 
 use Terminal::Print::Commands;
+use Terminal::Print::Commands::ANSI;
 my constant T = Terminal::Print::Commands;
 
 #use Terminal::Print::Grid;
@@ -104,15 +105,18 @@ method AT-KEY( $grid-identifier ) {
     self.grid( $grid-identifier );
 }
 
-method postcircumfix:<( )> (*@t) {
-    die "Can only specify x, y, and char" if @t > 3;
-    my ($x,$y,$char) = @t;
-    given +@t {
-        when 3 { $!current-grid[$x][$y] = $char; $!current-grid[$x][$y].print-cell }
-        when 2 { $!current-grid[$x][$y].print-cell }
-        when 1 { $!current-grid[$x] }
-    }
-}
+# This is not re-enabled. Needs to be reimplemented via CALL-ME, if it wants to
+# come back.
+#
+#method postcircumfix:<( )> (*@t) {
+#    die "Can only specify x, y, and char" if @t > 3;
+#    my ($x,$y,$char) = @t;
+#    given +@t {
+#        when 3 { $!current-grid[$x][$y] = $char; $!current-grid[$x][$y].print-cell }
+#        when 2 { $!current-grid[$x][$y].print-cell }
+#        when 1 { $!current-grid[$x] }
+#    }
+#}
 
 multi method FALLBACK( Str $command-name ) {
     die "Do not know command $command-name" unless %T::human-command-names{$command-name};
