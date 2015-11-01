@@ -6,6 +6,8 @@ our %tput-commands;
 our %attributes;
 our %attribute-values;
 
+constant USE-ANSI = so %*ENV<USE_ANSI>;
+
 BEGIN {
 
     my sub build-cursor-to-template {
@@ -21,10 +23,10 @@ BEGIN {
         # might want to investigate
         my Str sub cursor-template( Int :$x,  Int :$y ) {
             #my $t = now;
-            my $res = sprintf($raw, $y + 1, $x + 1);
+            #return "\e[{$y+1};{$x+1}H" if USE-ANSI;
+            my $res = USE-ANSI ?? "\e[{$y+1};{$x+1}H" !! sprintf($raw, $y + 1, $x + 1);
             #print "\e[1;1H{ now - $t }";
             return $res;
-            #return "\e[{$y+1};{$x+1}H";
         }
         return &cursor-template;
     }
