@@ -9,7 +9,7 @@ $p.initialize-screen;
 
 #say $p.grid-indices.perl;
 
-#my @char-ranges = 's■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
+#my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
 my @alphabet = '─'..'╿';
 #for @char-ranges[0].pick(*) -> $alphabet {
 for ^10 {

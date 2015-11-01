@@ -11,18 +11,20 @@ BEGIN {
     my sub build-cursor-to-template {
         my ($x,$y) = 13,13;
         my $raw = qq:x{ tput cup $y $x };
+        # Replace the digits with format specifiers used
+        # by sprintf
+        $raw ~~ s:nth(*-1)[\d+] = "%d";
+        $raw ~~ s:nth(*)[\d+]   = "%d";
         # This sub replaces the parameters received from the
         # output given by tput with the appropriate values.
         # TODO: regex search might be inefficient;
         # might want to investigate
         my Str sub cursor-template( Int :$x,  Int :$y ) {
             #my $t = now;
-            # there may be single digit numbers in the escape preamble
-            #$raw ~~ s:nth(*-1)[\d+] = $y+1;
-            #$raw ~~ s:nth(*)[\d+]   = $x+1;
+            my $res = sprintf($raw, $y + 1, $x + 1);
             #print "\e[1;1H{ now - $t }";
-            #return $raw;
-            return "\e[{$y+1};{$x+1}H";
+            return $res;
+            #return "\e[{$y+1};{$x+1}H";
         }
         return &cursor-template;
     }
