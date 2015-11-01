@@ -62,6 +62,8 @@ method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( :$!max-columns,
     if $name {
         %!grid-name-map{$name} = +@!grids-1;
     }
+    $new-grid.initialize;
+    $new-grid;
 }
 
 method blit( $grid-identifier = 0 ) {
@@ -189,12 +191,13 @@ multi method print-grid( Str $name ) {
 }
 
 method !clone-grid-index( $origin, $dest? ) {
+    my $new-grid;
     if $dest {
-        self.add-grid($dest, new-grid => @!grids[$origin].clone);
+        $new-grid := self.add-grid($dest, new-grid => @!grids[$origin].clone);
     } else {
         @!grids.push: @!grids[$origin].clone;
     }
-    return @!grids[*-1];
+    return $new-grid;
 }
 
 #### clone-grid stuff
