@@ -1,6 +1,7 @@
 unit class Terminal::Print;
 
 use Terminal::Print::Commands;
+use Terminal::Print::Commands::ANSI;
 my constant T = Terminal::Print::Commands;
 
 #use Terminal::Print::Grid;
@@ -61,6 +62,8 @@ method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( :$!max-columns,
     if $name {
         %!grid-name-map{$name} = +@!grids-1;
     }
+    $new-grid.initialize;
+    $new-grid;
 }
 
 method blit( $grid-identifier = 0 ) {
@@ -104,15 +107,18 @@ method AT-KEY( $grid-identifier ) {
     self.grid( $grid-identifier );
 }
 
-method postcircumfix:<( )> (*@t) {
-    die "Can only specify x, y, and char" if @t > 3;
-    my ($x,$y,$char) = @t;
-    given +@t {
-        when 3 { $!current-grid[$x][$y] = $char; $!current-grid[$x][$y].print-cell }
-        when 2 { $!current-grid[$x][$y].print-cell }
-        when 1 { $!current-grid[$x] }
-    }
-}
+# This is not re-enabled. Needs to be reimplemented via CALL-ME, if it wants to
+# come back.
+#
+#method postcircumfix:<( )> (*@t) {
+#    die "Can only specify x, y, and char" if @t > 3;
+#    my ($x,$y,$char) = @t;
+#    given +@t {
+#        when 3 { $!current-grid[$x][$y] = $char; $!current-grid[$x][$y].print-cell }
+#        when 2 { $!current-grid[$x][$y].print-cell }
+#        when 1 { $!current-grid[$x] }
+#    }
+#}
 
 multi method FALLBACK( Str $command-name ) {
     die "Do not know command $command-name" unless %T::human-command-names{$command-name};
@@ -185,12 +191,13 @@ multi method print-grid( Str $name ) {
 }
 
 method !clone-grid-index( $origin, $dest? ) {
+    my $new-grid;
     if $dest {
-        self.add-grid($dest, new-grid => @!grids[$origin].clone);
+        $new-grid := self.add-grid($dest, new-grid => @!grids[$origin].clone);
     } else {
         @!grids.push: @!grids[$origin].clone;
     }
-    return @!grids[*-1];
+    return $new-grid;
 }
 
 #### clone-grid stuff
