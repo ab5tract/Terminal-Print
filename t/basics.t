@@ -127,5 +127,6 @@ lives-ok {
         sleep 0.5;
         $b.blit('hearts-again');
         sleep 0.5;
+        $b.shutdown-screen;
     }
 }, "blitting between grids works";
