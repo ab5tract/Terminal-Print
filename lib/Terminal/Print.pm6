@@ -1,7 +1,6 @@
 unit class Terminal::Print;
 
 use Terminal::Print::Commands;
-use Terminal::Print::Commands::ANSI;
 my constant T = Terminal::Print::Commands;
 
 #use Terminal::Print::Grid;
