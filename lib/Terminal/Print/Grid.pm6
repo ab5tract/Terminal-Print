@@ -2,7 +2,7 @@
 unit class Terminal::Print::Grid;
 
 class Terminal::Print::Grid::Column {
-    has $!column;   
+    has $!column;
     has $!max-rows;
     has $!grid-object;
 
@@ -51,7 +51,7 @@ method initialize {
         start {
             $initialized = True;
             react {
-                whenever $!character-supply -> [$x,$y,$c] { 
+                whenever $!character-supply -> [$x,$y,$c] {
                     @!grid[$x;$y] = $c;
                 }
                 whenever $!control-supply -> $command {
@@ -78,7 +78,7 @@ method shutdown {
     $!control-supply.emit('close');
 }
 
-method change-cell($x,$y,$c) {
+method change-cell($x, $y, $c) {
     $!character-supply.emit([$x,$y,$c]);
     $!grid-string = '' if $!grid-string;
 }
@@ -87,13 +87,13 @@ multi method print-cell(Int $x, Int $y) {
     print "{move-cursor($x,$y)}{@!grid[$x;$y]}";
 }
 
-multi method print-cell(Int $x, Int $y, Str $char  ) {
+multi method print-cell(Int $x, Int $y, Str $char) {
     self.change-cell($x,$y,$char);
     print "{move-cursor($x,$y)}{$char}";
 }
 
 method print-grid {
-    print move-cursor(0,0) ~ self;
+    print move-cursor(0, 0) ~ self;
 }
 
 method Str {
