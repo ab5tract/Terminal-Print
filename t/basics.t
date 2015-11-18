@@ -1,7 +1,7 @@
 use Test;
 use lib 'lib';
 
-plan 16;
+#plan 16;
 
 use Terminal::Print; pass "Import Terminal::Print";
 
@@ -12,6 +12,12 @@ my @colors = <red magenta yellow white>;
 my $b;
 lives-ok { $b = Terminal::Print.new; }, "Can create a Terminal::Print object";
 
+lives-ok { my $t = Terminal::Print.new( :move-cursor-profile('universal') ) },
+    "Can create Terminal::Print object with print-profile 'universal'";
+
+dies-ok { my $t = Terminal::Print.new( :move-cursor-profile('nonexistent') ) },
+    "Cannot create Terminal::Print object with print-profile 'nonexistent'";
+
 lives-ok { do { sleep 1; $b.initialize-screen;  $b.shutdown-screen; } }, "Can initialize and shutdown screen";
 
 lives-ok {
@@ -21,8 +27,12 @@ lives-ok {
         for $b.grid-indices -> [$x,$y] {
             # pretty, .. but slow.
             #            $b[$x][$y] = colored('♥', @colors.roll);
+            #
+            # BUG: this does not do the right thing WRT .print-grid
+            #       (behavior should be the same as the working behavior)
+            #   $b.print-cell($x, $y, '♥');
             $b[$x][$y] = '♥';
-            $b.print-cell($x,$y);
+            $b.print-cell($x, $y);
         }
         sleep 0.5;
         $b.shutdown-screen;

@@ -8,28 +8,31 @@ module Terminal::Print::Commands {
 
     my Bool $use-ansi = True;
 
-    our sub enable-universal {
-        $use-ansi = !$use-ansi;
-    }
+    subset Terminal::Print::MoveCursorProfile is export where * ~~ / ^('ansi' | 'universal')$ /;
 
     BEGIN {
 
         my sub build-cursor-to-template {
-            my ($x,$y) = 13,13;
-            my $raw = qq:x{ tput cup $y $x };
+
+            my Str sub ansi( Int $x,  Int $y ) {
+                "\e[{$y+1};{$x+1}H";
+            }
+
+            my $raw = q:x{ tput cup 13 13 };
             # Replace the digits with format specifiers used
             # by sprintf
             $raw ~~ s:nth(*-1)[\d+] = "%d";
             $raw ~~ s:nth(*)[\d+]   = "%d";
-            # This sub replaces the parameters received from the
-            # output given by tput with the appropriate values.
-            # TODO: regex search might be inefficient;
-            # might want to investigate
-            my Str sub cursor-template( Int :$x,  Int :$y ) {
-                my $res = $use-ansi ?? "\e[{$y+1};{$x+1}H" !! sprintf($raw, $y + 1, $x + 1);
-                return $res;
+
+
+            my Str sub universal( Int $x, Int $y ) {
+                sprintf($raw, $y + 1, $x + 1)
             }
-            return &cursor-template;
+
+            return %(
+                        :&ansi,
+                        :&universal
+                    );
         }
 
         %human-command-names = %(
@@ -46,9 +49,15 @@ module Terminal::Print::Commands {
 
         for %human-command-names.kv -> $human,$command {
             given $human {
-                when 'move-cursor'  { %tput-commands{$command} = &( build-cursor-to-template ) }
-                when 'erase-char'   { %tput-commands{$command} = qq:x{ tput $command 1 } }
-                default             { %tput-commands{$command} = qq:x{ tput $command } }
+                when 'move-cursor'  {
+                    %tput-commands{$command} = build-cursor-to-template;
+                }
+                when 'erase-char'   {
+                    %tput-commands{$command} = qq:x{ tput $command 1 }
+                }
+                default             {
+                    %tput-commands{$command} = qq:x{ tput $command }
+                }
             }
             %human-commands{$human} = &( %tput-commands{$command} );
         }
@@ -63,17 +72,19 @@ module Terminal::Print::Commands {
         %attribute-values<rows>     = %*ENV<ROWS>    //= qq:x{ tput lines };
     }
 
-    sub move-cursor-template returns Code is export {
-        %human-commands<move-cursor>;
+    sub move-cursor-template( Terminal::Print::MoveCursorProfile $profile = 'ansi' ) returns Code is export {
+        %human-commands<move-cursor>{$profile};
     }
 
-    sub move-cursor( Int $x, Int $y ) is export {
-        %human-commands<move-cursor>( :$x, :$y );
+    sub move-cursor( Int $x, Int $y, Terminal::Print::MoveCursorProfile $profile = 'ansi' ) is export {
+        %human-commands<move-cursor><$profile>( $x, $y );
     }
 
-    sub cursor_to( Int $x, Int $y ) is export {
-        %human-commands<move-cursor>( :$x, :$y );
-    }
+    # Not sure if this has reason enough to persist.
+    #
+    #    sub cursor_to( Int $x, Int $y ) is export {
+    #        %human-commands<move-cursor>( :$x, :$y );
+    #    }
 
     sub tput( Str $command ) is export {
         die "Not a supported (or perhaps even valid) tput command"

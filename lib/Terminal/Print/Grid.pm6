@@ -15,7 +15,7 @@ class Terminal::Print::Grid::Column {
     }
 
     method ASSIGN-POS($i,$v) {
-        $!grid-object.change-cell($!column,$i,$v);
+        await $!grid-object.change-cell($!column,$i,$v);
     }
 
 }
@@ -35,13 +35,19 @@ has $.max-columns;
 has $.max-rows;
 has @.grid-indices;
 
-submethod BUILD( :$!max-columns, :$!max-rows ) {
+has &.move-cursor-template;
+
+has Terminal::Print::MoveCursorProfile $.move-cursor-profile;
+
+submethod BUILD( :$!max-columns, :$!max-rows, :$!move-cursor-profile = 'ansi' ) {
     @!grid-indices = (^$!max-columns X ^$!max-rows)>>.Array;
     for @!grid-indices -> [$x,$y] {
         @!grid[$x;$y] = Str.new(:value(" "));
     }
     $!character-supply = Supply.new;
     $!control-supply = Supply.new;
+
+    &!move-cursor-template = %T::human-commands<move-cursor>{ $!move-cursor-profile };
 }
 
 method initialize {
@@ -75,31 +81,34 @@ method initialize {
 }
 
 method shutdown {
-    $!control-supply.emit('close');
+    await start $!control-supply.emit('close');
 }
 
 method change-cell($x, $y, $c) {
-    $!character-supply.emit([$x,$y,$c]);
-    $!grid-string = '' if $!grid-string;
+    start {
+        $!character-supply.emit([$x,$y,$c]);
+        $!grid-string = '' if $!grid-string;
+    }
 }
 
 multi method print-cell(Int $x, Int $y) {
-    print "{move-cursor($x,$y)}{@!grid[$x;$y]}";
+    print "{&!move-cursor-template($x, $y)}{@!grid[$x;$y]}";
 }
 
 multi method print-cell(Int $x, Int $y, Str $char) {
-    self.change-cell($x,$y,$char);
-    print "{move-cursor($x,$y)}{$char}";
+    await self.change-cell($x, $y, $char).then({
+        print "{&!move-cursor-template($x, $y)}{$char}";
+    });
 }
 
 method print-grid {
-    print move-cursor(0, 0) ~ self;
+    print &!move-cursor-template(0, 0) ~ self;
 }
 
 method Str {
     unless $!grid-string {
         for ^$!max-rows -> $y {
-            $!grid-string ~= [~] ~@!grid[$_][$y] for ^$!max-columns;
+            $!grid-string ~= [~] ~@!grid[$_;$y] for ^$!max-columns;
         }
     }
     $!grid-string;

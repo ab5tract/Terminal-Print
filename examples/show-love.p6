@@ -31,7 +31,7 @@ my $hg := $b.grid-object('hearts');
 my $og := $b.grid-object(0);
 my $h3 := $b.clone-grid(0,'h3');
 
-$h3.grep-grid: {$^x == 21 || $^y == 12}, :o;
+#$h3.grep-grid: {$^x == 21 || $^y == 12}, :o;
 
 sleep 5;
 

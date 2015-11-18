@@ -41,7 +41,7 @@ my sub zig-zag( Int $start_y? ) {
 }
 
 # TODO: support async writing. this produces weird (random?) 'artifacting';
-#await do for ^5 { start { is-odd($_) ?? zig-zag($_*3) !! zig-zag((-$_)*3) } }
+await do for ^5 { start { is-odd($_) ?? zig-zag($_*3) !! zig-zag((-$_)*3) } }
 
 # waiting patiently produces expected outputs
 #await do for 0...7 { await do start { is-odd($_) ?? zig-zag($_*3) !! zig-zag(-$_*10) } }

@@ -3,8 +3,6 @@ unit class Terminal::Print;
 use Terminal::Print::Commands;
 my constant T = Terminal::Print::Commands;
 
-#use Terminal::Print::Grid;
-
 use Terminal::Print::Grid;
 
 has $!current-buffer;
@@ -13,30 +11,32 @@ has Terminal::Print::Grid $!current-grid;
 has @!buffers;
 has Terminal::Print::Grid @.grids;
 
-
 has @.grid-indices;
 has %!grid-name-map;
 
 has $.max-columns;
 has $.max-rows;
 
-method new {
+has Terminal::Print::MoveCursorProfile $.move-cursor-profile;
+
+method new( :$move-cursor-profile = 'ansi' ) {
     my $max-columns   = +%T::attribute-values<columns>;
     my $max-rows      = +%T::attribute-values<rows>;
 
-    my $grid = Terminal::Print::Grid.new( :$max-columns, :$max-rows );
+    my $grid = Terminal::Print::Grid.new( :$max-columns, :$max-rows, :$move-cursor-profile );
     my @grid-indices = $grid.grid-indices;
 
     self!bind-buffer( $grid, my $buffer = [] );
 
     self.bless(
                 :$max-columns, :$max-rows, :@grid-indices,
+                :$move-cursor-profile,
                     current-grid    => $grid,
                     current-buffer  => $buffer
               );
 }
 
-submethod BUILD( :$current-grid, :$current-buffer, :$!max-columns, :$!max-rows, :@grid-indices ) {
+submethod BUILD( :$current-grid, :$current-buffer, :$!max-columns, :$!max-rows, :@grid-indices, :$move-cursor-profile ) {
     push @!buffers, $current-buffer;
     push @!grids, $current-grid;
 
