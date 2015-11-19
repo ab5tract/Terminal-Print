@@ -1,4 +1,3 @@
-
 unit class Terminal::Print::Grid;
 
 class Terminal::Print::Grid::Column {
@@ -19,8 +18,6 @@ class Terminal::Print::Grid::Column {
     }
 
 }
-
-#class Terminal::Print::Grid {
 
 use Terminal::Print::Commands;
 
@@ -129,4 +126,3 @@ multi method EXISTS-POS($x) {
 multi method EXISTS-POS($x,$y) {
     @!grid[$x;$y]:exists;
 }
-#}

@@ -1,101 +1,88 @@
-module Terminal::Print::Commands {
+unit module Terminal::Print::Commands;
 
-    our %human-command-names;
-    our %human-commands;
-    our %tput-commands;
-    our %attributes;
-    our %attribute-values;
+our %human-command-names;
+our %human-commands;
+our %tput-commands;
+our %attributes;
+our %attribute-values;
 
-    my Bool $use-ansi = True;
+my Bool $use-ansi = True;
 
-    subset Terminal::Print::MoveCursorProfile is export where * ~~ / ^('ansi' | 'universal')$ /;
+subset Terminal::Print::MoveCursorProfile is export where * ~~ / ^('ansi' | 'universal')$ /;
 
-    BEGIN {
+BEGIN {
 
-        my sub build-cursor-to-template {
+    my sub build-cursor-to-template {
 
-            my Str sub ansi( Int $x,  Int $y ) {
-                "\e[{$y+1};{$x+1}H";
-            }
-
-            my $raw = q:x{ tput cup 13 13 };
-            # Replace the digits with format specifiers used
-            # by sprintf
-            $raw ~~ s:nth(*-1)[\d+] = "%d";
-            $raw ~~ s:nth(*)[\d+]   = "%d";
-
-
-            my Str sub universal( Int $x, Int $y ) {
-                sprintf($raw, $y + 1, $x + 1)
-            }
-
-            return %(
-                        :&ansi,
-                        :&universal
-                    );
+        my Str sub ansi( Int $x,  Int $y ) {
+            "\e[{$y+1};{$x+1}H";
         }
 
-        %human-command-names = %(
-            'clear'              => 'clear',
-            'save-screen'        => 'smcup',
-            'restore-screen'     => 'rmcup',
-            'pos-cursor-save'    => 'sc',
-            'pos-cursor-restore' => 'rc',
-            'hide-cursor'        => 'civis',
-            'show-cursor'        => 'cnorm',
-            'move-cursor'        => 'cup',
-            'erase-char'         => 'ech',
-        );
+        my $raw = q:x{ tput cup 13 13 };
+        # Replace the digits with format specifiers used
+        # by sprintf
+        $raw ~~ s:nth(*-1)[\d+] = "%d";
+        $raw ~~ s:nth(*)[\d+]   = "%d";
 
-        for %human-command-names.kv -> $human,$command {
-            given $human {
-                when 'move-cursor'  {
-                    %tput-commands{$command} = build-cursor-to-template;
-                }
-                when 'erase-char'   {
-                    %tput-commands{$command} = qq:x{ tput $command 1 }
-                }
-                default             {
-                    %tput-commands{$command} = qq:x{ tput $command }
-                }
-            }
-            %human-commands{$human} = &( %tput-commands{$command} );
+
+        my Str sub universal( Int $x, Int $y ) {
+            sprintf($raw, $y + 1, $x + 1)
         }
 
-        %attributes = %(
-            'columns'       => 'cols',
-            'rows'          => 'lines',
-            'lines'         => 'lines',
-        );
-
-        %attribute-values<columns>  = %*ENV<COLUMNS> //= qq:x{ tput cols };
-        %attribute-values<rows>     = %*ENV<ROWS>    //= qq:x{ tput lines };
+        return %(
+                    :&ansi,
+                    :&universal
+                );
     }
 
-    sub move-cursor-template( Terminal::Print::MoveCursorProfile $profile = 'ansi' ) returns Code is export {
-        %human-commands<move-cursor>{$profile};
+    %human-command-names = %(
+        'clear'              => 'clear',
+        'save-screen'        => 'smcup',
+        'restore-screen'     => 'rmcup',
+        'pos-cursor-save'    => 'sc',
+        'pos-cursor-restore' => 'rc',
+        'hide-cursor'        => 'civis',
+        'show-cursor'        => 'cnorm',
+        'move-cursor'        => 'cup',
+        'erase-char'         => 'ech',
+    );
+
+    for %human-command-names.kv -> $human,$command {
+        given $human {
+            when 'move-cursor'  {
+                %tput-commands{$command} = build-cursor-to-template;
+            }
+            when 'erase-char'   {
+                %tput-commands{$command} = qq:x{ tput $command 1 }
+            }
+            default             {
+                %tput-commands{$command} = qq:x{ tput $command }
+            }
+        }
+        %human-commands{$human} = &( %tput-commands{$command} );
     }
 
-    sub move-cursor( Int $x, Int $y, Terminal::Print::MoveCursorProfile $profile = 'ansi' ) is export {
-        %human-commands<move-cursor><$profile>( $x, $y );
-    }
+    %attributes = %(
+        'columns'       => 'cols',
+        'rows'          => 'lines',
+        'lines'         => 'lines',
+    );
 
-    # Not sure if this has reason enough to persist.
-    #
-    #    sub cursor_to( Int $x, Int $y ) is export {
-    #        %human-commands<move-cursor>( :$x, :$y );
-    #    }
-
-    sub tput( Str $command ) is export {
-        die "Not a supported (or perhaps even valid) tput command"
-            unless %tput-commands{$command};
-
-        %tput-commands{$command};
-    }
-
+    %attribute-values<columns>  = %*ENV<COLUMNS> //= qq:x{ tput cols };
+    %attribute-values<rows>     = %*ENV<ROWS>    //= qq:x{ tput lines };
 }
 
-sub EXPORT( $universal? ) {
-    Terminal::Print::Commands::enable-universal if $universal;
-    return %();
+sub move-cursor-template( Terminal::Print::MoveCursorProfile $profile = 'ansi' ) returns Code is export {
+    %human-commands<move-cursor>{$profile};
+}
+
+sub move-cursor( Int $x, Int $y, Terminal::Print::MoveCursorProfile $profile = 'ansi' ) is export {
+    %human-commands<move-cursor><$profile>( $x, $y );
+}
+
+sub tput( Str $command ) is export {
+    die "Not a supported (or perhaps even valid) tput command"
+        unless %tput-commands{$command};
+
+    %tput-commands{$command};
 }
