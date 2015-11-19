@@ -9,10 +9,8 @@ $p.initialize-screen;
 
 #say $p.grid-indices.perl;
 
-#my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
-my @alphabet = '─'..'╿';
-#for @char-ranges[0].pick(*) -> $alphabet {
-for ^5 {
+my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
+for @char-ranges.pick(*) -> @alphabet {
     for $p.grid-indices -> [$x,$y] {
         $p.print-cell($x, $y, @alphabet.roll)
             if $y %% 7 || ($x %% (0..5).roll || $y %% (0..6).roll);
