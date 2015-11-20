@@ -36,14 +36,16 @@ my sub zig-zag( Int $start_y? ) {
             $b[$x-2][$cur_y-1] = ' ';
             $b.print-cell($x-2,$cur_y-1);
         }
-        sleep 0.1;
+        sleep (^0.9).roll;
     }
 }
 
-# TODO: support async writing. this produces weird (random?) 'artifacting';
-await do for ^5 { sleep ( 0.1 .. 0.5 ).roll; start { is-odd($_) ?? zig-zag($_*3) !! zig-zag((-$_)*3) } }
 
-# waiting patiently produces expected outputs
+# ASYNC WORKS
+# but this looks stupid.
+# TODO: Make this a better example
+await do for ^12 { start { sleep ( 0.1 .. 0.5 ).roll; is-odd($_) ?? zig-zag($_*3) !! zig-zag((-$_)*3) } }
+
 #await do for 0...7 { await do start { is-odd($_) ?? zig-zag($_*3) !! zig-zag(-$_*10) } }
 
 LEAVE { $b.shutdown-screen }

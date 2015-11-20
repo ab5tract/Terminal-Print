@@ -56,14 +56,19 @@ method initialize {
             react {
                 whenever $!character-supply -> [$x,$y,$c] {
                     @!grid[$x;$y] = $c;
+                    $!grid-string = '' if $!grid-string;
                 }
-                whenever $!control-supply -> $command {
+                whenever $!control-supply -> [$command, @args] {
                     given $command {
                         # I have a feeling this isn't actually doing what I think it's doing
                         # Probably need to rewrite this whole react block as a Promise
                         # and keep the vow here. Then we can just spin up a new Promise whenever
                         # initialize gets called again, or throw an exception if the current 'React Promise'
                         # is not yet kept.
+                        when 'print' {
+                            my ($x, $y) = @args;
+                            print self.cell-string($x, $y);
+                        }
                         when 'close' { done; }
                     }
                     $initialized = False;
@@ -72,29 +77,34 @@ method initialize {
         }
     }
 
+    # this is deferred until after the full construction of the grid object
+    # so that we can pass it properly into the column constructor.
     for ^$!max-columns -> $x {
         @!grid[$x] //= Terminal::Print::Grid::Column.new( :grid-object(self), :column($x), :$!max-rows );
     }
 }
 
 method shutdown {
-    await start $!control-supply.emit('close');
+    await start $!control-supply.emit(['close']);
 }
 
 method change-cell($x, $y, $c) {
     start {
         $!character-supply.emit([$x,$y,$c]);
-        $!grid-string = '' if $!grid-string;
     }
 }
 
+method cell-string(Int $x, Int $y) {
+    "{&!move-cursor-template($x, $y)}{@!grid[$x;$y]}";
+}
+
 multi method print-cell(Int $x, Int $y) {
-    print "{&!move-cursor-template($x, $y)}{@!grid[$x;$y]}";
+    $!control-supply.emit(['print', [$x, $y]]);
 }
 
 multi method print-cell(Int $x, Int $y, Str $char) {
     await self.change-cell($x, $y, $char).then({
-        print "{&!move-cursor-template($x, $y)}{$char}";
+        $!control-supply.emit(['print', [$x, $y]]);
     });
 }
 
