@@ -13,7 +13,7 @@ my @indices = $t.grid-indices;
 #await do for ^$t.max-rows -> $x {
 #await do for ^10 -> $x {
 
-my @alphabet = 'v'..'z';
+my @alphabet = 'j'..'z';
 await do for (^$t.max-rows).rotor(10, :partial).kv -> $thread,@ys {
     my $char = @alphabet[$thread];
     start {
