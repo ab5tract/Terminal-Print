@@ -39,7 +39,7 @@ has Terminal::Print::MoveCursorProfile $.move-cursor-profile;
 submethod BUILD( :$!max-columns, :$!max-rows, :$!move-cursor-profile = 'ansi' ) {
     @!grid-indices = (^$!max-columns X ^$!max-rows)>>.Array;
     for @!grid-indices -> [$x,$y] {
-        @!grid[$x;$y] = Str.new(:value(" "));
+        @!grid[$x;$y] = " ";
     }
     $!character-supply = Supply.new;
     $!control-supply = Supply.new;

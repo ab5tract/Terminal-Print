@@ -19,8 +19,9 @@ await do for (^$t.max-rows).rotor(10, :partial).kv -> $thread,@ys {
     start {
         sleep $thread / 2.3;
         my @xs := $thread %% 2 ?? (^$t.max-columns).reverse !! ^$t.max-columns;
+        my @ys-rev = @ys.reverse;
         for @xs -> $x {
-            my @yss := $thread %% 2 ?? @ys.reverse !! @ys;
+            my @yss := $thread %% 2 ?? @ys-rev !! @ys;
             for @yss -> $y {
                 $t.print-cell($x,$y,$char);
             }
