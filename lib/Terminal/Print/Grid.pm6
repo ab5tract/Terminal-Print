@@ -25,6 +25,9 @@ constant T = Terminal::Print::Commands;
 
 has @.grid;
 has $!grid-string;
+
+has $!character-supplier;
+has $!control-supplier;
 has $!character-supply;
 has $!control-supply;
 
@@ -41,8 +44,10 @@ submethod BUILD( :$!max-columns, :$!max-rows, :$!move-cursor-profile = 'ansi' ) 
     for @!grid-indices -> [$x,$y] {
         @!grid[$x;$y] = Str.new(:value(" "));
     }
-    $!character-supply = Supply.new;
-    $!control-supply = Supply.new;
+    $!character-supplier = Supplier.new;
+    $!control-supplier = Supplier.new;
+    $!character-supply = $!character-supplier.Supply;
+    $!control-supply = $!control-supplier.Supply;
 
     &!move-cursor-template = %T::human-commands<move-cursor>{ $!move-cursor-profile };
 }
@@ -53,6 +58,7 @@ method initialize {
     unless $initialized {
         start {
             $initialized = True;
+            my Str $frame-string;
             react {
                 whenever $!character-supply -> [$x,$y,$c] {
                     @!grid[$x;$y] = $c;
@@ -67,12 +73,19 @@ method initialize {
                         # is not yet kept.
                         when 'print' {
                             my ($x, $y) = @args;
+#                            $frame-string ~= self.cell-string($x, $y);
                             print self.cell-string($x, $y);
                         }
                         when 'close' { done; }
                     }
                     $initialized = False;
                 }
+                #                whenever Supply.interval(0.05) {
+                #                    if $frame-string {
+                #                        print $frame-string;
+                #                        $frame-string = '';
+                #                    }
+    #                }
             }
         }
     }
@@ -85,12 +98,12 @@ method initialize {
 }
 
 method shutdown {
-    await start $!control-supply.emit(['close']);
+    await start $!control-supplier.emit(['close']);
 }
 
 method change-cell($x, $y, $c) {
     start {
-        $!character-supply.emit([$x,$y,$c]);
+        $!character-supplier.emit([$x,$y,$c]);
     }
 }
 
@@ -99,12 +112,12 @@ method cell-string(Int $x, Int $y) {
 }
 
 multi method print-cell(Int $x, Int $y) {
-    $!control-supply.emit(['print', [$x, $y]]);
+    $!control-supplier.emit(['print', [$x, $y]]);
 }
 
 multi method print-cell(Int $x, Int $y, Str $char) {
     await self.change-cell($x, $y, $char).then({
-        $!control-supply.emit(['print', [$x, $y]]);
+        $!control-supplier.emit(['print', [$x, $y]]);
     });
 }
 
