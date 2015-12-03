@@ -66,14 +66,9 @@ method initialize {
                 }
                 whenever $!control-supply -> [$command, @args] {
                     given $command {
-                        # I have a feeling this isn't actually doing what I think it's doing
-                        # Probably need to rewrite this whole react block as a Promise
-                        # and keep the vow here. Then we can just spin up a new Promise whenever
-                        # initialize gets called again, or throw an exception if the current 'React Promise'
-                        # is not yet kept.
                         when 'print' {
                             my ($x, $y) = @args;
-#                            $frame-string ~= self.cell-string($x, $y);
+                            #   $frame-string ~= self.cell-string($x, $y);
                             print self.cell-string($x, $y);
                         }
                         when 'close' { done; }
@@ -85,7 +80,7 @@ method initialize {
                 #                        print $frame-string;
                 #                        $frame-string = '';
                 #                    }
-    #                }
+                #   }
             }
         }
     }
