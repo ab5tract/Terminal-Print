@@ -48,7 +48,7 @@ submethod BUILD( :$current-grid, :$current-buffer, :$!max-columns, :$!max-rows, 
 
 method !bind-buffer( $grid, $new-buffer is rw ) {
     for $grid.grid-indices -> [$x,$y] {
-        $new-buffer[$x + ($y * $grid.max-rows)] ::= $grid[$x][$y];
+        $new-buffer[$x + ($y * $grid.max-rows)] := $grid[$x][$y];
     }
 }
 

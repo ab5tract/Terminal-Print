@@ -17,10 +17,10 @@ my @xs = @columns.pick(*).rotor(5, :partial);
 while +@xs {
     my @x-range = |@xs.pop;
     await do for @x-range -> $i {
-        start { 
+        start {
             for ^$t.max-rows -> $y {
                 my $string-printed;
-                until (^10).roll == 0 and $string-printed {
+                until (^20).roll == 0 and $string-printed {
                     $t.print-cell($i, $y, @chars.roll);
                     $string-printed = True;
                 }

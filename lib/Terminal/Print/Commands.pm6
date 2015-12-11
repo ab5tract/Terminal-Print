@@ -1,5 +1,9 @@
 unit module Terminal::Print::Commands;
 
+# Otherwise the dimensions to be printed will always be the size of the
+# first terminal window you ran/installed the module on.
+#no precompilation;
+
 our %human-command-names;
 our %human-commands;
 our %tput-commands;
