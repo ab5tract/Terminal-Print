@@ -30,16 +30,12 @@ perl6 -Ilib examples/zig-zag.p6
 
 Additionally, if your terminal supports ANSI escape codes, then you may set the environment variable `USE_ANSI` to a non-empty value.
 
-## TODO ##
 
-- pass a single 'printer' supply as a build argument to all the columns/cells
-- add row access ($row := $grid[\*][$y] for $cols) [WIP]
-- add async mechanisms for printing "channels" (guardian processes which update
-  specific sections of the screen)
-- complete the zig-zag example and add others
-- split tests into visual and functional. only run functional on install
-- add Terminal::Print::Golf module which provides some quick-access constants and functionality
+# STATUS: ALPHA
+
+This module is currently under nourished. It hungers for a proper test suite, documentation, and a truly crash free asynchronous implementation.
+
+The core of the 'tricky' parts is all there, however, in `Terminal::Print::Commands`. With that you can wrap your own printer very easily.
 
 
-
-Copyright 2015, John Haltiwanger. Released under the Artistic License 2.0.
+Copyright 2015-2016, John Haltiwanger. Released under the Artistic License 2.0.
