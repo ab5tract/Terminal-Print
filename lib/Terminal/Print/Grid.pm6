@@ -31,6 +31,8 @@ has $!control-supplier;
 has $!character-supply;
 has $!control-supply;
 
+has $.frame-time;
+
 has $.max-columns;
 has $.max-rows;
 has @.grid-indices;
@@ -39,7 +41,7 @@ has &.move-cursor-template;
 
 has Terminal::Print::MoveCursorProfile $.move-cursor-profile;
 
-submethod BUILD( :$!max-columns, :$!max-rows, :$!move-cursor-profile = 'ansi' ) {
+submethod BUILD( :$!max-columns, :$!max-rows, :$!move-cursor-profile = 'ansi', :$frame-time ) {
     @!grid-indices = (^$!max-columns X ^$!max-rows)>>.Array;
     for @!grid-indices -> [$x,$y] {
         @!grid[$x;$y] = " ";
@@ -50,6 +52,8 @@ submethod BUILD( :$!max-columns, :$!max-rows, :$!move-cursor-profile = 'ansi' ) 
     $!control-supply = $!control-supplier.Supply;
 
     &!move-cursor-template = %T::human-commands<move-cursor>{ $!move-cursor-profile };
+
+    $!frame-time = $frame-time // 0.05;
 }
 
 method initialize {
@@ -67,20 +71,18 @@ method initialize {
                 whenever $!control-supply -> [$command, @args] {
                     given $command {
                         when 'print' {
-                            my ($x, $y) = @args;
-                            #   $frame-string ~= self.cell-string($x, $y);
-                            print self.cell-string($x, $y);
+                            # print self.cell-string(|@args);
+                            $frame-string ~= self.cell-string(|@args);
                         }
-                        when 'close' { done; }
+                        when 'close' { $initialized = False; done; }
                     }
-                    $initialized = False;
                 }
-                #                whenever Supply.interval(0.05) {
-                #                    if $frame-string {
-                #                        print $frame-string;
-                #                        $frame-string = '';
-                #                    }
-                #   }
+                whenever Supply.interval($!frame-time) {
+                   if $frame-string {
+                       print $frame-string;
+                       $frame-string = '';
+                   }
+                }
             }
         }
     }
