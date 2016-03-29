@@ -14,7 +14,7 @@
   ],
   "description" : "Access terminfo-based console escape sequences in a handy grid interface",
   "test-depends" : [ ],
-  "version" : "0.03",
+  "version" : "0.04",
   "authors" : [
     "John Haltiwanger"
   ]
