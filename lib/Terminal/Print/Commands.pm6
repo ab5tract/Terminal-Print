@@ -23,20 +23,24 @@ BEGIN {
             "\e[{$y+1};{$x+1}H";
         }
 
-        my $term;
-        if %valid-terminals{ %*ENV<TERM>//'' } -> $t {
-            $term = $t;
+        my $raw;
+        if q:x{ which tput } {
+            my $term;
+            if %valid-terminals{ %*ENV<TERM>//'' } -> $t {
+                $term = $t;
+            }
+            $term ||= 'xterm';
+
+            $raw = qq:x{ tput -T $term cup 13 13 };
+            # Replace the digits with format specifiers used
+            # by sprintf
+            $raw ~~ s:nth(*-1)[\d+] = "%d";
+            $raw ~~ s:nth(*)[\d+]   = "%d";
         }
-        $term ||= 'xterm';
-
-        my $raw = qq:x{ tput -T $term cup 13 13 };
-        # Replace the digits with format specifiers used
-        # by sprintf
-        $raw ~~ s:nth(*-1)[\d+] = "%d";
-        $raw ~~ s:nth(*)[\d+]   = "%d";
-
+        $raw ||= '';
 
         my Str sub universal( Int $x, Int $y ) {
+            warn "universal mode must have access to tput" unless $raw;
             sprintf($raw, $y + 1, $x + 1)
         }
 
