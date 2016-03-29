@@ -2,7 +2,7 @@ unit module Terminal::Print::Commands;
 
 # Otherwise the dimensions to be printed will always be the size of the
 # first terminal window you ran/installed the module on.
-#no precompilation;
+no precompilation;
 
 our %human-command-names;
 our %human-commands;
@@ -10,9 +10,10 @@ our %tput-commands;
 our %attributes;
 our %attribute-values;
 
-my Bool $use-ansi = True;
+subset Terminal::Print::MoveCursorProfile is export where * ~~ / ^('ansi' | 'universal' | 'debug')$ /;
 
-subset Terminal::Print::MoveCursorProfile is export where * ~~ / ^('ansi' | 'universal')$ /;
+# we can add more, but there is a qq:x call so whitelist is the way to go.
+my %valid-terminals = <xterm xterm-256color vt100> Z=> True;
 
 BEGIN {
 
@@ -22,7 +23,13 @@ BEGIN {
             "\e[{$y+1};{$x+1}H";
         }
 
-        my $raw = q:x{ tput cup 13 13 };
+        my $term;
+        if %valid-terminals{ %*ENV<TERM>//'' } -> $t {
+            $term = $t;
+        }
+        $term ||= 'xterm';
+
+        my $raw = qq:x{ tput -T $term cup 13 13 };
         # Replace the digits with format specifiers used
         # by sprintf
         $raw ~~ s:nth(*-1)[\d+] = "%d";
