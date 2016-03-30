@@ -9,10 +9,11 @@ $t.initialize-screen;
 
 my @indices = $t.grid-indices;
 
-my @chars = '─'..'╿';
+#my @chars = '─'..'╿';
+my @chars = 'ァ'..'ヿ';
 my @columns = ^$t.max-columns;
 
-my @xs = @columns.pick(*).rotor(5, :partial);
+my @xs = @columns.pick(*).grep(* %% 6).rotor(5, :partial);
 
 while +@xs {
     my @x-range = |@xs.pop;
@@ -20,8 +21,9 @@ while +@xs {
         start {
             for ^$t.max-rows -> $y {
                 my $string-printed;
-                until (^20).roll == 0 and $string-printed {
-                    $t.print-cell($i, $y, @chars.roll);
+                last if ^21 .roll == 7;
+                until ^42 .roll == 0 and $string-printed {
+                    $t.print-cell($i, $y, @chars.roll) unless ^5 .roll == 3;
                     $string-printed = True;
                 }
             }
