@@ -57,33 +57,30 @@ submethod BUILD( :$!max-columns, :$!max-rows, :$!move-cursor-profile = 'ansi', :
 }
 
 method initialize {
-    state $initialized;
-
-    unless $initialized {
-        start {
-            $initialized = True;
-            my Str $frame-string;
-            react {
-                whenever $!character-supply -> [$x,$y,$c] {
-                    @!grid[$x;$y] = $c;
-                    $!grid-string = '' if $!grid-string;
-                }
-                whenever $!control-supply -> [$command, @args] {
-                    given $command {
-                        when 'print' {
-                            # print self.cell-string(|@args);
-                            $frame-string ~= self.cell-string(|@args);
-                        }
-                        when 'close' { $initialized = False; done; }
+    my $p = Promise.new;
+    start {
+        my Str $frame-string;
+        react {
+            whenever $!character-supply -> [$x,$y,$c] {
+                @!grid[$x;$y] = $c;
+                $!grid-string = '' if $!grid-string;
+            }
+            whenever $!control-supply -> [$command, @args] {
+                given $command {
+                    when 'print' {
+                        # print self.cell-string(|@args);
+                        $frame-string ~= self.cell-string(|@args);
                     }
-                }
-                whenever Supply.interval($!frame-time) {
-                   if $frame-string {
-                       print $frame-string;
-                       $frame-string = '';
-                   }
+                    when 'close' { done }
                 }
             }
+            whenever Supply.interval($!frame-time) {
+               if $frame-string {
+                   print $frame-string;
+                   $frame-string = '';
+               }
+            }
+            default { $p.keep }
         }
     }
 
@@ -92,6 +89,8 @@ method initialize {
     for ^$!max-columns -> $x {
         @!grid[$x] //= Terminal::Print::Grid::Column.new( :grid-object(self), :column($x), :$!max-rows );
     }
+
+    $p;
 }
 
 method shutdown {

@@ -76,7 +76,7 @@ method clear-screen {
 }
 
 method initialize-screen {
-    $!current-grid.initialize;
+    await $!current-grid.initialize;
     print %T::human-commands<save-screen>;
     self.hide-cursor;
     self.clear-screen;
