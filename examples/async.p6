@@ -15,18 +15,20 @@ my @indices = $t.grid-indices;
 
 my @alphabet = 'j'..'z';
 
-my $rotor := (^$t.max-rows).rotor(10, :partial)>>.Array;
+my @rotor = (^$t.max-rows).rotor(10, :partial)>>.Array;
 my $thread = 0;
 
-await do for $rotor -> @ys {
+sub choosey() { <1 2>.pick %% 2 }
+
+await do for @rotor -> @ys {
     my $char := @alphabet.pick;
     my $p = start {
-        my @xs = ^3 %% 2 ?? (^$t.max-columns).reverse !! ^$t.max-columns;
-        my @ys-rev = @ys.reverse;
+        my @xs = ^3 .pick %% 2 ?? (^$t.max-columns).reverse !! ^$t.max-columns;
+        my @ys-rev := @ys.reverse;
         for @xs -> $x {
-            my @yss := $thread %% 2 ?? @ys-rev !! @ys;
+            my @yss := choosey() ?? @ys-rev !! @ys;
             for @yss -> $y {
-                $t.print-cell($x,$y,$char);
+                $t.print-cell($x, $y, choosey() ?? $char !! $char.uc);
             }
         }
     }
