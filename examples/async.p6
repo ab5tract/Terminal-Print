@@ -15,12 +15,13 @@ my @indices = $t.grid-indices;
 
 my @alphabet = 'j'..'z';
 
+my $rotor := (^$t.max-rows).rotor(10, :partial)>>.Array;
 my $thread = 0;
-await do for (^$t.max-rows).rotor(10, :partial) -> @ys {
-    my $char = @alphabet[$thread];
+
+await do for $rotor -> @ys {
+    my $char := @alphabet.pick;
     my $p = start {
-        sleep $thread / 2.3;
-        my @xs := $thread %% 2 ?? (^$t.max-columns).reverse !! ^$t.max-columns;
+        my @xs = ^3 %% 2 ?? (^$t.max-columns).reverse !! ^$t.max-columns;
         my @ys-rev = @ys.reverse;
         for @xs -> $x {
             my @yss := $thread %% 2 ?? @ys-rev !! @ys;
@@ -29,7 +30,6 @@ await do for (^$t.max-rows).rotor(10, :partial) -> @ys {
             }
         }
     }
-    $thread++;
     $p
 }
 
