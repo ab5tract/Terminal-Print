@@ -44,7 +44,8 @@ has Terminal::Print::MoveCursorProfile $.move-cursor-profile;
 submethod BUILD( :$!max-columns, :$!max-rows, :$!move-cursor-profile = 'ansi', :$frame-time ) {
     @!grid-indices = (^$!max-columns X ^$!max-rows)>>.Array;
     for @!grid-indices -> [$x,$y] {
-        @!grid[$x;$y] = " ";
+        @!grid[$x] //= [];
+        @!grid[$x][$y] = " ";
     }
     $!character-supplier = Supplier.new;
     $!control-supplier = Supplier.new;
@@ -69,6 +70,8 @@ method initialize {
                 given $command {
                     when 'print' {
                         # print self.cell-string(|@args);
+                        #
+                        # In this case, @args ~~ [x, y]
                         $frame-string ~= self.cell-string(|@args);
                     }
                     when 'close' { done }
@@ -104,7 +107,7 @@ method change-cell($x, $y, $c) {
 }
 
 method cell-string(Int $x, Int $y) {
-    "{&!move-cursor-template($x, $y)}{@!grid[$x;$y]}";
+    "{&!move-cursor-template($x, $y)}{@!grid[$x][$y]}";
 }
 
 multi method print-cell(Int $x, Int $y) {
@@ -135,7 +138,7 @@ multi method AT-POS($x) {
 }
 
 multi method AT-POS($x,$y) {
-    @!grid[$x;$y];
+    @!grid[$x][$y];
 }
 
 multi method EXISTS-POS($x) {
@@ -143,5 +146,5 @@ multi method EXISTS-POS($x) {
 }
 
 multi method EXISTS-POS($x,$y) {
-    @!grid[$x;$y]:exists;
+    @!grid[$x][$y]:exists;
 }
