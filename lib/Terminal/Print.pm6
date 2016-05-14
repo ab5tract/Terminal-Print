@@ -76,7 +76,7 @@ method clear-screen {
 }
 
 method initialize-screen {
-    await $!current-grid.initialize;
+    $!current-grid.initialize;
     print %T::human-commands<save-screen>;
     self.hide-cursor;
     self.clear-screen;
@@ -153,7 +153,7 @@ multi method grid-object( Int $index ) {
 multi method grid-object( Str $name ) {
     die "No grid has been named $name" unless my $grid-index = %!grid-name-map{$name};
     @!grids[$grid-index];
-} 
+}
 
 multi method print-cell( Int $x, Int $y ) {
     $!current-grid.print-cell($x,$y);
@@ -276,10 +276,10 @@ screen of hearts?'
 So: async (as mentioned above), testing, and debugging are current pain points.
 Contributions welcome.
 
-=head2 Why not just use L<NativeCall> and C<ncurses>? 
+=head2 Why not just use L<NativeCall> and C<ncurses>?
 
 I tried that first and it wasn't any fun. C<ncurses> unicode support is
-admirable considering the age and complexity of the library, but it 
+admirable considering the age and complexity of the library, but it
 still feels bolted on.
 
 C<ncurses> is not re-entrant, either, which would nix one of the main benefits
@@ -294,4 +294,3 @@ It's not currently in the test suite and I wonder if it is actually necessary.
 If we do keep it we should move it to Terminal::Print::Grid.
 
 =end pod
-

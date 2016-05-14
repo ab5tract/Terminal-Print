@@ -12,10 +12,9 @@ our %attribute-values;
 
 subset Terminal::Print::MoveCursorProfile is export where * ~~ / ^('ansi' | 'universal' | 'debug')$ /;
 
-# we can add more, but there is a qq:x call so whitelist is the way to go.
-my %valid-terminals = <xterm xterm-256color vt100> Z=> True;
-
 BEGIN {
+    # we can add more, but there is a qq:x call so whitelist is the way to go.
+    my %valid-terminals = <xterm xterm-256color vt100> X=> True;
 
     my sub build-cursor-to-template {
 
@@ -25,12 +24,10 @@ BEGIN {
 
         my $raw;
         if q:x{ which tput } {
-            my $term;
-            if %valid-terminals{ %*ENV<TERM>//'' } -> $t {
-                $term = $t;
-            }
-            $term ||= 'xterm';
+            die 'Please update %valid-terminals with your desired TERM configuration and submit a PR if it works'
+                unless %valid-terminals{ %*ENV<TERM>//'' };
 
+            my $term = %*ENV<TERM>;
             $raw = qq:x{ tput -T $term cup 13 13 };
             # Replace the digits with format specifiers used
             # by sprintf
@@ -44,9 +41,12 @@ BEGIN {
             sprintf($raw, $y + 1, $x + 1)
         }
 
+        my sub debug(Int $x, Int $y) { my $code = ansi($x, $y).comb.join(' '); print $code; $code }
+
         return %(
                     :&ansi,
-                    :&universal
+                    :&universal,
+                    :&debug
                 );
     }
 
@@ -88,11 +88,11 @@ BEGIN {
 }
 
 sub move-cursor-template( Terminal::Print::MoveCursorProfile $profile = 'ansi' ) returns Code is export {
-    %human-commands<move-cursor>{$profile};
+    %human-commands{'move-cursor'}{$profile};
 }
 
 sub move-cursor( Int $x, Int $y, Terminal::Print::MoveCursorProfile $profile = 'ansi' ) is export {
-    %human-commands<move-cursor><$profile>( $x, $y );
+    %human-commands{'move-cursor'}{$profile}( $x, $y );
 }
 
 sub tput( Str $command ) is export {

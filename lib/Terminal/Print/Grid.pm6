@@ -40,6 +40,8 @@ has @.grid-indices;
 has &.move-cursor-template;
 
 has Terminal::Print::MoveCursorProfile $.move-cursor-profile;
+subset Boundary::X where * < $!max-columns;
+subset Boundary::Y where * < $!max-rows;
 
 submethod BUILD( :$!max-columns, :$!max-rows, :$!move-cursor-profile = 'ansi', :$frame-time ) {
     @!grid-indices = (^$!max-columns X ^$!max-rows)>>.Array;
@@ -111,13 +113,21 @@ method cell-string(Int $x, Int $y) {
 }
 
 multi method print-cell(Int $x, Int $y) {
-    $!control-supplier.emit(['print', [$x, $y]]);
+    if $x >= $!max-columns or $y >= $!max-rows {
+        warn "You have provided an out of bounds value -- x: $x\ty: $y";
+    } else {
+        $!control-supplier.emit(['print', [$x, $y]]);
+    }
 }
 
 multi method print-cell(Int $x, Int $y, Str $char) {
-    await self.change-cell($x, $y, $char).then({
-        $!control-supplier.emit(['print', [$x, $y]]);
-    });
+    if $x >= $!max-columns or $y >= $!max-rows {
+        warn "You have provided an out of bounds value -- x: $x\ty: $y";
+    } else {
+        await self.change-cell($x, $y, $char).then({
+            $!control-supplier.emit(['print', [$x, $y]]);
+        });
+    }
 }
 
 method print-grid {
