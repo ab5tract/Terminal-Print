@@ -6,7 +6,7 @@ my constant T = Terminal::Print::Commands;
 use Terminal::Print::Grid;
 
 has $!current-buffer;
-has Terminal::Print::Grid $!current-grid;
+has Terminal::Print::Grid $.current-grid;
 
 has @!buffers;
 has Terminal::Print::Grid @.grids;
@@ -170,6 +170,9 @@ multi method print-cell( Int $x, Int $y, Str $c ) {
     $!current-grid.print-cell($x,$y,$c);
 }
 
+method change-cell( Int $x, Int $y, Str $c ) {
+    $!current-grid.change-cell($x,$y,$c);
+}
 #### buffer stuff
 
 multi method buffer( Int $index ) {
@@ -224,6 +227,10 @@ method column-range {
 
 method row-range {
     $!current-grid.row-range;
+}
+
+method Str {
+    ~$!current-grid;
 }
 
 

@@ -2,7 +2,7 @@ use Test;
 use lib 'lib';
 
 chdir('t');
-plan 8;
+plan 10;
 
 sub slurp-corpus($topic) {
     "corpus/$topic".IO.slurp;
@@ -27,24 +27,16 @@ ok $b.move-cursor-profile eq 'debug', "Our test object has a .move-cursor-profil
 ok $b.print-command('save-screen') eq slurp-corpus('save-screen'), ".save-screen matches corpus";
 ok $b.print-command('restore-screen') eq slurp-corpus('restore-screen'), ".restore-screen matches corpus";
 
-# lives-ok {
-#     do {
-#         sleep 0.5;
-#         $b.initialize-screen;
-#         for $b.grid-indices -> [$x,$y] {
-#             # pretty, .. but slow.
-#             #            $b[$x][$y] = colored('♥', @colors.roll);
-#             #
-#             # BUG: this does not do the right thing WRT .print-grid
-#             #       (behavior should be the same as the working behavior)
-#             #   $b.print-cell($x, $y, '♥');
-#             $b[$x][$y] = '♥';
-#             $b.print-cell($x, $y);
-#         }
-#         sleep 0.5;
-#         $b.Valid::Char-screen;
-#     }
-# }, "Can print a screen full of hearts one at a time";
+lives-ok {
+    do {
+        for $b.grid-indices -> [$x,$y] {
+            $b.change-cell($x, $y, '♥');
+        }
+    }
+}, "Can .change-cell a grid to be full of hearts, one at a time";
+
+ok ~$b eq slurp-corpus('ansi-hearts'), "Stringifying the grid of hearts matches the corpus file 'ansi-hearts'";
+
 #
 # lives-ok {
 #     do {
