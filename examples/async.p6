@@ -18,7 +18,8 @@ my @alphabet = 'j'..'z';
 my @rotor = (^$t.max-rows).rotor(10, :partial)>>.Array;
 my $thread = 0;
 
-sub choosey() { <1 2>.pick %% 2 }
+# just a coinflipper, at the moment.
+sub choosey() { <1 2>.roll %% 2 }
 
 await do for @rotor -> @ys {
     my $char := @alphabet.pick;

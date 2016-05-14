@@ -26,16 +26,28 @@ Check out some animations:
 ````
 perl6 -Ilib examples/show-love.p6
 perl6 -Ilib examples/zig-zag.p6
+perl6 -Ilib examples/matrix-ish.p6
+perl6 -Ilib
 ````
 
-Additionally, if your terminal supports ANSI escape codes, then you may set the environment variable `USE_ANSI` to a non-empty value.
+By default the `Terminal::Print` object will use ANSI escape sequences for it's cursor drawing, but you can tell it to use `universal` if you would prefer to use the cursor movement commands as provided by `tput`. (You should only really need this if you are having trouble with the default).
 
+```
+    my $t = Terminal::Print(move-cursor-profile => 'universal')
+```
 
-# STATUS: ALPHA
+Additionally, we have `debug`. This will be used to generate and run the test suite.
 
-This module is currently under nourished. It hungers for a proper test suite, documentation, and a truly crash free asynchronous implementation.
+# It dies immediately complaining about my TERM env setting
 
-The core of the 'tricky' parts is all there, however, in `Terminal::Print::Commands`. With that you can wrap your own printer very easily.
+In order to make the shelling out to `tput` safer, I have opted to use a whitelist of
+valid terminals. The list is quite short at the moment, so my apologies if you trigger
+this error. Everything should work smoothly once you have added it to the lookup hash
+in `Terminal::Print::Commands`. Please consider sending it in as a PR, or filing a bug
+report!
 
+# STATUS: BETA
+
+This module is currently a bit under nourished. It hungers for a proper test suite and documentation.
 
 Copyright 2015-2016, John Haltiwanger. Released under the Artistic License 2.0.

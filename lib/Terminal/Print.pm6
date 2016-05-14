@@ -20,8 +20,8 @@ has $.max-rows;
 has Terminal::Print::MoveCursorProfile $.move-cursor-profile;
 
 method new( :$move-cursor-profile = 'ansi' ) {
-    my $max-columns   = +%T::attribute-values<columns>;
-    my $max-rows      = +%T::attribute-values<rows>;
+    my $max-columns   = +%T::attributes<columns>;
+    my $max-rows      = +%T::attributes<rows>;
 
     my $grid = Terminal::Print::Grid.new( :$max-columns, :$max-rows, :$move-cursor-profile );
     my @grid-indices = $grid.grid-indices;
@@ -163,8 +163,8 @@ multi method print-cell( Int $x, Int $y ) {
 #   where *.comb == 1 means that you can't add escape chars
 #   of any kind before sending to print-cell. but maybe that's
 #   not such a bad thing?
-multi method print-cell( Int $x, Int $y, Str $char ) {
-    $!current-grid.print-cell($x,$y,$char);
+multi method print-cell( Int $x, Int $y, Str $c ) {
+    $!current-grid.print-cell($x,$y,$c);
 }
 
 #### buffer stuff
@@ -242,12 +242,11 @@ objective 'a' is finished, including both named and positional access.
     $t.add-grid('home'); # create a second grid named 'home'
     $t.grid('home');     # or $t.grid(1)
 
-'b', unfortunately, is not fully finished. I think we need to have a scheduled
-print cycle, ticking at a specific framerate.
+'b' is also working! Most of the scripts in C<examples/> run async!
 
 Obvious applications include snake clones, rogue engines and golfed art works :)
 
-Oh, and serious monitoring apps.
+Oh, and Serious Monitoring Apps, of course.
 
 =head1 Usage
 

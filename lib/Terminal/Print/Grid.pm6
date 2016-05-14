@@ -1,23 +1,24 @@
 unit class Terminal::Print::Grid;
 
-class Terminal::Print::Grid::Column {
-    has $!column;
-    has $!max-rows;
-    has $!grid-object;
 
-    submethod BUILD( :$!column, :$!max-rows, :$grid-object ) {
-        $!grid-object := $grid-object;
-    }
-
-    method AT-POS($i) {
-        $!grid-object[$!column;$i];
-    }
-
-    method ASSIGN-POS($i,$v) {
-        await $!grid-object.change-cell($!column,$i,$v);
-    }
-
-}
+#
+# class Terminal::Print::Grid::Column {
+#     has $!column;
+#     has $!max-rows;
+#     has $!grid-object;
+#
+#     submethod BUILD( :$!column, :$!max-rows, :$grid-object ) {
+#         $!grid-object := $grid-object;
+#     }
+#
+#     method AT-POS($i) {
+#         $!grid-object[$!column][$i];
+#     }
+#
+#     method ASSIGN-POS($i,$v) {
+#         await $!grid-object.change-cell($!column,$i,$v);
+#     }
+# }
 
 use Terminal::Print::Commands;
 
@@ -40,8 +41,9 @@ has @.grid-indices;
 has &.move-cursor-template;
 
 has Terminal::Print::MoveCursorProfile $.move-cursor-profile;
-subset Boundary::X where * < $!max-columns;
-subset Boundary::Y where * < $!max-rows;
+subset Valid::X of Int is export where * < %T::attributes<columns>;
+subset Valid::Y of Int is export where * < %T::attributes<rows>;
+subset Valid::Char of Str is export where *.chars == 1;
 
 submethod BUILD( :$!max-columns, :$!max-rows, :$!move-cursor-profile = 'ansi', :$frame-time ) {
     @!grid-indices = (^$!max-columns X ^$!max-rows)>>.Array;
@@ -91,28 +93,34 @@ method initialize {
 
     # this is deferred until after the full construction of the grid object
     # so that we can pass it properly into the column constructor.
-    for ^$!max-columns -> $x {
-        @!grid[$x] //= Terminal::Print::Grid::Column.new( :grid-object(self), :column($x), :$!max-rows );
-    }
+    # for ^$!max-columns -> $x {
+    #     @!grid[$x] //= Terminal::Print::Grid::Column.new( :grid-object(self), :column($x), :$!max-rows );
+    # }
 
-    $p;
+    $p
 }
 
 method shutdown {
     await start $!control-supplier.emit(['close']);
 }
 
-method change-cell($x, $y, $c) {
+multi method change-cell(Valid::X $x, Valid::Y $y, Valid::Char $c) {
     start {
         $!character-supplier.emit([$x,$y,$c]);
     }
 }
-
-method cell-string(Int $x, Int $y) {
-    "{&!move-cursor-template($x, $y)}{@!grid[$x][$y]}";
+multi method change-cell($x, $y, $c) {
+    bad-input(:$x, :$y, :$c);
 }
 
-multi method print-cell(Int $x, Int $y) {
+multi method cell-string(Valid::X $x, Valid::Y $y) {
+    "{&!move-cursor-template($x, $y)}{@!grid[$x][$y]}";
+}
+multi method cell-string($x, $y) {
+    bad-input(:$x, :$y);
+}
+
+multi method print-cell(Valid::X $x, Valid::Y $y) {
     if $x >= $!max-columns or $y >= $!max-rows {
         warn "You have provided an out of bounds value -- x: $x\ty: $y";
     } else {
@@ -120,35 +128,62 @@ multi method print-cell(Int $x, Int $y) {
     }
 }
 
-multi method print-cell(Int $x, Int $y, Str $char) {
-    if $x >= $!max-columns or $y >= $!max-rows {
-        warn "You have provided an out of bounds value -- x: $x\ty: $y";
-    } else {
-        await self.change-cell($x, $y, $char).then({
-            $!control-supplier.emit(['print', [$x, $y]]);
-        });
-    }
+multi method print-cell(Valid::X $x, Valid::Y $y, Valid::Char $c) {
+    await self.change-cell($x, $y, $c).then({
+        $!control-supplier.emit(['print', [$x, $y]]);
+    });
+}
+multi method print-cell($x, $y, $c?) {
+    bad-input(:$x, :$y, :$c);
 }
 
 method print-grid {
     print &!move-cursor-template(0, 0) ~ self;
 }
 
+
+sub bad-input(:$x, :$y, :$c) {
+    my $warning;
+    unless !$x || $x ~~ Valid::X {
+        $warning ~= "Invalid x: $x\t";
+    }
+    unless !$y || $y ~~ Valid::Y {
+        $warning ~= "Invalid y: $y\t";
+    }
+    unless !$c || $c ~~ Valid::Char {
+        $warning ~= "Invalid character: $c";
+    }
+    warn $warning;
+}
+
+# Coercions
+# TODO: Add a 'gist' ?
+
 method Str {
     unless $!grid-string {
         for ^$!max-rows -> $y {
-            $!grid-string ~= [~] ~@!grid[$_;$y] for ^$!max-columns;
+            $!grid-string ~= [~] ~@!grid[$_][$y] for ^$!max-columns;
         }
     }
     $!grid-string;
 }
 
-multi method AT-POS($x) {
+
+# The grid may be accessed as an array
+# TODO: Harden these via promises
+
+multi method AT-POS(Valid::X $x) {
     @!grid[$x];
 }
+multi method AT-POS($x) {
+    bad-input(:$x);
+}
 
-multi method AT-POS($x,$y) {
+multi method AT-POS(Valid::X $x, Valid::Y $y) {
     @!grid[$x][$y];
+}
+multi method AT-POS($x, $y) {
+    bad-input(:$x, :$y);
 }
 
 multi method EXISTS-POS($x) {
