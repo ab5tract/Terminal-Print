@@ -5,16 +5,16 @@
   "resources" : [ ],
   "build-depends" : [ ],
   "provides" : {
-    "Terminal::Print::Commands" : "lib/Terminal/Print/Commands.pm6",
     "Terminal::Print" : "lib/Terminal/Print.pm6",
-    "Terminal::Print::Grid" : "lib/Terminal/Print/Grid.pm6"
+    "Terminal::Print::Grid" : "lib/Terminal/Print/Grid.pm6",
+    "Terminal::Print::Commands" : "lib/Terminal/Print/Commands.pm6"
   },
   "depends" : [
     "Terminal::ANSIColor"
   ],
   "description" : "Access terminfo-based console escape sequences in a handy grid interface",
   "test-depends" : [ ],
-  "version" : "0.04",
+  "version" : "0.05",
   "authors" : [
     "John Haltiwanger"
   ]
