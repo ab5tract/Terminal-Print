@@ -36,7 +36,7 @@ method new( :$move-cursor-profile = 'ansi' ) {
               );
 }
 
-submethod BUILD( :$current-grid, :$current-buffer, :$!max-columns, :$!max-rows, :@grid-indices, :$move-cursor-profile ) {
+submethod BUILD( :$current-grid, :$current-buffer, :$!max-columns, :$!max-rows, :@grid-indices, :$!move-cursor-profile ) {
     push @!buffers, $current-buffer;
     push @!grids, $current-grid;
 
@@ -72,12 +72,12 @@ method blit( $grid-identifier = 0 ) {
 
 # 'clear' will also work through the FALLBACK
 method clear-screen {
-    print %T::human-commands<clear>;
+    print-command <clear>;
 }
 
 method initialize-screen {
     $!current-grid.initialize;
-    print %T::human-commands<save-screen>;
+    print-command <save-screen>;
     self.hide-cursor;
     self.clear-screen;
 }
@@ -85,8 +85,12 @@ method initialize-screen {
 method shutdown-screen {
     self.clear-screen;
     @!grids>>.shutdown;
-    print %T::human-commands<restore-screen>;
+    print-command <restore-screen>;
     self.show-cursor;
+}
+
+method print-command( $command ) {
+    print-command($command, $!move-cursor-profile);
 }
 
 # AT-POS hands back a Terminal::Print::Column
@@ -119,9 +123,8 @@ method AT-KEY( $grid-identifier ) {
 #    }
 #}
 
-multi method FALLBACK( Str $command-name ) {
-    die "Do not know command $command-name" unless %T::human-command-names{$command-name};
-    print %T::human-commands{$command-name};
+multi method FALLBACK( Str $command-name where { %T::human-command-names{$_} } ) {
+    print-command( $command-name );
 }
 
 

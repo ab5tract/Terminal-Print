@@ -95,3 +95,11 @@ sub tput( Str $command ) is export {
 
     %tput-commands{$command};
 }
+
+sub print-command($command, Terminal::Print::MoveCursorProfile $profile = 'ansi') is export {
+    if $profile eq 'debug' {
+        return %human-commands{$command}.comb.join(' ');
+    } else {
+        print %human-commands{$command};
+    }
+}
