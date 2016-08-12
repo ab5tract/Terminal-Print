@@ -23,27 +23,28 @@ subset Valid::Y of Int is export where * < %T::attributes<rows>;
 subset Valid::Char of Str is export where *.chars == 1;
 
 has Terminal::Print::MoveCursorProfile $.cursor-profile;
-has &.move-cursor;
+has $.move-cursor;
 
 method new( :$cursor-profile = 'ansi' ) {
     my $columns   = +%T::attributes<columns>;
     my $rows      = +%T::attributes<rows>;
-    my &move-cursor = %T::human-commands<move-cursor>{$cursor-profile};
+    my $move-cursor = move-cursor-template($cursor-profile);
 
-    my $grid = Terminal::Print::Grid2.new( :$columns, :$rows );
+    my $grid = Terminal::Print::Grid2.new( $columns, $rows );
     my @grid-indices = $grid.grid-indices;
 
-    self!bind-buffer( $grid, my $buffer = [] );
+#    self!bind-buffer( $grid, my $buffer = [] );
+    my $buffer = [];
 
     self.bless(
                 :$columns, :$rows, :@grid-indices,
-                :$cursor-profile, :&move-cursor,
+                :$cursor-profile, :$move-cursor,
                     current-grid    => $grid,
                     current-buffer  => $buffer
               );
 }
 
-submethod BUILD( :$current-grid, :$current-buffer, :$!columns, :$!rows, :@grid-indices, :$!cursor-profile ) {
+submethod BUILD( :$current-grid, :$current-buffer, :$!columns, :$!rows, :@grid-indices, :$!cursor-profile, :$!move-cursor ) {
     push @!buffers, $current-buffer;
     push @!grids, $current-grid;
 
@@ -115,6 +116,13 @@ method AT-KEY( $grid-identifier ) {
     self.grid( $grid-identifier );
 }
 
+multi method CALL-ME($x, $y) { 
+    $!current-grid.print-cell($x, $y);
+}
+
+multi method CALL-ME($x, $y, $c) { 
+    $!current-grid.print-cell($x, $y, $c);
+}
 
 multi method FALLBACK( Str $command-name where { %T::human-command-names{$_} } ) {
     print-command( $command-name );
@@ -152,20 +160,20 @@ multi method grid-object( Str $name ) {
 }
 
 multi method print-cell( Int $x, Int $y ) {
-    # $!current-grid.print-cell($x,$y);
-    print "{&!move-cursor($x, $y)}{$!current-grid.grid[$x][$y]}";
+    $!current-grid.print-cell($x,$y, $!move-cursor);
+    #    print "{&!move-cursor($x, $y)}{$!current-grid.grid[$x][$y]}";
 }
 
 # TODO: provide reasonable constraint?
 #   where *.comb == 1 means that you can't add escape chars
 #   of any kind before sending to print-cell. but maybe that's
 #   not such a bad thing?
-# multi method print-cell( Int $x, Int $y, Str $c ) {
-#     $!current-grid.print-cell($x,$y,$c);
-# }
+multi method print-cell( Int $x, Int $y, Str $c ) {
+    $!current-grid.print-cell($x, $y, $c, $!move-cursor);
+}
 
 method change-cell( Int $x, Int $y, Str $c ) {
-    $!current-grid.grid[$x][$y] = $c;
+    $!current-grid.change-cell($x, $y, $c);
 }
 #### buffer stuff
 
