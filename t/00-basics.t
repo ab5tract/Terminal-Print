@@ -13,16 +13,16 @@ use Terminal::Print; pass "Import Terminal::Print";
 my $b;
 lives-ok { my $t = Terminal::Print.new; }, "Can create a Terminal::Print object";
 
-lives-ok { my $t = Terminal::Print.new( :move-cursor-profile('universal') ) },
+lives-ok { my $t = Terminal::Print.new( :cursor-profile('universal') ) },
     "Can create Terminal::Print object with print-profile 'universal'";
 
-dies-ok { my $t = Terminal::Print.new( :move-cursor-profile('nonexistent') ) },
+dies-ok { my $t = Terminal::Print.new( :cursor-profile('nonexistent') ) },
     "Cannot create Terminal::Print object with print-profile 'nonexistent'";
 
-lives-ok { $b = Terminal::Print.new( :move-cursor-profile('debug') ) },
+lives-ok { $b = Terminal::Print.new( :cursor-profile('debug') ) },
         "Can create Terminal::Print object with print-profile 'debug'";
 
-ok $b.move-cursor-profile eq 'debug', "Our test object has a .move-cursor-profile of 'debug'";
+ok $b.cursor-profile eq 'debug', "Our test object has a .cursor-profile of 'debug'";
 
 ok $b.print-command('save-screen') eq slurp-corpus('save-screen'), ".save-screen matches corpus";
 ok $b.print-command('restore-screen') eq slurp-corpus('restore-screen'), ".restore-screen matches corpus";

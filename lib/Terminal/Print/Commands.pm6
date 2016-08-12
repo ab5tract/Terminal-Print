@@ -24,7 +24,7 @@ BEGIN {
 
         my $raw;
         if q:x{ which tput } {
-            my $term = %*ENV<TERM> // '';
+            my $term = %*ENV<TERM> // 'xterm';
             die "Please update %valid-terminals with your desired TERM ('$term', is it?) and submit a PR if it works"
                 unless %valid-terminals{ $term };
 
