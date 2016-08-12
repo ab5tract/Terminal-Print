@@ -2,10 +2,8 @@ unit class Terminal::Print;
 
 use Terminal::Print::Grid2;
 
-has $!current-buffer;
 has Terminal::Print::Grid2 $.current-grid;
 
-has @!buffers;
 has Terminal::Print::Grid2 @.grids;
 
 has @.grid-indices;
@@ -33,39 +31,23 @@ method new( :$cursor-profile = 'ansi' ) {
     my $grid = Terminal::Print::Grid2.new( $columns, $rows );
     my @grid-indices = $grid.grid-indices;
 
-#    self!bind-buffer( $grid, my $buffer = [] );
-    my $buffer = [];
-
     self.bless(
                 :$columns, :$rows, :@grid-indices,
                 :$cursor-profile, :$move-cursor,
                     current-grid    => $grid,
-                    current-buffer  => $buffer
               );
 }
 
-submethod BUILD( :$current-grid, :$current-buffer, :$!columns, :$!rows, :@grid-indices, :$!cursor-profile, :$!move-cursor ) {
-    push @!buffers, $current-buffer;
+submethod BUILD( :$current-grid, :$!columns, :$!rows, :@grid-indices, :$!cursor-profile, :$!move-cursor ) {
     push @!grids, $current-grid;
 
     $!current-grid   := @!grids[0];
-    $!current-buffer := @!buffers[0];
 
     @!grid-indices = @grid-indices;  # TODO: bind this to @!grids[0].grid-indices?
 }
 
-method !bind-buffer( $grid, $new-buffer is rw ) {
-    for $grid.grid-indices -> [$x,$y] {
-        $new-buffer[$x + ($y * $grid.rows)] := $grid[$x][$y];
-    }
-}
-
 method add-grid( $name?, :$new-grid = Terminal::Print::Grid2.new( :$!columns, :$!rows ) ) {
-    self!bind-buffer( $new-grid, my $new-buffer = [] );
-
     push @!grids, $new-grid;
-    push @!buffers, $new-buffer;
-
     if $name {
         %!grid-name-map{$name} = +@!grids-1;
     }
@@ -174,16 +156,6 @@ multi method print-cell( Int $x, Int $y, Str $c ) {
 
 method change-cell( Int $x, Int $y, Str $c ) {
     $!current-grid.change-cell($x, $y, $c);
-}
-#### buffer stuff
-
-multi method buffer( Int $index ) {
-    @!buffers[$index];
-}
-
-multi method buffer( Str $name ) {
-    die "No buffer has been named $name" unless my $buffer-index = %!grid-name-map{$name};
-    @!buffers[$buffer-index];
 }
 
 #### print-grid stuff
@@ -295,13 +267,5 @@ still feels bolted on.
 
 C<ncurses> is not re-entrant, either, which would nix one of the main benefits
 we might be able to get from using Perl 6 -- easy async abstractions.
-
-=head2 A note on buffers
-
-C<buffer> was designed to provide a flat access mechanism: the first cell is
-at 0 and the last cell is at *-1.
-
-It's not currently in the test suite and I wonder if it is actually necessary.
-If we do keep it we should move it to Terminal::Print::Grid.
 
 =end pod
