@@ -1,10 +1,10 @@
 unit class Terminal::Print;
 
-use Terminal::Print::Grid2;
+use Terminal::Print::Grid;
 
-has Terminal::Print::Grid2 $.current-grid;
+has Terminal::Print::Grid $.current-grid;
 
-has Terminal::Print::Grid2 @.grids;
+has Terminal::Print::Grid @.grids;
 
 has @.grid-indices;
 has %!grid-name-map;
@@ -28,7 +28,7 @@ method new( :$cursor-profile = 'ansi' ) {
     my $rows      = +%T::attributes<rows>;
     my $move-cursor = move-cursor-template($cursor-profile);
 
-    my $grid = Terminal::Print::Grid2.new( $columns, $rows );
+    my $grid = Terminal::Print::Grid.new( $columns, $rows );
     my @grid-indices = $grid.grid-indices;
 
     self.bless(
@@ -46,7 +46,7 @@ submethod BUILD( :$current-grid, :$!columns, :$!rows, :@grid-indices, :$!cursor-
     @!grid-indices = @grid-indices;  # TODO: bind this to @!grids[0].grid-indices?
 }
 
-method add-grid( $name?, :$new-grid = Terminal::Print::Grid2.new( :$!columns, :$!rows ) ) {
+method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( :$!columns, :$!rows ) ) {
     push @!grids, $new-grid;
     if $name {
         %!grid-name-map{$name} = +@!grids-1;

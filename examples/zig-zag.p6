@@ -15,10 +15,10 @@ my sub is-odd( $i ) { not $i %% 2 };
 
 my sub zig-zag( Int $start_y? ) {
     my $cur_y = $start_y // 0;
-    for 1..^$b.max-columns -> $x {
+    for 1..^$b.columns -> $x {
         $cur_y++ && next if $cur_y <  0;
-        last if $cur_y >= $b.max-rows;
-        next if $x > $b.max-columns;
+        last if $cur_y >= $b.rows;
+        next if $x > $b.columns;
 
         if is-odd($x) {
             $b.print-cell($x, $cur_y, '_');
