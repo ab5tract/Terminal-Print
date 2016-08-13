@@ -24,7 +24,7 @@ BEGIN {
 
         my $raw;
         if q:x{ which tput } {
-            my $term = %*ENV<TERM> // 'xterm';
+            my $term = %*ENV<TERM> || 'xterm';
             die "Please update %valid-terminals with your desired TERM ('$term', is it?) and submit a PR if it works"
                 unless %valid-terminals{ $term };
 
@@ -41,13 +41,7 @@ BEGIN {
             sprintf($raw, $y + 1, $x + 1)
         }
 
-        my sub debug(Int $x, Int $y) { my $code = ansi($x, $y).comb.join(' '); print $code; $code }
-
-        return %(
-                    :&ansi,
-                    :&universal,
-                    :&debug
-                );
+        return %( :&ansi, :&universal );
     }
 
     %human-command-names = %(
