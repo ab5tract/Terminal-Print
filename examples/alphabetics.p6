@@ -7,8 +7,6 @@ my $p = Terminal::Print.new;
 
 $p.initialize-screen;
 
-#say $p.grid-indices.perl;
-
 my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
 for @char-ranges.pick(*) -> @alphabet {
     for $p.grid-indices -> [$x,$y] {

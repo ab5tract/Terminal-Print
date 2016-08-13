@@ -10,7 +10,7 @@ our %tput-commands;
 our %attributes;
 our %attribute-values;
 
-subset Terminal::Print::MoveCursorProfile is export where * ~~ / ^('ansi' | 'universal' | 'debug')$ /;
+subset Terminal::Print::CursorProfile is export where * ~~ / ^('ansi' | 'universal' | 'debug')$ /;
 
 BEGIN {
     # we can add more, but there is a qq:x call so whitelist is the way to go.
@@ -81,11 +81,11 @@ BEGIN {
     %attributes<rows>     = %*ENV<ROWS>    //= qq:x{ tput lines };
 }
 
-sub move-cursor-template( Terminal::Print::MoveCursorProfile $profile = 'ansi' ) returns Code is export {
+sub move-cursor-template( Terminal::Print::CursorProfile $profile = 'ansi' ) returns Code is export {
     %human-commands{'move-cursor'}{$profile};
 }
 
-sub move-cursor( Int $x, Int $y, Terminal::Print::MoveCursorProfile $profile = 'ansi' ) is export {
+sub move-cursor( Int $x, Int $y, Terminal::Print::CursorProfile $profile = 'ansi' ) is export {
     %human-commands{'move-cursor'}{$profile}( $x, $y );
 }
 
@@ -96,7 +96,7 @@ sub tput( Str $command ) is export {
     %tput-commands{$command};
 }
 
-sub print-command($command, Terminal::Print::MoveCursorProfile $profile = 'ansi') is export {
+sub print-command($command, Terminal::Print::CursorProfile $profile = 'ansi') is export {
     if $profile eq 'debug' {
         return %human-commands{$command}.comb.join(' ');
     } else {

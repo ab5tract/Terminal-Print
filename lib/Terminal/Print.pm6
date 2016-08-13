@@ -20,7 +20,7 @@ subset Valid::X of Int is export where * < %T::attributes<columns>;
 subset Valid::Y of Int is export where * < %T::attributes<rows>;
 subset Valid::Char of Str is export where *.chars == 1;
 
-has Terminal::Print::MoveCursorProfile $.cursor-profile;
+has Terminal::Print::CursorProfile $.cursor-profile;
 has $.move-cursor;
 
 method new( :$cursor-profile = 'ansi' ) {
@@ -98,11 +98,11 @@ method AT-KEY( $grid-identifier ) {
     self.grid( $grid-identifier );
 }
 
-multi method CALL-ME($x, $y) { 
+multi method CALL-ME($x, $y) {
     $!current-grid.print-cell($x, $y);
 }
 
-multi method CALL-ME($x, $y, $c) { 
+multi method CALL-ME($x, $y, $c) {
     $!current-grid.print-cell($x, $y, $c);
 }
 
