@@ -24,10 +24,12 @@ sub choosey() { <1 2 3>.roll %% 2 }
 await do for @rotor -> @ys {
     my $char := @alphabet.pick;
     my $p = start {
-        my @xs = ^3 .pick %% 2 ?? (^$t.columns).reverse !! ^$t.columns;
+        my @xs = ^3 .pick %% 2  ?? (^$t.columns).reverse
+                                !! ^$t.columns;
         my @ys-rev := @ys.reverse;
         for @xs -> $x {
-            my @yss := choosey() ?? @ys-rev !! @ys;
+            my @yss := choosey()    ?? @ys-rev
+                                    !! @ys;
             for @yss -> $y {
                 $t.print-cell($x, $y, choosey() ?? $char !! $char.uc);
             }
