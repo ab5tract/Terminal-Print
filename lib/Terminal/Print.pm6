@@ -28,7 +28,7 @@ method new( :$cursor-profile = 'ansi' ) {
     my $rows      = +%T::attributes<rows>;
     my $move-cursor = move-cursor-template($cursor-profile);
 
-    my $grid = Terminal::Print::Grid.new( $columns, $rows );
+    my $grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
     my @grid-indices = $grid.grid-indices;
 
     self.bless(
@@ -142,7 +142,7 @@ multi method grid-object( Str $name ) {
 }
 
 multi method print-cell( Int $x, Int $y ) {
-    $!current-grid.print-cell($x,$y, $!move-cursor);
+    $!current-grid.print-cell($x, $y);
     #    print "{&!move-cursor($x, $y)}{$!current-grid.grid[$x][$y]}";
 }
 
@@ -151,7 +151,7 @@ multi method print-cell( Int $x, Int $y ) {
 #   of any kind before sending to print-cell. but maybe that's
 #   not such a bad thing?
 multi method print-cell( Int $x, Int $y, Str $c ) {
-    $!current-grid.print-cell($x, $y, $c, $!move-cursor);
+    $!current-grid.print-cell($x, $y, $c);
 }
 
 method change-cell( Int $x, Int $y, Str $c ) {
