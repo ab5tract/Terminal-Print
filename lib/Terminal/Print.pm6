@@ -12,6 +12,8 @@ has %!grid-name-map;
 has $.columns;
 has $.rows;
 
+has $.print-enabled = True;
+
 use Terminal::Print::Commands;
 
 constant T = Terminal::Print::Commands;
@@ -41,9 +43,15 @@ method new( :$cursor-profile = 'ansi' ) {
 submethod BUILD( :$current-grid, :$!columns, :$!rows, :@grid-indices, :$!cursor-profile, :$!move-cursor ) {
     push @!grids, $current-grid;
 
-    $!current-grid   := @!grids[0];
+    $!current-grid := @!grids[0];
 
     @!grid-indices = @grid-indices;  # TODO: bind this to @!grids[0].grid-indices?
+    signal(SIGINT).tap: {
+        $!print-enabled = False;
+        my $shutdown = start { self.shutdown-screen };
+        await $shutdown;
+        print-command <show-cursor>;
+    }
 }
 
 method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( :$!columns, :$!rows ) ) {
@@ -72,7 +80,6 @@ method initialize-screen {
 
 method shutdown-screen {
     self.clear-screen;
-    # @!grids>>.shutdown;
     print-command <restore-screen>;
     self.show-cursor;
 }
@@ -142,7 +149,7 @@ multi method grid-object( Str $name ) {
 }
 
 multi method print-cell( Int $x, Int $y ) {
-    $!current-grid.print-cell($x, $y);
+    $!current-grid.print-cell($x, $y) if $!print-enabled;
     #    print "{&!move-cursor($x, $y)}{$!current-grid.grid[$x][$y]}";
 }
 
@@ -151,7 +158,7 @@ multi method print-cell( Int $x, Int $y ) {
 #   of any kind before sending to print-cell. but maybe that's
 #   not such a bad thing?
 multi method print-cell( Int $x, Int $y, Str $c ) {
-    $!current-grid.print-cell($x, $y, $c);
+    $!current-grid.print-cell($x, $y, $c) if $!print-enabled;
 }
 
 method change-cell( Int $x, Int $y, Str $c ) {
@@ -169,44 +176,31 @@ multi method print-grid( Str $name ) {
     @!grids[$grid-index].print-grid;
 }
 
-method !clone-grid-index( $origin, $dest? ) {
-    my $new-grid;
-    if $dest {
-        $new-grid := self.add-grid($dest, new-grid => @!grids[$origin].clone);
-    } else {
-        @!grids.push: @!grids[$origin].clone;
-    }
-    return $new-grid;
-}
-
-#### clone-grid stuff
-
-multi method clone-grid( Int $origin, Str $dest? ) {
-    die "Invalid grid '$origin'" unless @!grids[$origin]:exists;
-    self!clone-grid-index($origin, $dest);
-}
-
-multi method clone-grid( Str $origin, Str $dest? ) {
-    die "Invalid grid '$origin'" unless my $grid-index = %!grid-name-map{$origin};
-    self!clone-grid-index($grid-index, $dest);
-}
-
-#### range stuffs
+# method !clone-grid-index( $origin, $dest? ) {
+#     my $new-grid;
+#     if $dest {
+#         $new-grid := self.add-grid($dest, new-grid => @!grids[$origin].clone);
+#     } else {
+#         @!grids.push: @!grids[$origin].clone;
+#     }
+#     return $new-grid;
+# }
 #
-# TODO: add hooks to dynamically bind $!current-grid to @!grids
-
-method column-range {
-    $!current-grid.column-range; # TODO: we can make the grids reflect specific subsets of these ranges
-}
-
-method row-range {
-    $!current-grid.row-range;
-}
+# #### clone-grid stuff
+#
+# multi method clone-grid( Int $origin, Str $dest? ) {
+#     die "Invalid grid '$origin'" unless @!grids[$origin]:exists;
+#     self!clone-grid-index($origin, $dest);
+# }
+#
+# multi method clone-grid( Str $origin, Str $dest? ) {
+#     die "Invalid grid '$origin'" unless my $grid-index = %!grid-name-map{$origin};
+#     self!clone-grid-index($grid-index, $dest);
+# }
 
 method Str {
     ~$!current-grid;
 }
-
 
 =begin pod
 =title Terminal::Print

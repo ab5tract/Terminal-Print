@@ -15,4 +15,4 @@ for $b.grid-indices.pick(*) -> [$x,$y] {
 
 sleep 5;
 
-$b.clear-screen;
+$b.shutdown-screen;
