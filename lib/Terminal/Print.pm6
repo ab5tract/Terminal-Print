@@ -50,7 +50,6 @@ submethod BUILD( :$current-grid, :$!columns, :$!rows, :@grid-indices, :$!cursor-
         $!print-enabled = False;
         my $shutdown = start { self.shutdown-screen };
         await $shutdown;
-        print-command <show-cursor>;
     }
 }
 
@@ -81,7 +80,7 @@ method initialize-screen {
 method shutdown-screen {
     self.clear-screen;
     print-command <restore-screen>;
-    self.show-cursor;
+    print-command <show-cursor>;
 }
 
 method print-command( $command ) {
@@ -159,6 +158,9 @@ multi method print-cell( Int $x, Int $y ) {
 #   not such a bad thing?
 multi method print-cell( Int $x, Int $y, Str $c ) {
     $!current-grid.print-cell($x, $y, $c) if $!print-enabled;
+}
+multi method print-cell( Int $x, Int $y, %c ) {
+    $!current-grid.print-cell($x, $y, %c) if $!print-enabled;
 }
 
 method change-cell( Int $x, Int $y, Str $c ) {

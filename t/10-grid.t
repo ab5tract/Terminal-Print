@@ -2,7 +2,7 @@ use Test;
 use lib 'lib';
 
 chdir('t');
-plan 2;
+plan 3;
 
 # our little corpus slurper
 sub slurp-corpus($topic) {
@@ -29,3 +29,14 @@ lives-ok {
         $b.shutdown-screen;
     }
 }, "Can print the current grid";
+
+lives-ok {
+    my @colors = <magenta red yellow blue green cyan>;
+    do {
+        $b.initialize-screen;
+        for $b.grid-indices -> [$x, $y] {
+            $b.print-cell: $x, $y, %( :char('♥'), :color(@colors.roll) );
+        }
+        $b.shutdown-screen;
+    }
+}, "Can print a screen full of multi colored hearts";
