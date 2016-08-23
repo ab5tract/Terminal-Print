@@ -10,7 +10,7 @@ our %tput-commands;
 our %attributes;
 our %attribute-values;
 
-subset Terminal::Print::CursorProfile is export where * ~~ / ^('ansi' | 'universal' | 'debug')$ /;
+subset Terminal::Print::CursorProfile is export where * ~~ / ^('ansi' | 'universal')$ /;
 
 BEGIN {
     # we can add more, but there is a qq:x call so whitelist is the way to go.

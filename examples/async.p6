@@ -9,10 +9,6 @@ $t.initialize-screen;
 
 my @indices = $t.grid-indices;
 
-# Other attempts that do not work very well
-#await do for ^$t.max-rows -> $x {
-#await do for ^10 -> $x {
-
 my @alphabet = 'j'..'z';
 
 my @rotor = (^$t.rows).rotor(10, :partial)>>.Array;
