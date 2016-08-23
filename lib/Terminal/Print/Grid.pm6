@@ -7,22 +7,12 @@ class Cell {
     use Terminal::ANSIColor; # lexical imports FTW
     has $.char;
     has $.color;
-    has $!valid-color;
+    has $!string;
 
     method Str {
-        if $!color {
-            if $!valid-color {
-                return colored($!char, $!color);
-            } else {
-                if colorvalid($!color) {
-                    $!valid-color = True;
-                    return colored($!char, $!color);
-                } else {
-                    die "Invalid color: $!color";
-                }
-            }
-        } else {
-            return $!char;
+        return $!string //= do {
+            $!color ?? colored($!char, $!color)
+                    !! $!char
         }
     }
 }
@@ -51,23 +41,34 @@ method cell-string($x, $y) {
     "{$!move-cursor($x, $y)}{~@!grid[$x][$y]}"
 }
 
-method change-cell($x, $y, $c) {
+multi method change-cell($x, $y, %c) {
     $!grid-string = '';
-    @!grid[$x][$y] = $c
+    @!grid[$x][$y] = Cell.new(|%c)
+}
+
+multi method change-cell($x, $y, Str $char) {
+    $!grid-string = '';
+    @!grid[$x][$y] = Cell.new(:$char)
+}
+
+multi method change-cell($x, $y, Cell $cell) {
+    $!grid-string = '';
+    @!grid[$x][$y] = $cell
 }
 
 multi method print-cell($x, $y) {
     print self.cell-string($x, $y);
 }
 
-multi method print-cell($x, $y, Str $c) {
-    self.change-cell($x, $y, $c);
+multi method print-cell($x, $y, Str $char) {
+    my $cell = Cell.new(:$char);
+    self.change-cell($x, $y, $cell);
     print self.cell-string($x, $y);
 }
 
 multi method print-cell($x, $y, %c) {
-    my $c = Cell.new(|%c);
-    self.change-cell($x, $y, $c);
+    my $cell = Cell.new(|%c);
+    self.change-cell($x, $y, $cell);
     print self.cell-string($x, $y);
 }
 
