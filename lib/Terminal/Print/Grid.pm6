@@ -24,6 +24,7 @@ has @.grid;
 has $.grid-string = '';
 
 has $.move-cursor;
+has $!print-enabled = True;
 
 method new($columns, $rows, :$move-cursor) {
     my @grid-indices = (^$columns X ^$rows)>>.Array;
@@ -57,19 +58,37 @@ multi method change-cell($x, $y, Cell $cell) {
 }
 
 multi method print-cell($x, $y) {
-    print self.cell-string($x, $y);
+    print self.cell-string($x, $y) if $!print-enabled;
 }
 
 multi method print-cell($x, $y, Str $char) {
+    return unless $!print-enabled;
     my $cell = Cell.new(:$char);
     self.change-cell($x, $y, $cell);
     print self.cell-string($x, $y);
 }
 
 multi method print-cell($x, $y, %c) {
+    return unless $!print-enabled;
     my $cell = Cell.new(|%c);
     self.change-cell($x, $y, $cell);
     print self.cell-string($x, $y);
+}
+
+method print-string($x is copy, $y is copy, Str() $string) {
+    return unless $!print-enabled;
+    for $string.lines -> $line {
+        my @chars = $string.comb;
+        for @chars -> $c {
+            self.print-cell($x, $y, $c);
+            $x++;
+        }
+        $y++;
+    }
+}
+
+method disable {
+    $!print-enabled = False;
 }
 
 method Str {

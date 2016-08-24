@@ -12,8 +12,6 @@ has %!grid-name-map;
 has $.columns;
 has $.rows;
 
-has $.print-enabled = True;
-
 use Terminal::Print::Commands;
 
 constant T = Terminal::Print::Commands;
@@ -47,9 +45,9 @@ submethod BUILD( :$current-grid, :$!columns, :$!rows, :@grid-indices, :$!cursor-
 
     @!grid-indices = @grid-indices;  # TODO: bind this to @!grids[0].grid-indices?
     signal(SIGINT).tap: {
-        $!print-enabled = False;
-        my $shutdown = start { self.shutdown-screen };
-        await $shutdown;
+        @!grids>>.disable;
+        self.shutdown-screen;
+        die "Encountered a SIGINT. Cleaning up the screen and exiting...";
     }
 }
 
@@ -148,19 +146,14 @@ multi method grid-object( Str $name ) {
 }
 
 multi method print-cell( Int $x, Int $y ) {
-    $!current-grid.print-cell($x, $y) if $!print-enabled;
-    #    print "{&!move-cursor($x, $y)}{$!current-grid.grid[$x][$y]}";
+    $!current-grid.print-cell($x, $y);
 }
 
-# TODO: provide reasonable constraint?
-#   where *.comb == 1 means that you can't add escape chars
-#   of any kind before sending to print-cell. but maybe that's
-#   not such a bad thing?
 multi method print-cell( Int $x, Int $y, Str $c ) {
-    $!current-grid.print-cell($x, $y, $c) if $!print-enabled;
+    $!current-grid.print-cell($x, $y, $c);
 }
 multi method print-cell( Int $x, Int $y, %c ) {
-    $!current-grid.print-cell($x, $y, %c) if $!print-enabled;
+    $!current-grid.print-cell($x, $y, %c);
 }
 
 method change-cell( Int $x, Int $y, Str $c ) {
