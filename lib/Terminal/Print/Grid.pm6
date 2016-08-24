@@ -3,9 +3,9 @@ use Terminal::Print::Commands;
 
 unit monitor Terminal::Print::Grid;
 
-class Cell {
+my class Cell {
     use Terminal::ANSIColor; # lexical imports FTW
-    has $.char;
+    has $.char is required;
     has $.color;
     has $!string;
 
@@ -75,7 +75,6 @@ multi method print-cell($x, $y, %c) {
 method Str {
     unless $!grid-string {
         for @!grid-indices -> [$x, $y] {
-            # die "$x, $y" if @!grid[$x][$y] eq ' ';
             $!grid-string ~= self.cell-string($x, $y);
         }
     }
