@@ -18,7 +18,7 @@ BEGIN {
 
     my sub build-cursor-to-template {
 
-        my Str sub ansi( Int $x,  Int $y ) {
+        my Str sub ansi( Int() $x,  Int() $y ) {
             "\e[{$y+1};{$x+1}H";
         }
 
@@ -36,7 +36,7 @@ BEGIN {
         }
         $raw ||= '';
 
-        my Str sub universal( Int $x, Int $y ) {
+        my Str sub universal( Int() $x, Int() $y ) {
             warn "universal mode must have access to tput" unless $raw;
             sprintf($raw, $y + 1, $x + 1)
         }

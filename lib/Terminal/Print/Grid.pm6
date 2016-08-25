@@ -75,15 +75,17 @@ multi method print-cell($x, $y, %c) {
     print self.cell-string($x, $y);
 }
 
-method print-string($x is copy, $y is copy, Str() $string) {
+method print-string($x, $y, Str() $string) {
     return unless $!print-enabled;
+    my ($off-x, $off-y) = 0 xx 2;
     for $string.lines -> $line {
-        my @chars = $string.comb;
+        my @chars = $line.comb;
         for @chars -> $c {
-            self.print-cell($x, $y, $c);
-            $x++;
+            self.print-cell($x + $off-x, $y + $off-y, $c);
+            $off-x++;
         }
-        $y++;
+        $off-y++;
+        $off-x = 0;
     }
 }
 

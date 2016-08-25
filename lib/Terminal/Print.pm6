@@ -51,7 +51,7 @@ submethod BUILD( :$current-grid, :$!columns, :$!rows, :@grid-indices, :$!cursor-
     }
 }
 
-method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( :$!columns, :$!rows ) ) {
+method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( :$!columns, :$!rows, :$!move-cursor ) ) {
     push @!grids, $new-grid;
     if $name {
         %!grid-name-map{$name} = +@!grids-1;
@@ -145,18 +145,22 @@ multi method grid-object( Str $name ) {
     @!grids[$grid-index];
 }
 
-multi method print-cell( Int $x, Int $y ) {
+multi method print-cell( $x, $y ) {
     $!current-grid.print-cell($x, $y);
 }
 
-multi method print-cell( Int $x, Int $y, Str $c ) {
+multi method print-cell( $x, $y, Str $c ) {
     $!current-grid.print-cell($x, $y, $c);
 }
-multi method print-cell( Int $x, Int $y, %c ) {
+multi method print-cell( $x, $y, %c ) {
     $!current-grid.print-cell($x, $y, %c);
 }
 
-method change-cell( Int $x, Int $y, Str $c ) {
+method print-string( $x, $y, Str() $string) {
+    $!current-grid.print-string($x, $y, $string);
+}
+
+method change-cell( $x, $y, Str $c ) {
     $!current-grid.change-cell($x, $y, $c);
 }
 

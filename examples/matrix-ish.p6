@@ -7,10 +7,8 @@ my $t = Terminal::Print.new;
 
 $t.initialize-screen;
 
-my @indices = $t.grid-indices;
-
 #my @chars = '─'..'╿';
-my @chars = 'ァ'..'ヿ';
+my @chars = 'ァ'..'ヾ';
 my @columns = ^$t.columns;
 
 my @xs = @columns.pick(*).grep(* %% 6).rotor(5, :partial);
@@ -24,8 +22,10 @@ while +@xs {
                 last if ^21 .roll == 7;
                 until ^42 .roll == 0 and $string-printed {
                     unless ^5 .roll == 3 {
-                        $t.print-cell($x, $y, @chars.roll);
+                        $t.print-cell($x, $y, %( char => @chars.roll, color => 'bold black on_green' ));
+                        # $t.print-cell($x, $y, @chars.roll);
                         $string-printed = True;
+                        $t.print-cell($x, $y, %( char => @chars.roll, color => 'bold green' ));
                     }
                 }
             }
