@@ -11,14 +11,15 @@ Right now it only provides a grid with some nice access semantics.
 ````
   my $screen = Terminal::Print.new;
 
-  $screen[9][23] = "%";         # prints the escape sequence to put '%' on line 9 column 23
-  $screen[9][23];               # returns "%"
-  $screen[9][23].print-cell     # prints "%" on the 23rd column of the 9th row
+  $screen.change-cell(9, 23, '%');        # change the contents of the grid cell at line 9 column 23 
+  $screen.cell-string(9, 23);             # returns the escape sequence to put '%' on line 9 column 23
+  $screen.print-cell(9, 23);              # prints "%" on the 23rd column of the 9th row
+  $screen.print-cell(9, 23, '&');         # changes the cell at 9:23 to '&' and prints it
 
-  $screen(9,23,"%");            # another way, designed for golfing or simpler expression
+  $screen(9,23,'%');                      # uses CALL-ME to dispatch the provided arguments to .print-cell
 ````
 
-(Please note that these are are still subject to change as the library develops further).
+The above syntax is now guaranteed not to change!
 
 Terminal::Print intends to provide the essential underpinnings of command-line printing, to be the fuel for the fire, so to speak, for libraries which might aim towards 'command-line user interfaces' (CUI), asynchronous monitoring, rogue-like adventures, screensavers, video art, etc.
 

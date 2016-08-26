@@ -15,6 +15,13 @@ subset Terminal::Print::CursorProfile is export where * ~~ / ^('ansi' | 'univers
 BEGIN {
     # we can add more, but there is a qq:x call so whitelist is the way to go.
     my %valid-terminals = <xterm xterm-256color vt100 screen> X=> True;
+    my $term = %*ENV<TERM> || 'xterm';
+
+    die "Please update %valid-terminals with your desired TERM ('$term', is it?) and submit a PR if it works"
+        unless %valid-terminals{ $term };
+
+    die 'Cannot use Terminal::Print without `tput` (usually provided by `ncurses`)'
+        unless q:x{ which tput };
 
     my sub build-cursor-to-template {
 
@@ -22,18 +29,11 @@ BEGIN {
             "\e[{$y+1};{$x+1}H";
         }
 
-        my $raw;
-        if q:x{ which tput } {
-            my $term = %*ENV<TERM> || 'xterm';
-            die "Please update %valid-terminals with your desired TERM ('$term', is it?) and submit a PR if it works"
-                unless %valid-terminals{ $term };
-
-            $raw = qq:x{ tput -T $term cup 13 13 };
-            # Replace the digits with format specifiers used
-            # by sprintf
-            $raw ~~ s:nth(*-1)[\d+] = "%d";
-            $raw ~~ s:nth(*)[\d+]   = "%d";
-        }
+        my $raw = qq:x{ tput -T $term cup 13 13 };
+        # Replace the digits with format specifiers used
+        # by sprintf
+        $raw ~~ s:nth(*-1)[\d+] = "%d";
+        $raw ~~ s:nth(*)[\d+]   = "%d";
         $raw ||= '';
 
         my Str sub universal( Int() $x, Int() $y ) {
@@ -62,10 +62,10 @@ BEGIN {
                 %tput-commands{$command} = build-cursor-to-template;
             }
             when 'erase-char'   {
-                %tput-commands{$command} = qq:x{ tput $command 1 }
+                %tput-commands{$command} = qq:x{ tput -T $term $command 1 }
             }
             default             {
-                %tput-commands{$command} = qq:x{ tput $command }
+                %tput-commands{$command} = qq:x{ tput -T $term $command }
             }
         }
         %human-commands{$human} = &( %tput-commands{$command} );

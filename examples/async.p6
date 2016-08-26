@@ -1,9 +1,10 @@
 use v6;
 
-use lib './lib';
 use Terminal::Print;
 
-my $t = Terminal::Print.new;   # TODO: take named parameter for grid name of default grid
+my $t = Terminal::Print.new;
+
+say $t.rows ~ " " ~ $t.columns; die;
 
 $t.initialize-screen;
 
