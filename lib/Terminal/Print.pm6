@@ -71,12 +71,12 @@ method clear-screen {
 
 method initialize-screen {
     print-command <save-screen>;
-    self.hide-cursor;
-    self.clear-screen;
+    print-command <hide-cursor>;
+    print-command <clear>;
 }
 
 method shutdown-screen {
-    self.clear-screen;
+    print-command <clear>;
     print-command <restore-screen>;
     print-command <show-cursor>;
 }

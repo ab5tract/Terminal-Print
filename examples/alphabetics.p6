@@ -3,11 +3,13 @@ use lib './lib';
 
 use Terminal::Print;
 
-my $p = Terminal::Print.new;
+my $p = Terminal::Print.new(cursor-profile => 'universal');
 
 $p.initialize-screen;
 
-my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
+# my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
+my @char-ranges = '─'..'╿', 'ᚠ'..'ᛰ';
+
 for @char-ranges.pick(*) -> @alphabet {
     for $p.grid-indices -> [$x,$y] {
         $p.print-cell($x, $y, @alphabet.roll)
