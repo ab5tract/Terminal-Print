@@ -12,7 +12,7 @@ my $base-y = ($t.rows / 2).floor;
 
 $t.initialize-screen;
 
-my $end-time = DateTime.now.later( :20seconds );
+my $end-time = DateTime.now.later( :1minutes );
 my $exit = Promise.new;
 my $s = Supply.interval(1);
 my $old-string = '';
@@ -40,19 +40,23 @@ $s.tap: {
     }
 };
 
-class Circle {
+class Clock {
     has $.c is required = 60;
     has $.r = ($!c / (2 * π)).round;
     has $.t;
     has $.ratio;
+    has @.points;
+    has $!index = 0;
 
-    method draw($x0 is copy, $y0 is copy, $char ) {
+    method fill($x0 is copy, $y0 is copy, $char ) {
         my $f = 1 - $!r;
         my $ddF_x = 0;
         my $ddF_y = -2 * $!r;
         my ($x, $y) = 0, $!r;
-        $x0 -= ($x0 / $!ratio).ceiling - 4*$!r + 32 + 6;
-        $y0 += ($y0 / $!ratio).ceiling - $!r - 24 - 1;
+        $x0 -= $!r + 1;
+        $y0 += ($!r/2).floor;
+        # $x0 -= ($x0 / $!ratio).ceiling - 4*$!r + 32 + 6;
+        # $y0 += ($y0 / $!ratio).ceiling - $!r - 24 - 1;
         self.set-cell($x0, $y0 + $!r, $char);
         self.set-cell($x0, $y0 - $!r, $char);
         self.set-cell($x0 + $!r, $y0, $char);
@@ -79,35 +83,29 @@ class Circle {
 
     method set-cell($x, $y, $char) {
         # $!t(($x * $!ratio).ceiling, ($y / $!ratio).ceiling, $char);
-        $!t($x * $!ratio, $y, $char);
+        # $!t($x * $!ratio, $y / $!ratio, $char);
+        @!points.push: [ ($x * $!ratio), ($y / $!ratio), $char ];
+    }
+
+    method draw-point() {
+        state $total = +@!points;
+        state $step-size = ($total / 60).floor;
+        my $point = @!points[$!index];
+        if $!index > 0 {
+            my $last-point = @!points[$!index - 1];
+            $!t($last-point[0], $last-point[1], ' ');
+        }
+        $!t($point[0], $point[1], %( char => $point[2], color => 'black on_cyan'));
+        $!index += $step-size;
     }
 }
 
-$t.initialize-screen;
+my $c = Clock.new: c => 80, ratio => 1.4, :$t;
+$c.fill($base-x, $base-y, '*');
 
-# my $c = 60;
-# my $r = $c / (2 * π);
-# say $r.round;
-#
-# my $theta = 0;
-# my $step = 360 / $c;
-# repeat until $theta >= 360 {
-#     my $x = ($base-x + ($r * cos($theta) * 1.4).floor);
-#     my $y = ($base-y - ($r * sin($theta)).floor); #.ceiling;
-#     $t($x, $y, 'O');
-#     $theta += $step;
-# }
-
-my $c = Circle.new: c => 80, ratio => 1.8, :$t;
-$c.draw($base-x, $base-y + $c.r, '*');
-
-# for -$r..$r -> $x {
-#     for -$r..$r -> $y {
-#
-#     }
-# }
-
-# sleep 5;
+$s.tap: {
+    $c.draw-point();
+};
 
 await $exit;
 

@@ -1,6 +1,6 @@
 use v6;
 
-use lib './lib';
+# use lib './lib';
 use Terminal::Print;
 
 my $t = Terminal::Print.new;
@@ -23,7 +23,6 @@ while +@xs {
                 until ^42 .roll == 0 and $string-printed {
                     unless ^5 .roll == 3 {
                         $t.print-cell($x, $y, %( char => @chars.roll, color => 'bold black on_green' ));
-                        # $t.print-cell($x, $y, @chars.roll);
                         $string-printed = True;
                         $t.print-cell($x, $y, %( char => @chars.roll, color => 'bold green' ));
                     }
