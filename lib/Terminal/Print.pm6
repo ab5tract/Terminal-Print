@@ -167,14 +167,12 @@ multi method CALL-ME($x, $y) {
 }
 
 multi method CALL-ME($x, $y, $c) {
-    $!current-grid.print-cell($x, $y, $c);
+    $!current-grid.print-string($x, $y, $c);
 }
 
 multi method FALLBACK( Str $command-name where { %T::human-command-names{$_} } ) {
     print-command( $command-name );
 }
-
-
 
 # multi method sugar:
 #    @!grids and @!buffers can both be accessed by index or name (if it has
@@ -288,7 +286,20 @@ sub draw(Callable $block) is export {
     await $drawn-promise;
 }
 
-my package EXPORT::DEFAULT {
-    OUR::{ 'T' } := $Terminal::Print::T;
+sub d($block) is export {
+    draw($block);
 }
 
+sub p($x, $y, $c?) is export {
+    $T.print-string($x, $y, $c);
+}
+
+sub sl($seconds) is export {
+    sleep $seconds;
+}
+
+my package EXPORT::DEFAULT {
+    OUR::{ 'T' }  := $Terminal::Print::T;
+    OUR::{ 'w' }  := $Terminal::Print::T.columns;
+    OUR::{ 'h' }  := $Terminal::Print::T.rows;
+}

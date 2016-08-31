@@ -11,7 +11,7 @@
   "depends" : [
     "Terminal::ANSIColor"
   ],
-  "description" : "Print characters to your terminal from multiple threads as a simple grid",
+  "description" : "Asynchronous printing to your terminal -- as a simple grid",
   "test-depends" : [ ],
   "version" : "0.50",
   "authors" : [
