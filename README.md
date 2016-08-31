@@ -49,7 +49,6 @@ Status: *BETA*
 - Create an abstraction around the entire draw cycle, replacing the initialize-draw-shutdown patttern with a block that is passed to a `.draw` method on the `Terminal::Print` object itself
 - Upgrade the tests with robust comparisons against a known-good corpus
 - Investigate the potential of binding to `libtparm` (the backend to `tput`) via NativeCall
-- Re-arrange the grabbing of the terminal width and height such that `Terminal::Print::Commands` can be precompiled. (Though arguably we should never do this, in case someone is running the code between two different incompatible terminals, I think we can burn that effigy when it is actually needed -- and save a hefty amount of startup time on the way).
 
 ## Problems?
 
@@ -61,7 +60,14 @@ this error. Everything should work smoothly once you have added it to the lookup
 in `Terminal::Print::Commands`. Please consider sending it in as a PR, or filing a bug
 report!
 
+### It seems to be sending the wrong escape codes when using a different terminal on the same box
 
-This module is currently a bit under nourished. It hungers for a proper test suite and documentation.
+This should only be an issue for non-ANSI terminal users. The tradeoff we currently make
+is to only disable precompilation on the module which determines the width and height of the
+current screen. This means that other escape sequences in `Terminal::Print::Commands` will
+only be run once and then cached in precompiled form. Clearing the related precomp files is
+a quick and dirty solution. If you run into this issue, please let me know. I will certainly
+get overly excited about your ancient TTY :D
+
 
 Copyright 2015-2016, John Haltiwanger. Released under the Artistic License 2.0.

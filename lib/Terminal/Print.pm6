@@ -1,4 +1,62 @@
+use v6;
+
 unit class Terminal::Print;
+
+=begin pod
+=title Terminal::Print
+
+=head1 Synopsis
+
+L<Terminal::Print> implements an abstraction layer for printing characters to
+terminal screens with full Unicode support and -- crucially -- the ability to
+print from concurrent threads. The idea is to provide all the necessary
+mechanical details while leaving the actual so called 'TUI' abstractions to
+higher level libraries.
+
+Obvious applications include snake clones, rogue engines and golfed art works :)
+
+Oh, and Serious Monitoring Apps, of course.
+
+=head1 Usage
+
+L<Terminal::Print> creates you an object for you when you import it, stored in
+C<$Terminal::Print::T>. It also creates a constant C<T> for you in the C<OUR::>
+scope.
+
+Thus common usage would look like this:
+
+=for code
+T.initialize-screen;
+T.print-string(20, 20, DateTime.now);
+T.shutdown-screen;
+
+=head1 Miscellany
+
+=head2 Where are we at now?
+
+All the features you can observe while running C<perl6 t/basics.t> work using
+the new react/supply based L<Terminal::Print::Grid>. If you run that test file,
+you will notice that C<Terminal::Print> is needing a better test harness.
+Part of that is getting a C<STDERR> or some such pipe going, and printing state/
+That will make debugging a lot easier.
+
+Testing a thing that is primarily designed to print to a screen seems a bit
+difficult anyway. I almost think we should make it interactive. 'Did you see a
+screen of hearts?'
+
+So: async (as mentioned above), testing, and debugging are current pain points.
+Contributions welcome.
+
+=head2 Why not just use L<NativeCall> and C<ncurses>?
+
+I tried that first and it wasn't any fun. C<ncurses> unicode support is
+admirable considering the age and complexity of the library, but it
+still feels bolted on.
+
+C<ncurses> is not re-entrant, either, which would nix one of the main benefits
+we might be able to get from using Perl 6 -- easy async abstractions.
+
+=end pod
 
 use Terminal::Print::Grid;
 
@@ -199,17 +257,19 @@ method Str {
     ~$!current-grid;
 }
 
-sub initialize-screen is export {
-    print-command <save-screen>;
-    print-command <hide-cursor>;
-    print-command <clear>;
+method gist {
+    "\{ cols: {self.columns} rows: {self.rows} which: {self.WHICH} grid: {self.current-grid.WHICH} \}";
 }
 
-sub shutdown-screen is export {
-    print-command <clear>;
-    print-command <restore-screen>;
-    print-command <show-cursor>;
-}
+=begin pod
+=head2 Golfing
+The golfing mechanism is minimal. Further golfing functionality may be added via third party modules,
+but the following two features seemed to fulfill a 'necessary minimum' set of golfing requirements:
+    - Not being subjected to a constructor command, certainly not against the full name of the class
+    - Having a succinct subroutine form which can initialize and shutdown the screen automatically
+=end pod
+
+our $T = Terminal::Print.new;
 
 sub draw(Callable $block) is export {
     my $drawn-promise = Promise.new;
@@ -224,77 +284,7 @@ sub draw(Callable $block) is export {
     await $drawn-promise;
 }
 
-multi sub T($x, $y, $str?) is export {
-    $PRINTER //= Terminal::Print.new;
-    if $str {
-        $PRINTER.print-string($x, $y, $str);
-    } else {
-        $PRINTER.print-cell($x, $y);
-    }
+my package EXPORT::DEFAULT {
+    OUR::{ 'T' } := $Terminal::Print::T;
 }
 
-multi sub T() is export {
-    return $PRINTER //= Terminal::Print.new;
-}
-
-=begin pod
-=title Terminal::Print
-
-=head1 Synopsis
-
-L<Terminal::Print> implements an abstraction layer for printing characters to terminal
-screens. The idea is to provide all the necessary mechanical details while leaving the actual
-so called 'TUI' abstractions to higher level libraries.
-
-This is/will be done by achieving two technical goals: a) multiple grid objects
-which may be swapped in place, allowing for behind the sccene and b) allow any
-code at any time to print async to the screen. I say 'is/will be' because
-objective 'a' is finished, including both named and positional access.
-
-    $t.grid(0);  # first grid, comes free
-    $t.add-grid('home'); # create a second grid named 'home'
-    $t.grid('home');     # or $t.grid(1)
-
-'b' is also working! Most of the scripts in C<examples/> run async!
-
-Obvious applications include snake clones, rogue engines and golfed art works :)
-
-Oh, and Serious Monitoring Apps, of course.
-
-=head1 Usage
-
-In general an application will have only one L<Terminal::Print> object at a
-time. This object can <L|.initialize-screen>, which stores the current state of
-the terminal window and replaces it with a blank canvas.
-
-TODO: Write more. For now please check out C<examples/show-love.p6> and
-C<examples/zig-zag.p6> for usage examples. C<zig-zag> has an async invocation commented
-out above the current 'main' line of the program.
-
-=head1 Miscellany
-
-=head2 Where are we at now?
-
-All the features you can observe while running C<perl6 t/basics.t> work using
-the new react/supply based L<Terminal::Print::Grid>. If you run that test file,
-you will notice that C<Terminal::Print> is needing a better test harness.
-Part of that is getting a C<STDERR> or some such pipe going, and printing state/
-That will make debugging a lot easier.
-
-Testing a thing that is primarily designed to print to a screen seems a bit
-difficult anyway. I almost think we should make it interactive. 'Did you see a
-screen of hearts?'
-
-So: async (as mentioned above), testing, and debugging are current pain points.
-Contributions welcome.
-
-=head2 Why not just use L<NativeCall> and C<ncurses>?
-
-I tried that first and it wasn't any fun. C<ncurses> unicode support is
-admirable considering the age and complexity of the library, but it
-still feels bolted on.
-
-C<ncurses> is not re-entrant, either, which would nix one of the main benefits
-we might be able to get from using Perl 6 -- easy async abstractions.
-
-=end pod

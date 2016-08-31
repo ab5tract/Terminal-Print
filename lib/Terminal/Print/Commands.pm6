@@ -1,13 +1,29 @@
 unit module Terminal::Print::Commands;
 
-#
-# Terminal::Print::Dimensions gives us columns() and rows().
-# Otherwise the dimensions to be printed will always be the size of the
-# first terminal window you ran/installed the module on.
-# 
-# My working hope is that pushing just these two things into a smaller module,
-# the cost due to 'no precompilation' will be reduced.
-#
+=begin pod
+=title Terminal::Print::Commands
+
+=head1 Synopsis
+
+This module essentially just creates a hash of escape sequences for doing various
+things, along with a few exported sub-routines to make interacting with this hash
+a bit nicer.
+
+=head1 A note on precompilation
+
+Terminal::Print::Dimensions gives us columns() and rows().
+Otherwise the dimensions to be printed will always be the size of the
+first terminal window you ran/installed the module on.
+
+My working hope is that pushing just these two things into a smaller module,
+will reduce the cost incurred by 'no precompilation' by isolating these two
+clearly un-cachable values.
+
+Thus, the jury may still be out on whether this module needs to have C<no precompilation>
+set or not. Please get in touch if you run into any issues.
+
+=end pod
+
 use Terminal::Print::Dimensions; 
 
 our %human-command-names;

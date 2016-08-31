@@ -1,4 +1,5 @@
 use OO::Monitors;
+
 use Terminal::Print::Commands;
 
 unit monitor Terminal::Print::Grid;
@@ -24,7 +25,6 @@ has @.grid;
 has $.grid-string = '';
 
 has $.move-cursor;
-has $!print-enabled = True;
 
 method new($columns, $rows, :$move-cursor) {
     my @grid-indices = (^$columns X ^$rows)>>.Array;
@@ -58,25 +58,22 @@ multi method change-cell($x, $y, Cell $cell) {
 }
 
 multi method print-cell($x, $y) {
-    print self.cell-string($x, $y) if $!print-enabled;
+    print self.cell-string($x, $y);
 }
 
 multi method print-cell($x, $y, Str $char) {
-    return unless $!print-enabled;
     my $cell = Cell.new(:$char);
     self.change-cell($x, $y, $cell);
     print self.cell-string($x, $y);
 }
 
 multi method print-cell($x, $y, %c) {
-    return unless $!print-enabled;
     my $cell = Cell.new(|%c);
     self.change-cell($x, $y, $cell);
     print self.cell-string($x, $y);
 }
 
 method print-string($x, $y, Str() $string) {
-    return unless $!print-enabled;
     my ($off-x, $off-y) = 0 xx 2;
     for $string.lines -> $line {
         my @chars = $line.comb;
@@ -87,10 +84,6 @@ method print-string($x, $y, Str() $string) {
         $off-y++;
         $off-x = 0;
     }
-}
-
-method disable {
-    $!print-enabled = False;
 }
 
 method Str {
