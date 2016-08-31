@@ -44,9 +44,9 @@ At first I thought I might try writing a NativeCall wrapper around ncurses. Then
 
 ## Roadmap
 
-Status: *BETA*
+Status: *BETA* -- Current API is fixed and guaranteed!
 
-- Create an abstraction around the entire draw cycle, replacing the initialize-draw-shutdown patttern with a block that is passed to a `.draw` method on the `Terminal::Print` object itself
+- Improved documentation and examples
 - Upgrade the tests with robust comparisons against a known-good corpus
 - Investigate the potential of binding to `libtparm` (the backend to `tput`) via NativeCall
 

@@ -2,7 +2,7 @@ use Test;
 use lib 'lib';
 
 chdir('t');
-plan 10;
+plan 4;
 
 sub slurp-corpus($topic) {
     "corpus/$topic".IO.slurp;
@@ -19,8 +19,8 @@ lives-ok { my $t = Terminal::Print.new( :cursor-profile('universal') ) },
 dies-ok { my $t = Terminal::Print.new( :cursor-profile('nonexistent') ) },
     "Cannot create Terminal::Print object with print-profile 'nonexistent'";
 
-ok $b.print-command('save-screen') eq slurp-corpus('save-screen'), ".save-screen matches corpus";
-ok $b.print-command('restore-screen') eq slurp-corpus('restore-screen'), ".restore-screen matches corpus";
+#ok $b.print-command('save-screen') eq slurp-corpus('save-screen'), ".save-screen matches corpus";
+#ok $b.print-command('restore-screen') eq slurp-corpus('restore-screen'), ".restore-screen matches corpus";
 
 #
 # lives-ok {

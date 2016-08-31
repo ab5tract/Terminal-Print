@@ -130,11 +130,15 @@ method clear-screen {
 }
 
 method initialize-screen {
-    initialize-screen();
+    print-command <save-screen>;
+    print-command <hide-cursor>;
+    print-command <clear>;
 }
 
 method shutdown-screen {
-    shutdown-screen();
+    print-command <clear>;
+    print-command <restore-screen>;
+    print-command <show-cursor>;
 }
 
 method print-command( $command ) {
@@ -275,10 +279,10 @@ sub draw(Callable $block) is export {
     my $drawn-promise = Promise.new;
     start {
         my $end-promise = Promise.new;
-        initialize-screen;
+        $T.initialize-screen;
         $block($end-promise);
         await $end-promise;
-        shutdown-screen;
+        $T.shutdown-screen;
         $drawn-promise.keep;
     }
     await $drawn-promise;
