@@ -4,7 +4,6 @@ use Terminal::Print;
 
 my $t = Terminal::Print.new;
 
-say $t.rows ~ " " ~ $t.columns; die;
 
 $t.initialize-screen;
 

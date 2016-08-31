@@ -12,9 +12,11 @@ has %!grid-name-map;
 has $.columns;
 has $.rows;
 
+my Terminal::Print $PRINTER;    # singleton for golfing and subroutines
+
 use Terminal::Print::Commands;
 
-constant T = Terminal::Print::Commands;
+constant Commands = Terminal::Print::Commands;
 
 subset Valid::X of Int is export where * < %T::attributes<columns>;
 subset Valid::Y of Int is export where * < %T::attributes<rows>;
@@ -24,8 +26,8 @@ has Terminal::Print::CursorProfile $.cursor-profile;
 has $.move-cursor;
 
 method new( :$cursor-profile = 'ansi' ) {
-    my $columns   = +%T::attributes<columns>;
-    my $rows      = +%T::attributes<rows>;
+    my $columns   = +%Commands::attributes<columns>;
+    my $rows      = +%Commands::attributes<rows>;
     my $move-cursor = move-cursor-template($cursor-profile);
 
     my $grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
@@ -70,15 +72,11 @@ method clear-screen {
 }
 
 method initialize-screen {
-    print-command <save-screen>;
-    print-command <hide-cursor>;
-    print-command <clear>;
+    initialize-screen();
 }
 
 method shutdown-screen {
-    print-command <clear>;
-    print-command <restore-screen>;
-    print-command <show-cursor>;
+    shutdown-screen();
 }
 
 method print-command( $command ) {
@@ -199,6 +197,44 @@ multi method print-grid( Str $name ) {
 
 method Str {
     ~$!current-grid;
+}
+
+sub initialize-screen is export {
+    print-command <save-screen>;
+    print-command <hide-cursor>;
+    print-command <clear>;
+}
+
+sub shutdown-screen is export {
+    print-command <clear>;
+    print-command <restore-screen>;
+    print-command <show-cursor>;
+}
+
+sub draw(Callable $block) is export {
+    my $drawn-promise = Promise.new;
+    start {
+        my $end-promise = Promise.new;
+        initialize-screen;
+        $block($end-promise);
+        await $end-promise;
+        shutdown-screen;
+        $drawn-promise.keep;
+    }
+    await $drawn-promise;
+}
+
+multi sub T($x, $y, $str?) is export {
+    $PRINTER //= Terminal::Print.new;
+    if $str {
+        $PRINTER.print-string($x, $y, $str);
+    } else {
+        $PRINTER.print-cell($x, $y);
+    }
+}
+
+multi sub T() is export {
+    return $PRINTER //= Terminal::Print.new;
 }
 
 =begin pod

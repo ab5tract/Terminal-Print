@@ -1,8 +1,14 @@
 unit module Terminal::Print::Commands;
 
+#
+# Terminal::Print::Dimensions gives us columns() and rows().
 # Otherwise the dimensions to be printed will always be the size of the
 # first terminal window you ran/installed the module on.
-no precompilation;
+# 
+# My working hope is that pushing just these two things into a smaller module,
+# the cost due to 'no precompilation' will be reduced.
+#
+use Terminal::Print::Dimensions; 
 
 our %human-command-names;
 our %human-commands;
@@ -71,8 +77,8 @@ BEGIN {
         %human-commands{$human} = &( %tput-commands{$command} );
     }
 
-    %attributes<columns>  = %*ENV<COLUMNS> //= qq:x{ tput cols };
-    %attributes<rows>     = %*ENV<ROWS>    //= qq:x{ tput lines };
+    %attributes<columns>  = %*ENV<COLUMNS> //= columns();
+    %attributes<rows>     = %*ENV<ROWS>    //= rows();
 }
 
 sub move-cursor-template( Terminal::Print::CursorProfile $profile = 'ansi' ) returns Code is export {
