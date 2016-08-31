@@ -1,0 +1,20 @@
+{
+  "name" : "Terminal::Print",
+  "source-url" : "git://github.com/ab5tract/Terminal-Print.git",
+  "perl" : "6.c",
+  "resources" : [ ],
+  "build-depends" : [ ],
+  "provides" : {
+    "Terminal::Print" : "lib/Terminal/Print.pm6",
+    "Terminal::Print::Commands" : "lib/Terminal/Print/Commands.pm6"
+  },
+  "depends" : [
+    "Terminal::ANSIColor"
+  ],
+  "description" : "Print characters to your terminal from multiple threads as a simple grid",
+  "test-depends" : [ ],
+  "version" : "0.50",
+  "authors" : [
+    "John Haltiwanger"
+  ]
+}
