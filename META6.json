@@ -7,13 +7,15 @@
   "provides" : {
     "Terminal::Print" : "lib/Terminal/Print.pm6",
     "Terminal::Print::Commands" : "lib/Terminal/Print/Commands.pm6"
+    "Terminal::Print::Dimensions" : "lib/Terminal/Print/Dimensions.pm6"
+    "Terminal::Print::Grid" : "lib/Terminal/Print/Grid.pm6"
   },
   "depends" : [
     "Terminal::ANSIColor"
   ],
   "description" : "Asynchronous printing to your terminal -- as a simple grid",
   "test-depends" : [ ],
-  "version" : "0.50",
+  "version" : "0.555",
   "authors" : [
     "John Haltiwanger"
   ]
