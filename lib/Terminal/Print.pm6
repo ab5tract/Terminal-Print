@@ -304,6 +304,11 @@ sub p($x, $y, $string?) is export {
     $T.print-string($x, $y, $string);
 }
 
+sub ch($x, $y, $char, $color?) is export {
+    my $cell = $color ?? %(:$char, :$color) !! $char;
+    $T.change-cell($x, $y, $cell);
+}
+
 sub cl($x, $y, $char, $color?) is export {
     my $cell = $color ?? %(:$char, :$color) !! $char;
     $T.print-cell($x, $y, $cell);
@@ -313,9 +318,14 @@ sub slp($seconds) is export {
     sleep $seconds;
 }
 
+# These are also available via Terminal::ANSIColor
+# reset bold underline inverse
+
 my package EXPORT::DEFAULT {
     OUR::{ 'T' }  := $Terminal::Print::T;
     OUR::{ 'w' }  := $Terminal::Print::T.columns;
     OUR::{ 'h' }  := $Terminal::Print::T.rows;
     OUR::{ 'in' } := $Terminal::Print::T.indices;
+    OUR::{ 'fgc' } := [ <black red green yellow blue magenta cyan white default> ];
+    OUR::{ 'bgc' } := [ <on_black on_red on_green on_yellow on_blue on_magenta on_cyan on_white on_default> ];
 }
