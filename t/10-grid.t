@@ -15,7 +15,7 @@ my $b = Terminal::Print.new;
 
 lives-ok {
     do {
-        for $b.grid-indices -> [$x, $y] {
+        for $b.indices -> [$x, $y] {
             $b.change-cell($x, $y, '♥');
         }
     }
@@ -34,7 +34,7 @@ lives-ok {
     my @colors = <magenta red yellow blue green cyan>;
     do {
         $b.initialize-screen;
-        for $b.grid-indices -> [$x, $y] {
+        for $b.indices -> [$x, $y] {
             $b.print-cell: $x, $y, %( :char('♥'), :color(@colors.roll) );
         }
         $b.shutdown-screen;

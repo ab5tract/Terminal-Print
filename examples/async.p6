@@ -7,7 +7,7 @@ my $t = Terminal::Print.new;
 
 $t.initialize-screen;
 
-my @indices = $t.grid-indices;
+my @indices = $t.indices;
 
 my @alphabet = 'j'..'z';
 

@@ -64,7 +64,7 @@ has Terminal::Print::Grid $.current-grid;
 
 has Terminal::Print::Grid @.grids;
 
-has @.grid-indices;
+has @.indices;
 has %!grid-name-map;
 
 has $.columns;
@@ -89,21 +89,23 @@ method new( :$cursor-profile = 'ansi' ) {
     my $move-cursor = move-cursor-template($cursor-profile);
 
     my $grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
-    my @grid-indices = $grid.grid-indices;
+    my @indices = $grid.indices;
 
     self.bless(
-                :$columns, :$rows, :@grid-indices,
+                :$columns, :$rows, :@indices,
                 :$cursor-profile, :$move-cursor,
                     current-grid    => $grid,
               );
 }
 
-submethod BUILD( :$current-grid, :$!columns, :$!rows, :@grid-indices, :$!cursor-profile, :$!move-cursor ) {
+submethod BUILD( :$current-grid, :$!columns, :$!rows, :@indices, :$!cursor-profile, :$!move-cursor ) {
     push @!grids, $current-grid;
 
     $!current-grid := @!grids[0];
 
-    @!grid-indices = @grid-indices;  # TODO: bind this to @!grids[0].grid-indices?
+    @!indices = @indices;  # TODO: bind this to @!grids[0].indices?
+
+    # set up a tap on SIGINT so that we can cleanly shutdown, restoring the previous screen and cursor
     signal(SIGINT).tap: {
         @!grids>>.disable;
         self.shutdown-screen;
@@ -181,6 +183,11 @@ multi method FALLBACK( Str $command-name where { %T::human-command-names{$_} } )
 #    In the case of @!grids, we pass back the grid array directly from the
 #    Terminal::Print::Grid object, actually notching both DWIM and DRY in one swoosh.
 #    because you can do things like  $b.grid("background")[42][42] this way.
+
+multi method grid() {
+    $!current-grid.grid;
+}
+
 multi method grid( Int $index ) {
     @!grids[$index].grid;
 }
@@ -263,13 +270,16 @@ method gist {
     "\{ cols: {self.columns} rows: {self.rows} which: {self.WHICH} grid: {self.current-grid.WHICH} \}";
 }
 
-=begin pod
-=head2 Golfing
+=begin Golfing
+
 The golfing mechanism is minimal. Further golfing functionality may be added via third party modules,
-but the following two features seemed to fulfill a 'necessary minimum' set of golfing requirements:
+but the following features seemed to fulfill a 'necessary minimum' set of golfing requirements:
+
     - Not being subjected to a constructor command, certainly not against the full name of the class
     - Having a succinct subroutine form which can initialize and shutdown the screen automatically
-=end pod
+    - Easy access to .print-string, sleep, colorization, and the grid indices list
+
+=end Golfing
 
 our $T = Terminal::Print.new;
 
@@ -290,11 +300,16 @@ sub d($block) is export {
     draw($block);
 }
 
-sub p($x, $y, $c?) is export {
-    $T.print-string($x, $y, $c);
+sub p($x, $y, $string?) is export {
+    $T.print-string($x, $y, $string);
 }
 
-sub sl($seconds) is export {
+sub cl($x, $y, $char, $color?) is export {
+    my $cell = $color ?? %(:$char, :$color) !! $char;
+    $T.print-cell($x, $y, $cell);
+}
+
+sub slp($seconds) is export {
     sleep $seconds;
 }
 
@@ -302,4 +317,5 @@ my package EXPORT::DEFAULT {
     OUR::{ 'T' }  := $Terminal::Print::T;
     OUR::{ 'w' }  := $Terminal::Print::T.columns;
     OUR::{ 'h' }  := $Terminal::Print::T.rows;
+    OUR::{ 'in' } := $Terminal::Print::T.indices;
 }

@@ -8,7 +8,7 @@ my $b = Terminal::Print.new;
 
 $b.initialize-screen;
 
-for $b.grid-indices.pick(*) -> [$x,$y] {
+for $b.indices.pick(*) -> [$x,$y] {
     next unless $x %% 3;
     $b.print-cell: $x, $y, %( char => '♥', color => @colors.roll);
 }

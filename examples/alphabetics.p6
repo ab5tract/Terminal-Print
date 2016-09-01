@@ -11,7 +11,7 @@ $p.initialize-screen;
 my @char-ranges = '─'..'╿', 'ᚠ'..'ᛰ';
 
 for @char-ranges.pick(*) -> @alphabet {
-    for $p.grid-indices -> [$x,$y] {
+    for $p.indices -> [$x,$y] {
         $p.print-cell($x, $y, @alphabet.roll)
             if $y %% 7 || ($x %% (1..5).roll || $y %% (1..6).roll);
     }
