@@ -14,7 +14,7 @@ subtest {
     lives-ok {
         do draw( -> Promise $p {
             my $secondly = Supply.interval(1);
-            $secondly.tap: { T.print-string(50, 25, DateTime.now(formatter => { sprintf "%02d:%02d:%02d",.hour,.minute,.second })) };
+            $secondly.tap: { T.print-string(T.columns/2, T.rows/2, DateTime.now(formatter => { sprintf "%02d:%02d:%02d",.hour,.minute,.second })) };
             my $ender = Supply.interval($STOP-TIME);
             # stop-time of 0 should short-circuit the "don't fire on first tick" anonymous state counter
             $ender.tap: { (!$STOP-TIME || $++) && $p.keep };

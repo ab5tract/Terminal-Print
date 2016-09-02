@@ -276,8 +276,11 @@ The golfing mechanism is minimal. Further golfing functionality may be added via
 but the following features seemed to fulfill a 'necessary minimum' set of golfing requirements:
 
     - Not being subjected to a constructor command, certainly not against the full name of the class
+        + Solved via 'T'
     - Having a succinct subroutine form which can initialize and shutdown the screen automatically
-    - Easy access to .print-string, sleep, colorization, and the grid indices list
+        + Solved via 'draw'
+    - Easy access to .print-string, sleep, colorization, and the grid indices list. (Even easier than using T());
+        + Solved via 'd', 'w', 'h', 'p', 'cl', 'ch', 'slp', 'fgc', 'bgc', 'in'
 
 =end Golfing
 
@@ -301,31 +304,28 @@ sub d($block) is export {
 }
 
 sub p($x, $y, $string?) is export {
-    $T.print-string($x, $y, $string);
+    $T.current-grid.print-string($x, $y, $string);
 }
 
 sub ch($x, $y, $char, $color?) is export {
     my $cell = $color ?? %(:$char, :$color) !! $char;
-    $T.change-cell($x, $y, $cell);
+    $T.current-grid.change-cell($x, $y, $cell);
 }
 
 sub cl($x, $y, $char, $color?) is export {
     my $cell = $color ?? %(:$char, :$color) !! $char;
-    $T.print-cell($x, $y, $cell);
+    $T.current-grid.print-cell($x, $y, $cell);
 }
 
 sub slp($seconds) is export {
     sleep $seconds;
 }
 
-# These are also available via Terminal::ANSIColor
-# reset bold underline inverse
-
 my package EXPORT::DEFAULT {
-    OUR::{ 'T' }  := $Terminal::Print::T;
-    OUR::{ 'w' }  := $Terminal::Print::T.columns;
-    OUR::{ 'h' }  := $Terminal::Print::T.rows;
-    OUR::{ 'in' } := $Terminal::Print::T.indices;
-    OUR::{ 'fgc' } := [ <black red green yellow blue magenta cyan white default> ];
-    OUR::{ 'bgc' } := [ <on_black on_red on_green on_yellow on_blue on_magenta on_cyan on_white on_default> ];
+    OUR::{ 'T' }   := $Terminal::Print::T;
+    OUR::{ 'w' }   := $Terminal::Print::T.columns;
+    OUR::{ 'h' }   := $Terminal::Print::T.rows;
+    OUR::{ 'in' }  := $Terminal::Print::T.indices;
+    OUR::{ 'fgc' } := @Terminal::Print::Commands::fg_colors;
+    OUR::{ 'bgc' } := @Terminal::Print::Commands::bg_colors;
 }
