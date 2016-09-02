@@ -13,5 +13,5 @@ first terminal window you ran/installed the module on.
 
 =end pod
 
-sub columns is export   { qq:x{ tput cols  } .chomp }
-sub rows is export      { qq:x{ tput lines } .chomp }
+sub columns is export   { q:x{ tput cols  } .chomp }
+sub rows is export      { q:x{ tput lines } .chomp }
