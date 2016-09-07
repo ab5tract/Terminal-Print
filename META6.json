@@ -11,11 +11,12 @@
     "Terminal::Print::Grid" : "lib/Terminal/Print/Grid.pm6"
   },
   "depends" : [
+    "OO::Monitors",
     "Terminal::ANSIColor"
   ],
   "description" : "Asynchronous printing to your terminal -- as a simple grid",
   "test-depends" : [ ],
-  "version" : "0.58",
+  "version" : "0.60",
   "authors" : [
     "John Haltiwanger"
   ]
