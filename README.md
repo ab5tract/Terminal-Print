@@ -11,16 +11,18 @@ Right now it only provides a grid with some nice access semantics.
 ````
 my $screen = Terminal::Print.new;
 
-$screen.initialize-screen;              # saves current screen state, blanks screen, and hides cursor
+$screen.initialize-screen;                      # saves current screen state, blanks screen, and hides cursor
 
-$screen.change-cell(9, 23, '%');        # change the contents of the grid cell at line 9 column 23
-$screen.cell-string(9, 23);             # returns the escape sequence to put '%' on line 9 column 23
-$screen.print-cell(9, 23);              # prints "%" on the 23rd column of the 9th row
-$screen.print-cell(9, 23, '&');         # changes the cell at 9:23 to '&' and prints it
+$screen.change-cell(9, 23, '%');                # change the contents of the grid cell at line 9 column 23
+$screen.cell-string(9, 23);                     # returns the escape sequence to put '%' on line 9 column 23
+$screen.print-cell(9, 23);                      # prints "%" on the 23rd column of the 9th row
+$screen.print-cell(9, 23, '&');                 # changes the cell at 9:23 to '&' and prints it
 
-$screen(9,23,'%');                      # uses CALL-ME to dispatch the provided arguments to .print-cell
+$screen.print-string(9, 23, 'hello\nworld!");   # prints a whole string (which can include newlines!)
 
-$screen.shutdown-screen;                # unwinds the process from .initialize-screen
+$screen(9,23,'hello\nworld!');                  # uses CALL-ME to dispatch the provided arguments to .print-string
+
+$screen.shutdown-screen;                        # unwinds the process from .initialize-screen
 ````
 
 Check out some animations:
@@ -29,7 +31,7 @@ Check out some animations:
 perl6 -Ilib examples/show-love.p6
 perl6 -Ilib examples/zig-zag.p6
 perl6 -Ilib examples/matrix-ish.p6
-perl6 -Ilib
+perl6 -Ilib examples/async.p6
 ````
 
 By default the `Terminal::Print` object will use ANSI escape sequences for it's cursor drawing, but you can tell it to use `universal` if you would prefer to use the cursor movement commands as provided by `tput`. (You should only really need this if you are having trouble with the default).
