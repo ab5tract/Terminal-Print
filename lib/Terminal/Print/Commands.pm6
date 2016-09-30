@@ -40,7 +40,7 @@ subset Terminal::Print::CursorProfile is export where * ~~ / ^('ansi' | 'univers
 
 BEGIN {
     # we can add more, but there is a qq:x call so whitelist is the way to go.
-    my %valid-terminals = <xterm xterm-256color vt100 screen> X=> True;
+    my %valid-terminals = <xterm xterm-256color vt100 screen screen-256color> X=> True;
     my $term = %*ENV<TERM> || 'xterm';
 
     die "Please update %valid-terminals with your desired TERM ('$term', is it?) and submit a PR if it works"
