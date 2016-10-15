@@ -79,7 +79,7 @@ INIT {
                 %tput-commands{$command} = qq:x{ tput -T $term $command }
             }
         }
-        %human-commands{$human} = &( %tput-commands{$command} );
+        %human-commands{$human} = %tput-commands{$command};
     }
 
     %attributes<columns>  = %*ENV<COLUMNS> //= columns();
