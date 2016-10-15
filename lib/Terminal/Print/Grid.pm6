@@ -72,13 +72,12 @@ multi method print-string($x, $y) {
 }
 
 multi method print-string($x, $y, Str() $string) {
-    my ($off-x, $off-y) = 0 xx 2;
-    if +$string.comb == 1 {
+    if $string.chars == 1 {
         self.print-cell($x, $y, $string);
     } else {
+        my ($off-x, $off-y) = 0, 0;
         for $string.lines -> $line {
-            my @chars = $line.comb;
-            for @chars -> $c {
+            for $line.comb -> $c {
                 self.print-cell($x + $off-x, $y + $off-y, $c);
                 $off-x++;
             }
