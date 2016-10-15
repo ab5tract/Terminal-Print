@@ -11,10 +11,7 @@ my class Cell {
     has $!string;
 
     method Str {
-        return $!string //= do {
-            $!color ?? colored($!char, $!color)
-                    !! $!char
-        }
+        $!string //= $!color ?? colored($!char, $!color) !! $!char
     }
 }
 
