@@ -24,7 +24,7 @@ our @styles    = [ <reset bold underline inverse> ];
 subset Terminal::Print::CursorProfile is export where * ~~ / ^('ansi' | 'universal')$ /;
 
 # we can add more, but there is a qq:x call so whitelist is the way to go.
-BEGIN my @valid-terminals = < xterm xterm-256color vt100 screen screen-256color >;
+constant @valid-terminals = < xterm xterm-256color vt100 screen screen-256color >;
 
 INIT {
     my $term = %*ENV<TERM> || 'xterm';
