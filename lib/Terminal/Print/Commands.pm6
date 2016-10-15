@@ -9,22 +9,7 @@ This module essentially just creates a hash of escape sequences for doing variou
 things, along with a few exported sub-routines to make interacting with this hash
 a bit nicer.
 
-=head1 A note on precompilation
-
-Terminal::Print::Dimensions gives us columns() and rows().
-Otherwise the dimensions to be printed will always be the size of the
-first terminal window you ran/installed the module on.
-
-My working hope is that pushing just these two things into a smaller module,
-will reduce the cost incurred by 'no precompilation' by isolating these two
-clearly un-cachable values.
-
-Thus, the jury may still be out on whether this module needs to have C<no precompilation>
-set or not. Please get in touch if you run into any issues.
-
 =end pod
-
-use Terminal::Print::Dimensions; 
 
 our %human-command-names;
 our %human-commands;
@@ -38,7 +23,7 @@ our @styles    = [ <reset bold underline inverse> ];
 
 subset Terminal::Print::CursorProfile is export where * ~~ / ^('ansi' | 'universal')$ /;
 
-BEGIN {
+INIT {
     # we can add more, but there is a qq:x call so whitelist is the way to go.
     my %valid-terminals = <xterm xterm-256color vt100 screen screen-256color> X=> True;
     my $term = %*ENV<TERM> || 'xterm';
@@ -100,6 +85,9 @@ BEGIN {
     %attributes<columns>  = %*ENV<COLUMNS> //= columns();
     %attributes<rows>     = %*ENV<ROWS>    //= rows();
 }
+
+sub columns is export   { q:x{ tput cols  } .chomp }
+sub rows is export      { q:x{ tput lines } .chomp }
 
 sub move-cursor-template( Terminal::Print::CursorProfile $profile = 'ansi' ) returns Code is export {
     %human-commands{'move-cursor'}{$profile};
