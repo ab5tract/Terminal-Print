@@ -30,7 +30,6 @@ method new($columns, $rows, :$move-cursor) {
     my @indices = (^$columns X ^$rows)>>.Array;
     my @grid;
     for @indices -> [$x, $y] {
-        @grid[$x] //= [];
         @grid[$x][$y] = " ";
     }
     $move-cursor //= move-cursor-template;
