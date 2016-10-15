@@ -54,31 +54,24 @@ multi method change-cell($x, $y, Cell $cell) {
 }
 
 multi method print-cell($x, $y) {
-    return unless $!print-enabled;
-    print self.cell-string($x, $y);
+    print self.cell-string($x, $y) if $!print-enabled;
 }
 
 multi method print-cell($x, $y, Str $char) {
-    return unless $!print-enabled;
-    my $cell = Cell.new(:$char);
-    self.change-cell($x, $y, $cell);
-    print self.cell-string($x, $y);
+    self.change-cell($x, $y, Cell.new(:$char));
+    self.print-cell($x, $y);
 }
 
 multi method print-cell($x, $y, %c) {
-    return unless $!print-enabled;
-    my $cell = Cell.new(|%c);
-    self.change-cell($x, $y, $cell);
-    print self.cell-string($x, $y);
+    self.change-cell($x, $y, Cell.new(|%c));
+    self.print-cell($x, $y);
 }
 
 multi method print-string($x, $y) {
-    return unless $!print-enabled;
     self.print-cell($x, $y);
 }
 
 multi method print-string($x, $y, Str() $string) {
-    return unless $!print-enabled;
     my ($off-x, $off-y) = 0 xx 2;
     if +$string.comb == 1 {
         self.print-cell($x, $y, $string);
