@@ -23,13 +23,14 @@ our @styles    = [ <reset bold underline inverse> ];
 
 subset Terminal::Print::CursorProfile is export where * ~~ / ^('ansi' | 'universal')$ /;
 
+# we can add more, but there is a qq:x call so whitelist is the way to go.
+BEGIN my @valid-terminals = < xterm xterm-256color vt100 screen screen-256color >;
+
 INIT {
-    # we can add more, but there is a qq:x call so whitelist is the way to go.
-    my %valid-terminals = <xterm xterm-256color vt100 screen screen-256color> X=> True;
     my $term = %*ENV<TERM> || 'xterm';
 
-    die "Please update %valid-terminals with your desired TERM ('$term', is it?) and submit a PR if it works"
-        unless %valid-terminals{ $term };
+    die "Please update @valid-terminals with your desired TERM ('$term', is it?) and submit a PR if it works"
+        unless $term (elem) @valid-terminals;
 
     die 'Cannot use Terminal::Print without `tput` (usually provided by `ncurses`)'
         unless q:x{ which tput };
