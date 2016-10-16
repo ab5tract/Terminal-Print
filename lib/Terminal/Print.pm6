@@ -60,7 +60,7 @@ we might be able to get from using Perl 6 -- easy async abstractions.
 
 use Terminal::Print::Grid;
 
-has Terminal::Print::Grid $.current-grid;
+has Terminal::Print::Grid $.current-grid handles 'indices';
 
 has Terminal::Print::Grid @.grids;
 
@@ -89,21 +89,18 @@ method new( :$cursor-profile = 'ansi' ) {
     my $move-cursor = move-cursor-template($cursor-profile);
 
     my $grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
-    my @indices = $grid.indices;
 
     self.bless(
-                :$columns, :$rows, :@indices,
+                :$columns, :$rows,
                 :$cursor-profile, :$move-cursor,
                     current-grid    => $grid,
               );
 }
 
-submethod BUILD( :$current-grid, :$!columns, :$!rows, :@indices, :$!cursor-profile, :$!move-cursor ) {
+submethod BUILD( :$current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!move-cursor ) {
     push @!grids, $current-grid;
 
     $!current-grid := @!grids[0];
-
-    @!indices = @indices;  # TODO: bind this to @!grids[0].indices?
 
     # set up a tap on SIGINT so that we can cleanly shutdown, restoring the previous screen and cursor
     signal(SIGINT).tap: {
