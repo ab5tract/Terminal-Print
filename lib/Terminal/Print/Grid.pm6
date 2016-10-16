@@ -25,10 +25,8 @@ has $!print-enabled = True;
 
 method new($columns, $rows, :$move-cursor) {
     my @indices = (^$columns X ^$rows)>>.Array;
-    my @grid;
-    for @indices -> [$x, $y] {
-        @grid[$x][$y] = " ";
-    }
+    my @grid = [ [ ' ' xx $rows ] xx $columns ];
+
     $move-cursor //= move-cursor-template;
 
     self.bless(:$columns, :$rows, :@grid, :@indices, :$move-cursor);
