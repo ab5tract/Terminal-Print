@@ -84,23 +84,17 @@ has Terminal::Print::CursorProfile $.cursor-profile;
 has $.move-cursor;
 
 method new( :$cursor-profile = 'ansi' ) {
-    my $columns   = +%Commands::attributes<columns>;
-    my $rows      = +%Commands::attributes<rows>;
-    my $move-cursor = move-cursor-template($cursor-profile);
+    my $columns      = +%Commands::attributes<columns>;
+    my $rows         = +%Commands::attributes<rows>;
+    my $move-cursor  = move-cursor-template($cursor-profile);
+    my $current-grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
 
-    my $grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
-
-    self.bless(
-                :$columns, :$rows,
-                :$cursor-profile, :$move-cursor,
-                    current-grid    => $grid,
-              );
+    self.bless( :$columns, :$rows, :$current-grid,
+                :$cursor-profile,  :$move-cursor );
 }
 
-submethod BUILD( :$current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!move-cursor ) {
-    push @!grids, $current-grid;
-
-    $!current-grid := @!grids[0];
+submethod BUILD( :$!current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!move-cursor ) {
+    push @!grids, $!current-grid;
 
     # set up a tap on SIGINT so that we can cleanly shutdown, restoring the previous screen and cursor
     signal(SIGINT).tap: {
