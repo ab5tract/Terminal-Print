@@ -7,7 +7,6 @@
   "provides" : {
     "Terminal::Print" : "lib/Terminal/Print.pm6",
     "Terminal::Print::Commands" : "lib/Terminal/Print/Commands.pm6",
-    "Terminal::Print::Dimensions" : "lib/Terminal/Print/Dimensions.pm6",
     "Terminal::Print::Grid" : "lib/Terminal/Print/Grid.pm6"
   },
   "depends" : [

@@ -168,6 +168,10 @@ multi method CALL-ME($x, $y) {
     $!current-grid.print-cell($x, $y);
 }
 
+multi method CALL-ME($x, $y, %c) {
+    $!current-grid.print-cell($x, $y, %c);
+}
+
 multi method CALL-ME($x, $y, $c) {
     $!current-grid.print-string($x, $y, $c);
 }
