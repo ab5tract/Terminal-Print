@@ -60,11 +60,10 @@ we might be able to get from using Perl 6 -- easy async abstractions.
 
 use Terminal::Print::Grid;
 
-has Terminal::Print::Grid $.current-grid;
+has Terminal::Print::Grid $.current-grid handles 'indices';
 
 has Terminal::Print::Grid @.grids;
 
-has @.indices;
 has %!grid-name-map;
 
 has $.columns;
@@ -84,26 +83,17 @@ has Terminal::Print::CursorProfile $.cursor-profile;
 has $.move-cursor;
 
 method new( :$cursor-profile = 'ansi' ) {
-    my $columns   = +%Commands::attributes<columns>;
-    my $rows      = +%Commands::attributes<rows>;
-    my $move-cursor = move-cursor-template($cursor-profile);
+    my $columns      = +%Commands::attributes<columns>;
+    my $rows         = +%Commands::attributes<rows>;
+    my $move-cursor  = move-cursor-template($cursor-profile);
+    my $current-grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
 
-    my $grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
-    my @indices = $grid.indices;
-
-    self.bless(
-                :$columns, :$rows, :@indices,
-                :$cursor-profile, :$move-cursor,
-                    current-grid    => $grid,
-              );
+    self.bless( :$columns, :$rows, :$current-grid,
+                :$cursor-profile,  :$move-cursor );
 }
 
-submethod BUILD( :$current-grid, :$!columns, :$!rows, :@indices, :$!cursor-profile, :$!move-cursor ) {
-    push @!grids, $current-grid;
-
-    $!current-grid := @!grids[0];
-
-    @!indices = @indices;  # TODO: bind this to @!grids[0].indices?
+submethod BUILD( :$!current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!move-cursor ) {
+    push @!grids, $!current-grid;
 
     # set up a tap on SIGINT so that we can cleanly shutdown, restoring the previous screen and cursor
     signal(SIGINT).tap: {
