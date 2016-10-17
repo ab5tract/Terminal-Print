@@ -64,7 +64,6 @@ has Terminal::Print::Grid $.current-grid handles 'indices';
 
 has Terminal::Print::Grid @.grids;
 
-has @.indices;
 has %!grid-name-map;
 
 has $.columns;
