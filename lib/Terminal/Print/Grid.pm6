@@ -93,10 +93,7 @@ method disable {
 }
 
 method Str {
-    unless $!grid-string {
-        for @!indices -> [$x, $y] {
-            $!grid-string ~= self.cell-string($x, $y);
-        }
+    $!grid-string ||= join '', ^$!rows .map: -> $y {
+        $!move-cursor(0, $y) ~ (^$!columns .map(-> $x { @!grid[$x][$y] }).join)
     }
-    $!grid-string
 }
