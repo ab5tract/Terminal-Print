@@ -54,15 +54,13 @@ INIT {
         }
 
         my $raw = %cached<cup>;
-        # Replace the digits with format specifiers used
-        # by sprintf
-        $raw ~~ s:nth(*-1)[\d+] = "%d";
-        $raw ~~ s:nth(*)[\d+]   = "%d";
-        $raw ||= '';
+        $raw ~~ /^ (.*?) (\d+) (\D+) (\d+) (\D+) $/
+            or warn "universal mode must have access to tput";
+
+        my ($pre, $mid, $post) = $0, $2, $4;
 
         my Str sub universal( Int() $x, Int() $y ) {
-            warn "universal mode must have access to tput" unless $raw;
-            sprintf($raw, $y + 1, $x + 1)
+            $pre ~ ($y + 1) ~ $mid ~ ($x + 1) ~ $post;
         }
 
         return %( :&ansi, :&universal );
