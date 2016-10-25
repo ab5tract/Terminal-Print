@@ -39,6 +39,10 @@ method cell-string($x, $y) {
     "{$!move-cursor($x, $y)}{~@!grid[$x][$y]}"
 }
 
+method span-string($y, $x1 = 0, $x2 = $!columns - 1) {
+    $!move-cursor($x1, $y) ~ ($x1..$x2).map(-> $x { @!grid[$x][$y] }).join
+}
+
 multi method change-cell($x, $y, %c) {
     $!grid-string = '';
     @!grid[$x][$y] = Cell.new(|%c)
@@ -93,10 +97,5 @@ method disable {
 }
 
 method Str {
-    unless $!grid-string {
-        for @!indices -> [$x, $y] {
-            $!grid-string ~= self.cell-string($x, $y);
-        }
-    }
-    $!grid-string
+    $!grid-string ||= join '', ^$!rows .map({ self.span-string($_) });
 }
