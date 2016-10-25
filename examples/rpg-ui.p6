@@ -21,7 +21,7 @@ class ProgressBar {
         $!progress = max(0, min($!max, $p));
         my $completed = floor($!w * $!progress / $!max);
 
-        # XXXX: FAIL!
+        # XXXX: Real colors and no flashing
         T.print-string($!x, $!y, '#' x $completed);
         T.print-string($!x + $completed, $!y, '-' x ($!w - $completed));
         T.print-string($!x + ($!w - $!text.chars) / 2, $!y, $!text);  # ,,
@@ -64,13 +64,19 @@ sub draw-box($x1, $y1, $x2, $y2) {
 }
 
 
+#| Draw the current party state in the party viewport with upper left at $x, $y
+sub show-party-state($x, $y, @party, $expanded?) {
+    # for @party.kv
+}
+
+
 #| Simulate a CRPG or Roguelike interface
 sub MAIN(
     Bool :$bench  #= Benchmark mode (run as fast as possible, with no sleeps or rate limiting)
     ) {
 
     my $short-sleep = .1 * !$bench;
-    my $long-sleep  = 5  * !$bench;
+    my $long-sleep  = 10 * !$bench;
 
     # Start up the fun!
     T.initialize-screen;
@@ -80,7 +86,9 @@ sub MAIN(
 
     # XXXX: Loading bar
     my $bar = ProgressBar.new(:x((w - 50) / 2), :y(h / 2), :w(50), :text('L O A D I N G'));
-    $bar.set-progress($_) for ^101;
+    $bar.set-progress($_) for 0..100;
+
+    # XXXX: Transition animation?
 
     # XXXX: Basic UI
     # XXXX: What about clearing grid?
@@ -100,7 +108,14 @@ sub MAIN(
     print-centered(1, 1, $h-break - 1, $v-break - 1, 'THIS IS THE MAP AREA');
 
     # Characters
-    print-centered($h-break + 1, 1, w - 2, $v-break - 1, 'THIS IS THE PARTY AREA');
+    # XXXX: Nicer bars
+    # XXXX: Condition icons (poisoned, low health, etc.)
+    T.print-string($h-break + 1, 1, '   NAME     CLASS      HEALTH   MAGIC');
+    T.print-string($h-break + 1, 2, '1  Fennic   Ranger     ******   ---');
+    T.print-string($h-break + 1, 3, '2  Galtar   Cleric     *****    ----');
+    T.print-string($h-break + 1, 4, '3  Salnax   Sorcerer   ****     ------');
+    T.print-string($h-break + 1, 5, '4  Torfin   Barbarian  *******  ');
+    T.print-string($h-break + 1, 6, '5  Trentis  Rogue      *****    ');
 
     # Log/input
     T.print-string(1, $v-break + 1, 'Game state loaded.');
