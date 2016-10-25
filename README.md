@@ -20,7 +20,7 @@ $screen.print-cell(9, 23, '&');                 # changes the cell at 9:23 to '&
 
 $screen.print-string(9, 23, 'hello\nworld!");   # prints a whole string (which can include newlines!)
 
-$screen(9,23,'hello\nworld!');                  # uses CALL-ME to dispatch the provided arguments to .print-string
+$screen(9,23,'hello\nworld!');                  # uses CALL-ME to dispatch to .print-string
 
 $screen.shutdown-screen;                        # unwinds the process from .initialize-screen
 ````
