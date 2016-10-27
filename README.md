@@ -20,7 +20,7 @@ $screen.print-cell(9, 23, '&');                 # changes the cell at 9:23 to '&
 
 $screen.print-string(9, 23, 'hello\nworld!");   # prints a whole string (which can include newlines!)
 
-$screen(9,23,'hello\nworld!');                  # uses CALL-ME to dispatch the provided arguments to .print-string
+$screen(9,23,'hello\nworld!');                  # uses CALL-ME to dispatch to .print-string
 
 $screen.shutdown-screen;                        # unwinds the process from .initialize-screen
 ````
@@ -37,7 +37,7 @@ perl6 -Ilib examples/async.p6
 By default the `Terminal::Print` object will use ANSI escape sequences for it's cursor drawing, but you can tell it to use `universal` if you would prefer to use the cursor movement commands as provided by `tput`. (You should only really need this if you are having trouble with the default).
 
 ```
-my $t = Terminal::Print(cursor-profile => 'universal')
+my $t = Terminal::Print.new(cursor-profile => 'universal')
 ```
 
 ## History
