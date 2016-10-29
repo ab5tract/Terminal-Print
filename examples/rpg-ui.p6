@@ -19,12 +19,12 @@ class ProgressBar {
     #| Set the current progress level and update the screen
     method set-progress($p) {
         $!progress = max(0, min($!max, $p));
-        my $completed = floor($!w * $!progress / $!max);
+        my $completed =  $!w * $!progress div $!max;
+        my $left      = ($!w - $!text.chars) div 2;
+        my $bar = ' ' x $left ~ $!text ~ ' ' x ($!w - $left - $!text.chars);
 
-        # XXXX: Real colors and no flashing
-        T.print-string($!x, $!y, '#' x $completed);
-        T.print-string($!x + $completed, $!y, '-' x ($!w - $completed));
-        T.print-string($!x + ($!w - $!text.chars) / 2, $!y, $!text);  # ,,
+        T.print-string($!x,              $!y, substr($bar, 0, $completed), "$!text-color on_$!completed");
+        T.print-string($!x + $completed, $!y, substr($bar,    $completed), "$!text-color on_$!remaining");
     }
 }
 
