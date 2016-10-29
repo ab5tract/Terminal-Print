@@ -109,7 +109,7 @@ sub MAIN(
     T.clear-screen;
 
     # Basic 3-viewport layout (map, party stats, log/input)
-    my $party-width = 40;
+    my $party-width = 34;
     my $log-height  =  8;
     my $h-break     = w - $party-width - 2;
     my $v-break     = h - $log-height  - 2;
@@ -125,12 +125,12 @@ sub MAIN(
     # Characters
     # XXXX: Nicer bars
     # XXXX: Condition icons (poisoned, low health, etc.)
-    T.print-string($h-break + 1, 1, '   NAME     CLASS      HEALTH   MAGIC');
-    T.print-string($h-break + 1, 2, '1  Fennic   Ranger     ******   ---');
-    T.print-string($h-break + 1, 3, '2  Galtar   Cleric     *****    ----');
-    T.print-string($h-break + 1, 4, '3  Salnax   Sorcerer   ****     ------');
-    T.print-string($h-break + 1, 5, '4  Torfin   Barbarian  *******  ');
-    T.print-string($h-break + 1, 6, '5  Trentis  Rogue      *****    ');
+    T.print-string($h-break + 1, 1, '  NAME    CLASS     HEALTH MAGIC');
+    T.print-string($h-break + 1, 2, '1 Fennic  Ranger    *****  ---');
+    T.print-string($h-break + 1, 3, '2 Galtar  Cleric    ****   ----');
+    T.print-string($h-break + 1, 4, '3 Salnax  Sorcerer  ***    ------');
+    T.print-string($h-break + 1, 5, '4 Torfin  Barbarian ****** ');
+    T.print-string($h-break + 1, 6, '5 Trentis Rogue     ****   ');
 
     # Log/input
     T.print-string(1, $v-break + 1, 'Game state loaded.');
