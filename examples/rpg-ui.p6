@@ -72,6 +72,7 @@ sub show-party-state($x, $y, @party, $expanded?) {
 
 #| Simulate a CRPG or Roguelike interface
 sub MAIN(
+    Bool :$ascii, #= Use only ASCII characters, no >127 codepoints
     Bool :$bench  #= Benchmark mode (run as fast as possible, with no sleeps or rate limiting)
     ) {
 
@@ -82,10 +83,16 @@ sub MAIN(
     T.initialize-screen;
 
     # XXXX: Title screen
-    print-centered(0, 0, w, h - 4, 'R U I N S   O F   A K T A R I A');
+    my $title = $ascii ?? 'R U I N S   O F   A K T A R I A' !! q:to/TITLE/;
+        ░█▀▄░█░█░▀█▀░█▀█░█▀▀░░░█▀█░█▀▀░░░█▀█░█░█░▀█▀░█▀█░█▀▄░▀█▀░█▀█
+        ░█▀▄░█░█░░█░░█░█░▀▀█░░░█░█░█▀▀░░░█▀█░█▀▄░░█░░█▀█░█▀▄░░█░░█▀█
+        ░▀░▀░▀▀▀░▀▀▀░▀░▀░▀▀▀░░░▀▀▀░▀░░░░░▀░▀░▀░▀░░▀░░▀░▀░▀░▀░▀▀▀░▀░▀
+        TITLE
+
+    print-centered(0, 0, w, h * 3/4, $title);
 
     # XXXX: Loading bar
-    my $bar = ProgressBar.new(:x((w - 50) / 2), :y(h / 2), :w(50), :text('L O A D I N G'));
+    my $bar = ProgressBar.new(:x((w - 50) div 2), :y(h * 2/3), :w(50), :text('L O A D I N G'));
     $bar.set-progress($_) for 0..100;
 
     # XXXX: Transition animation?
