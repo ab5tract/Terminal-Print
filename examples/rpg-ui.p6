@@ -37,24 +37,31 @@ sub print-centered($x1, $y1, $x2, $y2, $string) {
     T.print-string($x, $y, $string);
 }
 
+my %hline = ascii  => '-', double => '═',
+            light1 => '─', light2 => '╌', light3 => '┄', light4 => '┈',
+            heavy1 => '━', heavy2 => '╍', heavy3 => '┅', heavy4 => '┉';
+
+my %vline = ascii  => '|', double => '║',
+            light1 => '│', light2 => '╎', light3 => '┆', light4 => '┊',
+            heavy1 => '┃', heavy2 => '╏', heavy3 => '┇', heavy4 => '┋';
 
 #| Draw a horizontal line
-sub draw-hline($y, $x1, $x2) {
-    T.print-string($x1, $y, '-' x ($x2 - $x1 + 1));
+sub draw-hline($y, $x1, $x2, $style = 'double') {
+    T.print-string($x1, $y, %hline{$style} x ($x2 - $x1 + 1));
 }
 
 #| Draw a vertical line
-sub draw-vline($x, $y1, $y2) {
-    T.print-cell($x, $_, '|') for $y1..$y2;
+sub draw-vline($x, $y1, $y2, $style = 'double') {
+    T.print-cell($x, $_, %vline{$style}) for $y1..$y2;
 }
 
 #| Draw a box
-sub draw-box($x1, $y1, $x2, $y2) {
+sub draw-box($x1, $y1, $x2, $y2, $style = Empty) {
     # Draw sides in order: left, right, top, bottom
-    draw-vline($x1, $y1 + 1, $y2 - 1);
-    draw-vline($x2, $y1 + 1, $y2 - 1);
-    draw-hline($y1, $x1 + 1, $x2 - 1);
-    draw-hline($y2, $x1 + 1, $x2 - 1);
+    draw-vline($x1, $y1 + 1, $y2 - 1, |$style);
+    draw-vline($x2, $y1 + 1, $y2 - 1, |$style);
+    draw-hline($y1, $x1 + 1, $x2 - 1, |$style);
+    draw-hline($y2, $x1 + 1, $x2 - 1, |$style);
 
     # Draw corners
     T.print-cell($x1, $y1, '+');
@@ -107,9 +114,10 @@ sub MAIN(
     my $h-break     = w - $party-width - 2;
     my $v-break     = h - $log-height  - 2;
 
-    draw-box(0, 0, w - 1, h - 1);
-    draw-hline($v-break, 1, w - 2);
-    draw-vline($h-break, 1, $v-break - 1);
+    my $style = $ascii ?? 'ascii' !! 'double';
+    draw-box(0, 0, w - 1, h - 1, $style);
+    draw-hline($v-break, 1, w - 2, $style);
+    draw-vline($h-break, 1, $v-break - 1, $style);
 
     # Map
     print-centered(1, 1, $h-break - 1, $v-break - 1, 'THIS IS THE MAP AREA');
