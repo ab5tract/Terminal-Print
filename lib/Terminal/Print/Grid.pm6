@@ -76,14 +76,15 @@ multi method print-string($x, $y) {
     self.print-cell($x, $y);
 }
 
-multi method print-string($x, $y, Str() $string) {
+multi method print-string($x, $y, Str() $string, $color?) {
     if $string.chars == 1 {
         self.print-cell($x, $y, $string);
     } else {
         my ($off-x, $off-y) = 0, 0;
         for $string.lines -> $line {
-            for $line.comb -> $c {
-                self.print-cell($x + $off-x, $y + $off-y, $c);
+            for $line.comb -> $char {
+                $color ?? self.print-cell($x + $off-x, $y + $off-y, %( :$char, :$color ))
+                       !! self.print-cell($x + $off-x, $y + $off-y, $char);
                 $off-x++;
             }
             $off-y++;

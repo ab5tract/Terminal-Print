@@ -215,8 +215,8 @@ multi method print-cell( $x, $y, %c ) {
     $!current-grid.print-cell($x, $y, %c);
 }
 
-method print-string( $x, $y, Str() $string) {
-    $!current-grid.print-string($x, $y, $string);
+method print-string( $x, $y, Str() $string, $color = Empty) {
+    $!current-grid.print-string($x, $y, $string, |$color);
 }
 
 method change-cell( $x, $y, Str $c ) {
