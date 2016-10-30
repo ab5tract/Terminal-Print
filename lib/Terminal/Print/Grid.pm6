@@ -23,10 +23,8 @@ has $.grid-string = '';
 has $.move-cursor;
 has $!print-enabled = True;
 
-method new($columns, $rows, :$move-cursor) {
+method new($columns, $rows, :$move-cursor = move-cursor-template) {
     my @grid = [ [ ' ' xx $rows ] xx $columns ];
-
-    $move-cursor //= move-cursor-template;
 
     self.bless(:$columns, :$rows, :@grid, :$move-cursor);
 }
