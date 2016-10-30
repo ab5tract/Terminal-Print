@@ -90,13 +90,22 @@ sub MAIN(
     T.initialize-screen;
 
     # XXXX: Title screen
-    my $title = $ascii ?? 'R U I N S   O F   A K T A R I A' !! q:to/TITLE/;
+    # XXXX: Draw rubble below/to sides of title?
+    my $standard = q:to/STANDARD/;
+         ____        _                    __      _    _    _             _       
+        |  _ \ _   _(_)_ __  ___    ___  / _|    / \  | | _| |_ __ _ _ __(_) __ _ 
+        | |_) | | | | | '_ \/ __|  / _ \| |_    / _ \ | |/ / __/ _` | '__| |/ _` |
+        |  _ <| |_| | | | | \__ \ | (_) |  _|  / ___ \|   <| || (_| | |  | | (_| |
+        |_| \_\\\\__,_|_|_| |_|___/  \___/|_|   /_/   \_\_|\_\\\\__\__,_|_|  |_|\__,_|
+        STANDARD
+
+    my $pagga = q:to/PAGGA/;
         ░█▀▄░█░█░▀█▀░█▀█░█▀▀░░░█▀█░█▀▀░░░█▀█░█░█░▀█▀░█▀█░█▀▄░▀█▀░█▀█
         ░█▀▄░█░█░░█░░█░█░▀▀█░░░█░█░█▀▀░░░█▀█░█▀▄░░█░░█▀█░█▀▄░░█░░█▀█
         ░▀░▀░▀▀▀░▀▀▀░▀░▀░▀▀▀░░░▀▀▀░▀░░░░░▀░▀░▀░▀░░▀░░▀░▀░▀░▀░▀▀▀░▀░▀
-        TITLE
+        PAGGA
 
-    print-centered(0, 0, w, h * 3/4, $title);
+    print-centered(0, 0, w, h * 3/4, $ascii ?? $standard !! $pagga);
 
     # XXXX: Loading bar
     my $bar = ProgressBar.new(:x((w - 50) div 2), :y(h * 2/3), :w(50), :text('L O A D I N G'));
