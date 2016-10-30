@@ -176,7 +176,7 @@ sub MAIN(
     Bool :$bench  #= Benchmark mode (run as fast as possible, with no sleeps or rate limiting)
     ) {
 
-    my $short-sleep = .2 * !$bench;
+    my $short-sleep =  1 * !$bench;
     my $long-sleep  = 10 * !$bench;
 
     # Start up the fun!
@@ -213,7 +213,7 @@ sub MAIN(
 
     # Basic 3-viewport layout (map, party stats, log/input)
     my $party-width = 34;
-    my $log-height  =  8;
+    my $log-height  = h div 6;
     my $h-break     = w - $party-width - 2;
     my $v-break     = h - $log-height  - 2;
 
