@@ -85,7 +85,15 @@ sub draw-box($x1, $y1, $x2, $y2, $style = Empty) {
 
 #| Draw the current party state in the party viewport with upper left at $x, $y
 sub show-party-state($x, $y, @party, $expanded?) {
-    # for @party.kv
+    # XXXX: Nicer bars
+    # XXXX: Condition icons (poisoned, low health, etc.)
+    T.print-string($x, $y + 0, '  NAME    CLASS     HEALTH MAGIC');
+
+    for @party.kv -> $i, $pc {
+        my $row = sprintf '%d %-7s %-9s %-6s %-6s', $i + 1, $pc<name>, $pc<class>,
+                              '*' x $pc<health>, '-' x $pc<magic>;
+        T.print-string($x, $y + $i + 1, $row);
+    }
 }
 
 
@@ -152,14 +160,14 @@ sub MAIN(
     print-centered(1, 1, $h-break - 1, $v-break - 1, 'THIS IS THE MAP AREA');
 
     # Characters
-    # XXXX: Nicer bars
-    # XXXX: Condition icons (poisoned, low health, etc.)
-    T.print-string($h-break + 1, 1, '  NAME    CLASS     HEALTH MAGIC');
-    T.print-string($h-break + 1, 2, '1 Fennic  Ranger    *****  ---');
-    T.print-string($h-break + 1, 3, '2 Galtar  Cleric    ****   ----');
-    T.print-string($h-break + 1, 4, '3 Salnax  Sorcerer  ***    ------');
-    T.print-string($h-break + 1, 5, '4 Torfin  Barbarian ****** ');
-    T.print-string($h-break + 1, 6, '5 Trentis Rogue     ****   ');
+    my @party =
+        { :name<Fennic>,  :class<Ranger>,    :health<5>, :magic<3> },
+        { :name<Galtar>,  :class<Cleric>,    :health<4>, :magic<4> },
+        { :name<Salnax>,  :class<Sorcerer>,  :health<3>, :magic<6> },
+        { :name<Torfin>,  :class<Barbarian>, :health<6>, :magic<0> },
+        { :name<Trentis>, :class<Rogue>,     :health<4>, :magic<0> };
+
+    show-party-state($h-break + 1, 1, @party);
 
     # Log/input
     T.print-string(1, $v-break + 1, 'Game state loaded.');
