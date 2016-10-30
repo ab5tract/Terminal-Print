@@ -121,16 +121,35 @@ sub draw-box($x1, $y1, $x2, $y2, $style = Empty) {
 }
 
 
-#| Draw the current party state in the party viewport with upper left at $x, $y
-sub show-party-state($x, $y, @party, $expanded?) {
-    # XXXX: Nicer bars
-    # XXXX: Condition icons (poisoned, low health, etc.)
-    T.print-string($x, $y + 0, '  NAME    CLASS     HEALTH MAGIC');
+class PartyViewer is Widget {
+    has @.party;
 
-    for @party.kv -> $i, $pc {
-        my $row = sprintf '%d %-7s %-9s %-6s %-6s', $i + 1, $pc<name>, $pc<class>,
+    #| Draw the current party state
+    method show-state($expanded = -1) {
+        # XXXX: Nicer bars
+        # XXXX: Condition icons (poisoned, low health, etc.)
+        $.grid.set-span-text(0, 0, '  NAME    CLASS     HEALTH MAGIC');
+
+        my $y = 1;
+        for @.party.kv -> $i, $pc {
+            my $row = sprintf '%d %-7s %-9s %-6s %-6s', $i + 1, $pc<name>, $pc<class>,
                               '*' x $pc<health>, '-' x $pc<magic>;
-        T.print-string($x, $y + $i + 1, $row);
+            $.grid.set-span-text($y++, 0, $row);
+
+            if $i == $expanded {
+                 $.grid.set-span-text($y++, 0, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
+                 $.grid.set-span-text($y++, 0, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
+                 $.grid.set-span-text($y++, 0, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
+                 $.grid.set-span-text($y++, 0, sprintf "  %-{$.w - 2}s", '');
+            }
+        }
+
+        # Make sure extra rows are cleared after collapsing
+        if $expanded < 0 {
+            $.grid.set-span-text($y++, 0, ' ' x $.w) for ^4;
+        }
+
+        self.composite(True);
     }
 }
 
@@ -141,7 +160,7 @@ sub MAIN(
     Bool :$bench  #= Benchmark mode (run as fast as possible, with no sleeps or rate limiting)
     ) {
 
-    my $short-sleep = .1 * !$bench;
+    my $short-sleep = .2 * !$bench;
     my $long-sleep  = 10 * !$bench;
 
     # Start up the fun!
@@ -206,13 +225,18 @@ sub MAIN(
         { :name<Torfin>,  :class<Barbarian>, :health<6>, :magic<0> },
         { :name<Trentis>, :class<Rogue>,     :health<4>, :magic<0> };
 
-    show-party-state($h-break + 1, 1, @party);
+    my $pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width), :h($v-break - 2), :@party);
+    $pv.show-state;
 
     # Log/input
     T.print-string(1, $v-break + 1, 'Game state loaded.');
     T.print-string(1, $v-break + 2, '> ');
 
-    # XXXX: Accordion character details
+    # XXXX: Accordion character details down, back up, and then collapse
+    $pv.show-state($_) && sleep $short-sleep for  ^@party;
+    $pv.show-state($_) && sleep $short-sleep for (^@party).reverse;
+    $pv.show-state;
+
     # XXXX: Popup help
     # XXXX: Pan game map
     # XXXX: Battle!
