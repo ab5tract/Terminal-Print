@@ -3,10 +3,19 @@ use v6;
 use Terminal::Print;
 
 
-#| A left-to-right colored progress bar
-class ProgressBar {
+#| A basic rectangular widget that can work in relative coordinates
+class Widget {
     has $.x is required;
     has $.y is required;  # i
+
+    method print-string($x, $y, $str, $color = Empty) {
+        T.print-string($!x + $x, $!y + $y, $str, |$color);  # ++
+    }
+}
+
+
+#| A left-to-right colored progress bar
+class ProgressBar is Widget {
     has $.w is required;
 
     has $.max        = 100;
@@ -23,8 +32,8 @@ class ProgressBar {
         my $left      = ($!w - $!text.chars) div 2;
         my $bar = ' ' x $left ~ $!text ~ ' ' x ($!w - $left - $!text.chars);
 
-        T.print-string($!x,              $!y, substr($bar, 0, $completed), "$!text-color on_$!completed");
-        T.print-string($!x + $completed, $!y, substr($bar,    $completed), "$!text-color on_$!remaining");
+        self.print-string(0,          0, substr($bar, 0, $completed), "$!text-color on_$!completed");
+        self.print-string($completed, 0, substr($bar,    $completed), "$!text-color on_$!remaining");
     }
 }
 
