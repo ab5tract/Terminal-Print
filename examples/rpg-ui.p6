@@ -25,7 +25,7 @@ class Widget {
             for ^$!w -> $x {
                 $to[$x + $!x][$y + $!y] = $from[$x][$y];
             }
-            $out ~= $cg.span-string($y + $!y, $!x, $x2) if $print;  # ,
+            $out ~= $cg.span-string($!x, $x2, $y + $!y) if $print;  # )))
         }
 
         print $out if $print;
@@ -50,15 +50,15 @@ class ProgressBar is Widget {
 
         # Loop over bar thickness (height) setting color spans
         for ^$.h {
-            $.grid.set-span-color($_, 0, $completed - 1,   "$!text-color on_$!completed");
-            $.grid.set-span-color($_, $completed, $.w - 1, "$!text-color on_$!remaining");
+            $.grid.set-span-color(0, $completed - 1,   $_, "$!text-color on_$!completed");
+            $.grid.set-span-color($completed, $.w - 1, $_, "$!text-color on_$!remaining");
         }
 
         # Overlay text
         my @lines = $!text.lines;
         my $top = ($.h - @lines) div 2;
         for @lines.kv -> $i, $line {
-            $.grid.set-span-text($top + $i, ($.w - $line.chars) div 2, $line);
+            $.grid.set-span-text(($.w - $line.chars) div 2, $top + $i, $line);
         }
 
         # Update screen
@@ -134,19 +134,19 @@ class PartyViewer is Widget {
         for @.party.kv -> $i, $pc {
             my $row = sprintf '%d %-7s %-9s %-6s %-6s', $i + 1, $pc<name>, $pc<class>,
                               '*' x $pc<health>, '-' x $pc<magic>;
-            $.grid.set-span-text($y++, 0, $row);
+            $.grid.set-span-text(0, $y++, $row);
 
             if $i == $expanded {
-                 $.grid.set-span-text($y++, 0, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
-                 $.grid.set-span-text($y++, 0, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
-                 $.grid.set-span-text($y++, 0, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
-                 $.grid.set-span-text($y++, 0, sprintf "  %-{$.w - 2}s", '');
+                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
+                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
+                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
+                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", '');
             }
         }
 
         # Make sure extra rows are cleared after collapsing
         if $expanded < 0 {
-            $.grid.set-span-text($y++, 0, ' ' x $.w) for ^4;
+            $.grid.set-span-text(0, $y++, ' ' x $.w) for ^4;
         }
 
         self.composite(True);

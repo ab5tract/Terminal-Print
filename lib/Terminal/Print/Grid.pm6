@@ -37,12 +37,12 @@ method cell-string($x, $y) {
     "{$!move-cursor($x, $y)}{~@!grid[$x][$y]}"
 }
 
-method span-string($y, $x1 = 0, $x2 = $!columns - 1) {
+method span-string($x1, $x2, $y) {
     $!move-cursor($x1, $y) ~ ($x1..$x2).map(-> $x { @!grid[$x][$y] }).join
 }
 
 #| Set both the text and color of a span
-method set-span($y, $x, Str $text, $color) {
+method set-span($x, $y, Str $text, $color) {
     $!grid-string = '';
     for $text.comb.kv -> $i, $char {
         @!grid[$x + $i][$y] = Cell.new(:$char, :$color);
@@ -50,7 +50,7 @@ method set-span($y, $x, Str $text, $color) {
 }
 
 #| Set the text of a span, but keep the color unchanged
-method set-span-text($y, $x, Str $text) {
+method set-span-text($x, $y, Str $text) {
     $!grid-string = '';
     for $text.comb.kv -> $i, $char {
         given @!grid[$x + $i][$y] {
@@ -61,7 +61,7 @@ method set-span-text($y, $x, Str $text) {
 }
 
 #| Set the color of a span, but keep the text unchanged
-method set-span-color($y, $x1, $x2, $color) {
+method set-span-color($x1, $x2, $y, $color) {
     $!grid-string = '';
     for $x1..$x2 -> $x {
         given @!grid[$x][$y] {
@@ -126,5 +126,5 @@ method disable {
 }
 
 method Str {
-    $!grid-string ||= join '', ^$!rows .map({ self.span-string($_) });
+    $!grid-string ||= join '', ^$!rows .map({ self.span-string(0, $!columns - 1, $_) });
 }
