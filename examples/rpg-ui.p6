@@ -45,6 +45,17 @@ my %vline = ascii  => '|', double => '║',
             light1 => '│', light2 => '╎', light3 => '┆', light4 => '┊',
             heavy1 => '┃', heavy2 => '╏', heavy3 => '┇', heavy4 => '┋';
 
+my %weight = ascii  => 'ascii', double => 'double',
+             light1 => 'light', light2 => 'light',
+             light3 => 'light', light4 => 'light',
+             heavy1 => 'heavy', heavy2 => 'heavy',
+             heavy3 => 'heavy', heavy4 => 'heavy';
+
+my %corners = ascii  => < + + + + >,
+              double => < ╔ ╗ ╚ ╝ >,
+              light  => < ┌ ┐ └ ┘ >,
+              heavy  => < ┏ ┓ ┗ ┛ >;
+
 #| Draw a horizontal line
 sub draw-hline($y, $x1, $x2, $style = 'double') {
     T.print-string($x1, $y, %hline{$style} x ($x2 - $x1 + 1));
@@ -64,10 +75,11 @@ sub draw-box($x1, $y1, $x2, $y2, $style = Empty) {
     draw-hline($y2, $x1 + 1, $x2 - 1, |$style);
 
     # Draw corners
-    T.print-cell($x1, $y1, '+');
-    T.print-cell($x2, $y1, '+');
-    T.print-cell($x1, $y2, '+');
-    T.print-cell($x2, $y2, '+');
+    my @corners = |%corners{%weight{$style}};
+    T.print-cell($x1, $y1, @corners[0]);
+    T.print-cell($x2, $y1, @corners[1]);
+    T.print-cell($x1, $y2, @corners[2]);
+    T.print-cell($x2, $y2, @corners[3]);
 }
 
 
@@ -127,6 +139,14 @@ sub MAIN(
     draw-box(0, 0, w - 1, h - 1, $style);
     draw-hline($v-break, 1, w - 2, $style);
     draw-vline($h-break, 1, $v-break - 1, $style);
+
+    # Draw intersections if in full Unicode mode
+    unless $ascii {
+        T.print-cell(0, $v-break, '╠');
+        T.print-cell(w, $v-break, '╣');
+        T.print-cell($h-break, 0, '╦');
+        T.print-cell($h-break, $v-break, '╩');
+    }
 
     # Map
     print-centered(1, 1, $h-break - 1, $v-break - 1, 'THIS IS THE MAP AREA');
