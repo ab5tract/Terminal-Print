@@ -120,6 +120,22 @@ sub draw-box($x1, $y1, $x2, $y2, $style = Empty) {
     T.print-cell($x2, $y2, @corners[3]);
 }
 
+sub wrap-text($w, $text, $prefix = '') {
+    my @words = $text.words;
+    my @lines = @words.shift;
+
+    for @words -> $word {
+        if $w < @lines[*-1].chars + 1 + $word.chars {
+            push @lines, "$prefix$word";
+        }
+        else {
+            @lines[*-1] ~= " $word";
+        }
+    }
+
+    @lines
+}
+
 
 class PartyViewer is Widget {
     has @.party;
