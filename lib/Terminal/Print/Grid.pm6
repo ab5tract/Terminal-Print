@@ -41,6 +41,36 @@ method span-string($y, $x1 = 0, $x2 = $!columns - 1) {
     $!move-cursor($x1, $y) ~ ($x1..$x2).map(-> $x { @!grid[$x][$y] }).join
 }
 
+#| Set both the text and color of a span
+method set-span($y, $x, Str $text, $color) {
+    $!grid-string = '';
+    for $text.comb.kv -> $i, $char {
+        @!grid[$x + $i][$y] = Cell.new(:$char, :$color);
+    }
+}
+
+#| Set the text of a span, but keep the color unchanged
+method set-span-text($y, $x, Str $text) {
+    $!grid-string = '';
+    for $text.comb.kv -> $i, $char {
+        given @!grid[$x + $i][$y] {
+            when Str { @!grid[$x + $i][$y] = Cell.new(:$char) }
+            default  { @!grid[$x + $i][$y] = Cell.new(:$char, :color(.color)) }
+        }
+    }
+}
+
+#| Set the color of a span, but keep the text unchanged
+method set-span-color($y, $x1, $x2, $color) {
+    $!grid-string = '';
+    for $x1..$x2 -> $x {
+        given @!grid[$x][$y] {
+            when Str { @!grid[$x][$y] = Cell.new(:char($_),    :$color) }
+            default  { @!grid[$x][$y] = Cell.new(:char(.char), :$color) }
+        }
+    }
+}
+
 multi method change-cell($x, $y, %c) {
     $!grid-string = '';
     @!grid[$x][$y] = Cell.new(|%c)

@@ -10,53 +10,25 @@ class Widget {
     has $.w is required;
     has $.h is required;
 
-    has $!grid = Terminal::Print::Grid.new($!w, $!h);
+    has $.grid = Terminal::Print::Grid.new($!w, $!h);
 
     # Simply copies widget contents onto the current display grid for now,
     # optionally also printing updated contents to the screen
     method composite(Bool $print?) {
         my $from = $!grid.grid;
-        my $to   = T.current-grid.grid;
+        my $cg   = T.current-grid;
+        my $to   = $cg.grid;
+        my $x2   = $!x + $!w - 1;
         my $out  = '';
 
         for ^$!h -> $y {
             for ^$!w -> $x {
                 $to[$x + $!x][$y + $!y] = $from[$x][$y];
             }
-            $out ~= T.current-grid.span-string($y + $!y, $!x, $!x + $!w - 1) if $print;  # ,
+            $out ~= $cg.span-string($y + $!y, $!x, $x2) if $print;  # ,
         }
 
         print $out if $print;
-    }
-
-    #| Set both the text and color of a span
-    method set-span($y, $x, Str $text, $color) {
-        my $grid = $!grid.grid;
-        for $text.comb.kv -> $i, $char {
-            $!grid.change-cell($x + $i, $y, %( :$char, :$color ) );
-        }
-    }
-
-    #| Set the text of a span, but keep the color unchanged
-    method set-span-text($y, $x, Str $text) {
-        my $grid = $!grid.grid;
-        for $text.comb.kv -> $i, $char {
-            given $grid[$x + $i][$y] {
-                when Str { $!grid.change-cell($x + $i, $y, $char) }
-                default  { $!grid.change-cell($x + $i, $y, %( :$char, :color($_.color) )) }
-            }
-        }
-    }
-
-    #| Set the color of a span, but keep the text unchanged
-    method set-span-color($y, $x1, $x2, $color) {
-        my $grid = $!grid.grid;
-        for $x1..$x2 -> $x {
-            given $grid[$x][$y] {
-                when Str { $!grid.change-cell($x, $y, %( :char($_),    :$color )) }
-                default  { $!grid.change-cell($x, $y, %( :char(.char), :$color )) }
-            }
-        }
     }
 }
 
@@ -78,15 +50,15 @@ class ProgressBar is Widget {
 
         # Loop over bar thickness (height) setting color spans
         for ^$.h {
-            self.set-span-color($_, 0, $completed - 1,   "$!text-color on_$!completed");
-            self.set-span-color($_, $completed, $.w - 1, "$!text-color on_$!remaining");
+            $.grid.set-span-color($_, 0, $completed - 1,   "$!text-color on_$!completed");
+            $.grid.set-span-color($_, $completed, $.w - 1, "$!text-color on_$!remaining");
         }
 
         # Overlay text
         my @lines = $!text.lines;
         my $top = ($.h - @lines) div 2;
         for @lines.kv -> $i, $line {
-            self.set-span-text($top + $i, ($.w - $line.chars) div 2, $line);
+            $.grid.set-span-text($top + $i, ($.w - $line.chars) div 2, $line);
         }
 
         # Update screen
