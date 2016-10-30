@@ -7,6 +7,8 @@ use Terminal::Print;
 class Widget {
     has $.x is required;
     has $.y is required;  # i
+    has $.w is required;
+    has $.h is required;
 
     method print-string($x, $y, $str, $color = Empty) {
         T.print-string($!x + $x, $!y + $y, $str, |$color);  # ++
@@ -16,8 +18,6 @@ class Widget {
 
 #| A left-to-right colored progress bar
 class ProgressBar is Widget {
-    has $.w is required;
-
     has $.max        = 100;
     has $.progress   = 0;
     has $.completed  = 'blue';
@@ -28,12 +28,15 @@ class ProgressBar is Widget {
     #| Set the current progress level and update the screen
     method set-progress($p) {
         $!progress = max(0, min($!max, $p));
-        my $completed =  $!w * $!progress div $!max;
-        my $left      = ($!w - $!text.chars) div 2;
-        my $bar = ' ' x $left ~ $!text ~ ' ' x ($!w - $left - $!text.chars);
+        my $completed =  $.w * $!progress div $!max;
+        my $left      = ($.w - $!text.chars) div 2;
+        my $bar = ' ' x $left ~ $!text ~ ' ' x ($.w - $left - $!text.chars);
 
-        self.print-string(0,          0, substr($bar, 0, $completed), "$!text-color on_$!completed");
-        self.print-string($completed, 0, substr($bar,    $completed), "$!text-color on_$!remaining");
+        # Loop if bar is thick (tall)
+        for ^$.h {
+            self.print-string(0,          $_, substr($bar, 0, $completed), "$!text-color on_$!completed");
+            self.print-string($completed, $_, substr($bar,    $completed), "$!text-color on_$!remaining");
+        }
     }
 }
 
@@ -137,7 +140,8 @@ sub MAIN(
     print-centered(0, 0, w, h * 3/4, $ascii ?? $standard !! $pagga);
 
     # XXXX: Loading bar
-    my $bar = ProgressBar.new(:x((w - 50) div 2), :y(h * 2/3), :w(50), :text('L O A D I N G'));
+    my $bar = ProgressBar.new(:x((w - 50) div 2), :y(h * 2/3), :w(50), :h(3),
+                              :text('L O A D I N G'));
     $bar.set-progress($_) for 0..100;
 
     # XXXX: Transition animation?
