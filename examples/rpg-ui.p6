@@ -236,6 +236,7 @@ class LogViewer is Widget {
 }
 
 
+#| Create the initial map state
 sub make-map($map-w, $map-h) {
     my @map = [ '' xx $map-w ] xx $map-h;
 
@@ -385,11 +386,9 @@ sub MAIN(
     my $map-w = 300;
     my $map-h = 200;
     my $map  := make-map($map-w, $map-h);
-
-    # Map viewer widget
-    my $mv = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
-                           :party-x(5), :party-y(3), :$ascii,
-                           :map-x(0), :map-y(0), :$map-w, :$map-h, :$map);
+    my $mv    = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
+			      :party-x(5), :party-y(3), :$ascii,
+			      :map-x(0), :map-y(0), :$map-w, :$map-h, :$map);
     $mv.draw;
 
     # Characters
