@@ -137,6 +137,46 @@ sub wrap-text($w, $text, $prefix = '') {
 }
 
 
+my %tiles = '' => '',  '.' => '⋅', '#' => '█',   # Layout: empty, floor, wall
+           '-' => '─', '|' => '│', '/' => '╱',   # Doors: closed, closed, open
+           '@' => '@';                           # Where party is 'at'
+
+class MapViewer is Widget {
+    has $.map-x is required;
+    has $.map-y is required;  # i
+    has $.map-w is required;
+    has $.map-h is required;
+    has @.map   is required;
+
+    has $.party-x is required;
+    has $.party-y is required;  # i
+    has $.ascii;
+
+    method draw() {
+        # Main map, panned to correct location
+        for ^$.h -> $y {
+            for ^$.w -> $x {
+                my $mapped = @!map[$!map-y + $y][$!map-x + $x] // '';  # +
+                $mapped = %tiles{$mapped} unless $.ascii;
+
+                $.grid.change-cell($x, $y, $mapped
+                                           || ((($!map-x + $x) %% 10 && ($!map-y + $y) %% 10) ?? '+' !! ' '));  # +
+            }
+        }
+
+        # Party location
+        my $px = $.party-x - $.map-x;
+        my $py = $.party-y - $.map-y;  # ;;
+        if 0 < $px < $.w && 0 < $py < $.h {
+            $.grid.change-cell($px, $py, '@');
+        }
+
+        # Update screen
+        self.composite(True);
+    }
+}
+
+
 class PartyViewer is Widget {
     has @.party;
 
@@ -257,7 +297,51 @@ sub MAIN(
     }
 
     # Map
-    print-centered(1, 1, $h-break - 1, $v-break - 1, 'THIS IS THE MAP AREA');
+    my $map-w = 300;
+    my $map-h = 200;
+    my @map = [ '' xx $map-w ] xx $map-h;
+
+    my sub map-room($x1, $y1, $w, $h) {
+        # Top and bottom walls
+        for ^$w -> $x {
+            @map[$y1][$x1 + $x] = '#';
+            @map[$y1 + $h - 1][$x1 + $x] = '#';
+        }
+
+        # Left and right walls
+        for 0 ^..^ ($h - 1) -> $y {
+            @map[$y1 + $y][$x1] = '#';
+            @map[$y1 + $y][$x1 + $w - 1] = '#';
+        }
+
+        # Floor
+        for 0 ^..^ ($h - 1) -> $y {
+            for 0 ^..^ ($w - 1) -> $x {
+                @map[$y1 + $y][$x1 + $x] = '.';
+            }
+        }
+    }
+
+    # Rooms
+    map-room(0, 0, 16, 7);
+    map-room(20, 2, 8, 4);
+    map-room(0, 10, 8, 12);
+
+    # Corridors
+    @map[4][$_] = '.' for 16..20;
+    @map[$_][6] = '.' for  6..10;
+
+    # Doors
+    @map[4][15] = '/';
+    @map[12][7] = '|';
+    @map[19][7] = '|';
+    @map[5][26] = '-';
+
+    # Map viewer widget
+    my $mv = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
+                           :party-x(5), :party-y(3), :$ascii,
+                           :map-x(0), :map-y(0), :$map-w, :$map-h, :@map);
+    $mv.draw;
 
     # Characters
     my @party =
