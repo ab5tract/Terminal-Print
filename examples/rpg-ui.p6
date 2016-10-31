@@ -236,6 +236,49 @@ class LogViewer is Widget {
 }
 
 
+sub make-map($map-w, $map-h) {
+    my @map = [ '' xx $map-w ] xx $map-h;
+
+    my sub map-room($x1, $y1, $w, $h) {
+        # Top and bottom walls
+        for ^$w -> $x {
+            @map[$y1][$x1 + $x] = '#';
+            @map[$y1 + $h - 1][$x1 + $x] = '#';
+        }
+
+        # Left and right walls
+        for 0 ^..^ ($h - 1) -> $y {
+            @map[$y1 + $y][$x1] = '#';
+            @map[$y1 + $y][$x1 + $w - 1] = '#';
+        }
+
+        # Floor
+        for 0 ^..^ ($h - 1) -> $y {
+            for 0 ^..^ ($w - 1) -> $x {
+                @map[$y1 + $y][$x1 + $x] = '.';
+            }
+        }
+    }
+
+    # Rooms
+    map-room(0, 0, 16, 7);
+    map-room(20, 2, 8, 4);
+    map-room(0, 10, 8, 12);
+
+    # Corridors
+    @map[4][$_] = '.' for 16..20;
+    @map[$_][6] = '.' for  6..10;
+
+    # Doors
+    @map[4][15] = '/';
+    @map[12][7] = '|';
+    @map[19][7] = '|';
+    @map[5][26] = '-';
+
+    @map
+}
+
+
 #| Simulate a CRPG or Roguelike interface
 sub MAIN(
     Bool :$ascii, #= Use only ASCII characters, no >127 codepoints
@@ -299,48 +342,12 @@ sub MAIN(
     # Map
     my $map-w = 300;
     my $map-h = 200;
-    my @map = [ '' xx $map-w ] xx $map-h;
-
-    my sub map-room($x1, $y1, $w, $h) {
-        # Top and bottom walls
-        for ^$w -> $x {
-            @map[$y1][$x1 + $x] = '#';
-            @map[$y1 + $h - 1][$x1 + $x] = '#';
-        }
-
-        # Left and right walls
-        for 0 ^..^ ($h - 1) -> $y {
-            @map[$y1 + $y][$x1] = '#';
-            @map[$y1 + $y][$x1 + $w - 1] = '#';
-        }
-
-        # Floor
-        for 0 ^..^ ($h - 1) -> $y {
-            for 0 ^..^ ($w - 1) -> $x {
-                @map[$y1 + $y][$x1 + $x] = '.';
-            }
-        }
-    }
-
-    # Rooms
-    map-room(0, 0, 16, 7);
-    map-room(20, 2, 8, 4);
-    map-room(0, 10, 8, 12);
-
-    # Corridors
-    @map[4][$_] = '.' for 16..20;
-    @map[$_][6] = '.' for  6..10;
-
-    # Doors
-    @map[4][15] = '/';
-    @map[12][7] = '|';
-    @map[19][7] = '|';
-    @map[5][26] = '-';
+    my $map  := make-map($map-w, $map-h);
 
     # Map viewer widget
     my $mv = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
                            :party-x(5), :party-y(3), :$ascii,
-                           :map-x(0), :map-y(0), :$map-w, :$map-h, :@map);
+                           :map-x(0), :map-y(0), :$map-w, :$map-h, :$map);
     $mv.draw;
 
     # Characters
