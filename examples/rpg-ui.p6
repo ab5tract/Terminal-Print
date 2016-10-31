@@ -149,21 +149,23 @@ class PartyViewer is Widget {
         my $y = 1;
         for @.party.kv -> $i, $pc {
             my $row = sprintf '%d %-7s %-9s %-6s %-6s', $i + 1, $pc<name>, $pc<class>,
-                              '*' x $pc<health>, '-' x $pc<magic>;
+                              '*' x $pc<hp>, '-' x $pc<mp>;
             $.grid.set-span-text(0, $y++, $row);
 
             if $i == $expanded {
-                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
-                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
-                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", 'BLAH BLAH BLAH BLAH');
+                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", "Armor:  $pc<armor>, AC $pc<ac>");
+                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", "Weapon: $pc<weapon>");
+                 if $pc<spells> {
+                     my $spells = 'Spells: ' ~ $pc<spells>.join(', ');
+                     my @spells = wrap-text($.w - 2, $spells, '    ');
+                     $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", $_) for @spells;
+                 }
                  $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", '');
             }
         }
 
         # Make sure extra rows are cleared after collapsing
-        if $expanded < 0 {
-            $.grid.set-span-text(0, $y++, ' ' x $.w) for ^4;
-        }
+        $.grid.set-span-text(0, $y++, ' ' x $.w) for ^(min 5, $.h - $y);
 
         self.composite(True);
     }
@@ -235,11 +237,40 @@ sub MAIN(
 
     # Characters
     my @party =
-        { :name<Fennic>,  :class<Ranger>,    :health<5>, :magic<3> },
-        { :name<Galtar>,  :class<Cleric>,    :health<4>, :magic<4> },
-        { :name<Salnax>,  :class<Sorcerer>,  :health<3>, :magic<6> },
-        { :name<Torfin>,  :class<Barbarian>, :health<6>, :magic<0> },
-        { :name<Trentis>, :class<Rogue>,     :health<4>, :magic<0> };
+        { :name<Fennic>,  :class<Ranger>,
+          :ac<6>, :hp<5>, :max-hp<5>, :mp<3>, :max-mp<3>,
+          :armor('Leaf Mail +2'),
+          :weapon('Longbow +1'),
+          :spells('Flaming Arrow', 'Summon Animal', 'Wall of Thorns',)
+        },
+
+        { :name<Galtar>,  :class<Cleric>,
+          :ac<5>, :hp<4>, :max-hp<4>, :mp<4>, :max-mp<4>,
+          :armor('Solar Breastplate'),
+          :weapon('Holy Mace'),
+          :spells('Cure Disease', 'Flame Strike', 'Heal', 'Protection from Evil', 'Solar Blast',)
+        },
+
+        { :name<Salnax>,  :class<Sorcerer>,
+          :ac<2>, :hp<3>, :max-hp<3>, :mp<6>, :max-mp<6>,
+          :armor('Robe of Shadows'),
+          :weapon('Staff of Ice'),
+          :spells('Acid Splash', 'Geyser', 'Fireball', 'Lightning Bolt', 'Magic Missle', 'Passwall',),
+        },
+
+        { :name<Torfin>,  :class<Barbarian>,
+          :ac<7>, :hp<6>, :max-hp<6>, :mp<0>, :max-mp<0>,
+          :armor('Dragon Hide'),
+          :weapon('Dragonbane Greatsword'),
+          :spells(()),
+        },
+
+        { :name<Trentis>, :class<Rogue>,
+          :ac<3>, :hp<4>, :max-hp<4>, :mp<0>, :max-mp<0>,
+          :armor('Silent Leather'),
+          :weapon('Throwing Dagger +1'),
+          :spells(()),
+        };
 
     my $pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width), :h($v-break - 2), :@party);
     $pv.show-state;
