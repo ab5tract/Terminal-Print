@@ -172,6 +172,30 @@ class PartyViewer is Widget {
 }
 
 
+class LogViewer is Widget {
+    has @.log;
+    has @.wrapped;
+    has $.scroll-pos = 0;
+
+    method add-entry($text) {
+        @.log.push($text);
+        my @lines = wrap-text($.w, $text, '    ');
+
+        # Autoscroll if already at end
+        $!scroll-pos += @lines if $.scroll-pos == @.wrapped;
+        @.wrapped.append(@lines);
+
+        my $top = max 0, $.scroll-pos - $.h + 1;
+        for ^$.h {
+            my $line = @.wrapped[$top + $_] // '';
+            $.grid.set-span-text(0, $_, $line ~ ' ' x ($.w - $line.chars));
+        }
+
+        self.composite(True);
+    }
+}
+
+
 #| Simulate a CRPG or Roguelike interface
 sub MAIN(
     Bool :$ascii, #= Use only ASCII characters, no >127 codepoints
@@ -276,8 +300,8 @@ sub MAIN(
     $pv.show-state;
 
     # Log/input
-    T.print-string(1, $v-break + 1, 'Game state loaded.');
-    T.print-string(1, $v-break + 2, '> ');
+    my $lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2), :h($log-height));
+    $lv.add-entry('Game state loaded.');
 
     # XXXX: Accordion character details down, back up, and then collapse
     $pv.show-state($_) && sleep $short-sleep for  ^@party;
