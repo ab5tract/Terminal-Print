@@ -279,6 +279,48 @@ sub make-map($map-w, $map-h) {
 }
 
 
+#| Create the initial character party
+sub make-party() {
+    my @party =
+        { :name<Fennic>,  :class<Ranger>,
+          :ac<6>, :hp<5>, :max-hp<5>, :mp<3>, :max-mp<3>,
+          :armor('Leaf Mail +2'),
+          :weapon('Longbow +1'),
+          :spells('Flaming Arrow', 'Summon Animal', 'Wall of Thorns',)
+        },
+
+        { :name<Galtar>,  :class<Cleric>,
+          :ac<5>, :hp<4>, :max-hp<4>, :mp<4>, :max-mp<4>,
+          :armor('Solar Breastplate'),
+          :weapon('Holy Mace'),
+          :spells('Cure Disease', 'Flame Strike', 'Heal', 'Protection from Evil', 'Solar Blast',)
+        },
+
+        { :name<Salnax>,  :class<Sorcerer>,
+          :ac<2>, :hp<3>, :max-hp<3>, :mp<6>, :max-mp<6>,
+          :armor('Robe of Shadows'),
+          :weapon('Staff of Ice'),
+          :spells('Acid Splash', 'Geyser', 'Fireball', 'Lightning Bolt', 'Magic Missle', 'Passwall',),
+        },
+
+        { :name<Torfin>,  :class<Barbarian>,
+          :ac<7>, :hp<6>, :max-hp<6>, :mp<0>, :max-mp<0>,
+          :armor('Dragon Hide'),
+          :weapon('Dragonbane Greatsword'),
+          :spells(()),
+        },
+
+        { :name<Trentis>, :class<Rogue>,
+          :ac<3>, :hp<4>, :max-hp<4>, :mp<0>, :max-mp<0>,
+          :armor('Silent Leather'),
+          :weapon('Throwing Dagger +1'),
+          :spells(()),
+        };
+
+    @party;
+}
+
+
 #| Simulate a CRPG or Roguelike interface
 sub MAIN(
     Bool :$ascii, #= Use only ASCII characters, no >127 codepoints
@@ -351,43 +393,8 @@ sub MAIN(
     $mv.draw;
 
     # Characters
-    my @party =
-        { :name<Fennic>,  :class<Ranger>,
-          :ac<6>, :hp<5>, :max-hp<5>, :mp<3>, :max-mp<3>,
-          :armor('Leaf Mail +2'),
-          :weapon('Longbow +1'),
-          :spells('Flaming Arrow', 'Summon Animal', 'Wall of Thorns',)
-        },
-
-        { :name<Galtar>,  :class<Cleric>,
-          :ac<5>, :hp<4>, :max-hp<4>, :mp<4>, :max-mp<4>,
-          :armor('Solar Breastplate'),
-          :weapon('Holy Mace'),
-          :spells('Cure Disease', 'Flame Strike', 'Heal', 'Protection from Evil', 'Solar Blast',)
-        },
-
-        { :name<Salnax>,  :class<Sorcerer>,
-          :ac<2>, :hp<3>, :max-hp<3>, :mp<6>, :max-mp<6>,
-          :armor('Robe of Shadows'),
-          :weapon('Staff of Ice'),
-          :spells('Acid Splash', 'Geyser', 'Fireball', 'Lightning Bolt', 'Magic Missle', 'Passwall',),
-        },
-
-        { :name<Torfin>,  :class<Barbarian>,
-          :ac<7>, :hp<6>, :max-hp<6>, :mp<0>, :max-mp<0>,
-          :armor('Dragon Hide'),
-          :weapon('Dragonbane Greatsword'),
-          :spells(()),
-        },
-
-        { :name<Trentis>, :class<Rogue>,
-          :ac<3>, :hp<4>, :max-hp<4>, :mp<0>, :max-mp<0>,
-          :armor('Silent Leather'),
-          :weapon('Throwing Dagger +1'),
-          :spells(()),
-        };
-
-    my $pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width), :h($v-break - 2), :@party);
+    my $party := make-party;
+    my $pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width), :h($v-break - 2), :$party);
     $pv.show-state;
 
     # Log/input
@@ -395,8 +402,8 @@ sub MAIN(
     $lv.add-entry('Game state loaded.');
 
     # XXXX: Accordion character details down, back up, and then collapse
-    $pv.show-state($_) && sleep $short-sleep for  ^@party;
-    $pv.show-state($_) && sleep $short-sleep for (^@party).reverse;
+    $pv.show-state($_) && sleep $short-sleep for  ^$party;
+    $pv.show-state($_) && sleep $short-sleep for (^$party).reverse;
     $pv.show-state;
 
     # XXXX: Popup help
