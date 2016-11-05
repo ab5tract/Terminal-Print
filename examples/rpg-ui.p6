@@ -148,13 +148,18 @@ class MapViewer is Widget {
     has $.map-h is required;
     has @.map   is required;
 
-    has $.party-x is required;
-    has $.party-y is required;  # i
+    has $.party-x is required is rw;
+    has $.party-y is required is rw;
 
     has $.ascii;
     has $.color-bits;
 
     method draw() {
+        # Make sure party (plus a comfortable radius around them) is still visible
+        my $radius = 3;
+        $!map-x = max(min($.map-x, $.party-x - $radius), $.party-x + $radius + 1 - $.w);
+        $!map-y = max(min($.map-y, $.party-y - $radius), $.party-y + $radius + 1 - $.h);  # ==
+
         # Main map, panned to correct location
         my $marker = $.color-bits > 4 ?? %( :char('+'), :color('242')) !! '+';
 
@@ -182,7 +187,6 @@ class MapViewer is Widget {
 
         # Party's light source glow
         # XXXX: This naively lights up areas the glow couldn't actually reach
-        my $radius = 3;
         for (-$radius) .. $radius -> $dy {
             my $y = $py + $dy;
             next unless 0 <= $y < $.h;
@@ -420,8 +424,8 @@ sub MAIN(
     my $map-h = 200;
     my $map  := make-map($map-w, $map-h);
     my $mv    = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
-                              :party-x(5), :party-y(3), :$ascii, :$color-bits,
-                              :map-x(0), :map-y(0), :$map-w, :$map-h, :$map);
+                              :party-x(6), :party-y(8), :$ascii, :$color-bits,
+                              :map-x(3), :map-y(3), :$map-w, :$map-h, :$map);
     $mv.draw;
 
     # Characters
@@ -439,7 +443,20 @@ sub MAIN(
     $pv.show-state;
 
     # XXXX: Popup help
-    # XXXX: Pan game map
+
+    # XXXX: Move party around, panning game map as necessary
+    sub move-party($dx, $dy) {
+        $mv.party-x += $dx;
+        $mv.party-y += $dy;  # ++
+        $mv.draw;
+    }
+
+    move-party( 0, -1) for ^2;
+    move-party(-1, -1) for ^5;
+    move-party( 1,  0) for ^5;
+    move-party( 1,  1) for ^3;
+    move-party( 1,  0) for ^12;
+
     # XXXX: Battle!
     # XXXX: Battle results splash
 
