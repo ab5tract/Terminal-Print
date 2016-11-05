@@ -167,7 +167,7 @@ class MapViewer is Widget {
         # Party location
         my $px = $.party-x - $.map-x;
         my $py = $.party-y - $.map-y;  # ;;
-        if 0 < $px < $.w && 0 < $py < $.h {
+        if 0 <= $px < $.w && 0 <= $py < $.h {
             $.grid.change-cell($px, $py, '@');
         }
 
