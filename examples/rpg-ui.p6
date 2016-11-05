@@ -150,17 +150,26 @@ class MapViewer is Widget {
 
     has $.party-x is required;
     has $.party-y is required;  # i
+
     has $.ascii;
+    has $.color-bits;
 
     method draw() {
         # Main map, panned to correct location
+        my $marker = $.color-bits > 4 ?? %( :char('+'), :color('242')) !! '+';
+
         for ^$.h -> $y {
             for ^$.w -> $x {
                 my $mapped = @!map[$!map-y + $y][$!map-x + $x] // '';  # +
                 $mapped = %tiles{$mapped} unless $.ascii;
 
-                $.grid.change-cell($x, $y, $mapped
-                                           || ((($!map-x + $x) %% 10 && ($!map-y + $y) %% 10) ?? '+' !! ' '));  # +
+                if $mapped {
+                    $.grid.change-cell($x, $y, $mapped);
+                }
+                else {
+                    my $need-marker = ($!map-x + $x) %% 10 && ($!map-y + $y) %% 10;  # ++
+                    $.grid.change-cell($x, $y, $need-marker ?? $marker !! ' ');
+                }
             }
         }
 
@@ -169,6 +178,29 @@ class MapViewer is Widget {
         my $py = $.party-y - $.map-y;  # ;;
         if 0 <= $px < $.w && 0 <= $py < $.h {
             $.grid.change-cell($px, $py, '@');
+        }
+
+        # Party's light source glow
+        # XXXX: This naively lights up areas the glow couldn't actually reach
+        my $radius = 3;
+        for (-$radius) .. $radius -> $dy {
+            my $y = $py + $dy;
+            next unless 0 <= $y < $.h;
+
+            for (-$radius) .. $radius -> $dx {
+                my $x = $px + $dx;
+                next unless 0 <= $x < $.w;
+
+                my $dist = sqrt($dy * $dy + $dx * $dx);
+                next if $dist > $radius || $dist =~= $radius;
+
+                # Calculates a sqrt dropoff, which looks better than realism
+                my $brightness = ceiling max 2, 5 * sqrt(1 - $dist / $radius);
+                my $color      = 16 + 42 * $brightness;  # 16 + 36 * r + 6 * g + b
+                # $.grid.change-cell($x, $y, ~$brightness);  # DEBUG: show brightness levels
+                $.grid.set-span-color($x, $x, $y, $.color-bits > 4 ?? ~$color       !!
+                                                  $brightness  > 3 ?? 'bold yellow' !! 'yellow');
+            }
         }
 
         # Update screen
@@ -325,7 +357,8 @@ sub make-party() {
 #| Simulate a CRPG or Roguelike interface
 sub MAIN(
     Bool :$ascii, #= Use only ASCII characters, no >127 codepoints
-    Bool :$bench  #= Benchmark mode (run as fast as possible, with no sleeps or rate limiting)
+    Bool :$bench, #= Benchmark mode (run as fast as possible, with no sleeps or rate limiting)
+    Int  :$color-bits = 4 #= Enable extended colors (8 = 256-color, 24 = 24-bit RGB)
     ) {
 
     my $short-sleep =  1 * !$bench;
@@ -387,8 +420,8 @@ sub MAIN(
     my $map-h = 200;
     my $map  := make-map($map-w, $map-h);
     my $mv    = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
-			      :party-x(5), :party-y(3), :$ascii,
-			      :map-x(0), :map-y(0), :$map-w, :$map-h, :$map);
+                              :party-x(5), :party-y(3), :$ascii, :$color-bits,
+                              :map-x(0), :map-y(0), :$map-w, :$map-h, :$map);
     $mv.draw;
 
     # Characters
