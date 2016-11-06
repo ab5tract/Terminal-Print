@@ -83,27 +83,29 @@ class ProgressBar is Widget {
     has $.remaining  = 'red';
     has $.text-color = 'white';
     has $.text       = '';
+    has $!initialized;
 
     #| Set the current progress level and update the screen
     method set-progress($p) {
         my $t0 = now;
+
+        # Overlay text on first initialization
+        unless $!initialized {
+            my @lines = $!text.lines;
+            my $top = ($.h - @lines) div 2;
+            for @lines.kv -> $i, $line {
+                $.grid.set-span-text(($.w - $line.chars) div 2, $top + $i, $line);
+            }
+            $!initialized = True;
+        }
 
         # Compute length of completed portion of bar
         $!progress    = max(0, min($!max, $p));
         my $completed = $.w * $!progress div $!max;
 
         # Loop over bar thickness (height) setting color spans
-        for ^$.h {
-            $.grid.set-span-color(0, $completed - 1,   $_, "$!text-color on_$!completed");
-            $.grid.set-span-color($completed, $.w - 1, $_, "$!text-color on_$!remaining");
-        }
-
-        # Overlay text
-        my @lines = $!text.lines;
-        my $top = ($.h - @lines) div 2;
-        for @lines.kv -> $i, $line {
-            $.grid.set-span-text(($.w - $line.chars) div 2, $top + $i, $line);
-        }
+        $.grid.set-span-color(0, $completed - 1,   $_, "$!text-color on_$!completed") for ^$.h;
+        $.grid.set-span-color($completed, $.w - 1, $_, "$!text-color on_$!remaining") for ^$.h;
 
         record-time("Draw $.w x $.h {self.^name}", $t0);
 
