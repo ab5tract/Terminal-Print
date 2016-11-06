@@ -3,6 +3,43 @@ use v6;
 use Terminal::Print;
 
 
+#| Timing measurements
+my @timings;
+
+#| Keep track of timing measurements
+sub record-time($desc, $start, $end = now) {
+    @timings.push: %( :$start, :$end, :delta($end - $start), :$desc );
+}
+
+#| Show all timings so far
+sub show-timings($verbosity) {
+    return unless $verbosity >= 1;
+
+    # Gather summary info
+    my %count;
+    my %total;
+    for @timings {
+        %count{.<desc>}++;
+        %total{.<desc>} += .<delta>;
+    }
+
+    # Details of every timing
+    if $verbosity >= 2 {
+        my $raw-format = "%7.3f %6.3f  %s\n";
+        say '  START SECONDS DESCRIPTION';
+        printf $raw-format, .<start> - $*INITTIME, .<delta>, .<desc> for @timings;
+        say '';
+    }
+
+    # Summary of timings by description, sorted by total time taken
+    my $summary-format = "%6d %7.3f %7.3f  %s\n";
+    say " COUNT   TOTAL AVERAGE  DESCRIPTION";
+    for %total.sort(-*.value) -> (:$key, :$value) {
+        printf $summary-format, %count{$key}, $value, $value / %count{$key}, $key;
+    }
+}
+
+
 #| A basic rectangular widget that can work in relative coordinates
 class Widget {
     has $.x is required;
@@ -465,4 +502,7 @@ sub MAIN(
 
     # Return to our regularly scheduled not-gaming
     T.shutdown-screen;
+
+    # Show timing results
+    show-timings(1) if $bench;
 }
