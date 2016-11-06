@@ -56,10 +56,8 @@ method set-span-text($x, $y, Str $text) {
     $!grid-string = '';
     my $row = @!grid[$y];
     for $text.comb.kv -> $i, $char {
-        given $row[$x + $i] {
-            when Cell { $row[$x + $i] = Cell.new(:$char, :color(.color)) }
-            default   { $row[$x + $i] = $char }
-        }
+        my $cell := $row[$x + $i];
+        $cell = $cell ~~ Cell ?? Cell.new(:$char, :color($cell.color)) !! $char;
     }
 }
 
@@ -68,10 +66,8 @@ method set-span-color($x1, $x2, $y, $color) {
     $!grid-string = '';
     my $row = @!grid[$y];
     for $x1..$x2 -> $x {
-        given $row[$x] {
-            when Cell { $row[$x] = Cell.new(:char(.char),     :$color) }
-            default   { $row[$x] = Cell.new(:char($_ // ' '), :$color) }
-        }
+        my $cell := $row[$x];
+        $cell = Cell.new(:char($cell ~~ Cell ?? $cell.char !! $cell // ' '), :$color);
     }
 }
 
