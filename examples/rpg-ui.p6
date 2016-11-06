@@ -52,6 +52,7 @@ class Widget {
     # Simply copies widget contents onto the current display grid for now,
     # optionally also printing updated contents to the screen
     method composite(Bool $print?) {
+        my $t0   = now;
         my $from = $!grid.grid;
         my $cg   = T.current-grid;
         my $to   = $cg.grid;
@@ -66,6 +67,8 @@ class Widget {
         }
 
         print $out if $print;
+
+        record-time("Composite $.w x $.h {self.^name}", $t0);
     }
 }
 
@@ -81,6 +84,8 @@ class ProgressBar is Widget {
 
     #| Set the current progress level and update the screen
     method set-progress($p) {
+        my $t0 = now;
+
         # Compute length of completed portion of bar
         $!progress    = max(0, min($!max, $p));
         my $completed = $.w * $!progress div $!max;
@@ -97,6 +102,8 @@ class ProgressBar is Widget {
         for @lines.kv -> $i, $line {
             $.grid.set-span-text(($.w - $line.chars) div 2, $top + $i, $line);
         }
+
+        record-time("Draw $.w x $.h {self.^name}", $t0);
 
         # Update screen
         self.composite(True);
@@ -192,6 +199,8 @@ class MapViewer is Widget {
     has $.color-bits;
 
     method draw() {
+        my $t0 = now;
+
         # Make sure party (plus a comfortable radius around them) is still visible
         my $radius = 3;
         $!map-x = max(min($.map-x, $.party-x - $radius), $.party-x + $radius + 1 - $.w);
@@ -244,6 +253,8 @@ class MapViewer is Widget {
             }
         }
 
+        record-time("Draw $.w x $.h {self.^name}", $t0);
+
         # Update screen
         self.composite(True);
     }
@@ -255,6 +266,8 @@ class PartyViewer is Widget {
 
     #| Draw the current party state
     method show-state($expanded = -1) {
+        my $t0 = now;
+
         # XXXX: Nicer bars
         # XXXX: Condition icons (poisoned, low health, etc.)
         $.grid.set-span-text(0, 0, '  NAME    CLASS     HEALTH MAGIC');
@@ -280,6 +293,8 @@ class PartyViewer is Widget {
         # Make sure extra rows are cleared after collapsing
         $.grid.set-span-text(0, $y++, ' ' x $.w) for ^(min 5, $.h - $y);
 
+        record-time("Draw $.w x $.h {self.^name}", $t0);
+
         self.composite(True);
     }
 }
@@ -291,6 +306,8 @@ class LogViewer is Widget {
     has $.scroll-pos = 0;
 
     method add-entry($text) {
+        my $t0 = now;
+
         @.log.push($text);
         my @lines = wrap-text($.w, $text, '    ');
 
@@ -304,6 +321,8 @@ class LogViewer is Widget {
             $.grid.set-span-text(0, $_, $line ~ ' ' x ($.w - $line.chars));
         }
 
+        record-time("Draw $.w x $.h {self.^name}", $t0);
+
         self.composite(True);
     }
 }
@@ -311,6 +330,8 @@ class LogViewer is Widget {
 
 #| Create the initial map state
 sub make-map($map-w, $map-h) {
+    my $t0 = now;
+
     my @map = [ '' xx $map-w ] xx $map-h;
 
     my sub map-room($x1, $y1, $w, $h) {
@@ -349,12 +370,16 @@ sub make-map($map-w, $map-h) {
     @map[19][7] = '|';
     @map[5][26] = '-';
 
+    record-time("Create $map-w x $map-h map array", $t0);
+
     @map
 }
 
 
 #| Create the initial character party
 sub make-party() {
+    my $t0 = now;
+
     my @party =
         { :name<Fennic>,  :class<Ranger>,
           :ac<6>, :hp<5>, :max-hp<5>, :mp<3>, :max-mp<3>,
@@ -391,6 +416,8 @@ sub make-party() {
           :spells(()),
         };
 
+    record-time("Create {+@party}-member party", $t0);
+
     @party;
 }
 
@@ -406,10 +433,13 @@ sub MAIN(
     my $long-sleep  = 10 * !$bench;
 
     # Start up the fun!
+    my $t0 = now;
     T.initialize-screen;
+    record-time("Initialize {w} x {h} screen", $t0);
 
     # XXXX: Title screen
     # XXXX: Draw rubble below/to sides of title?
+    $t0 = now;
     my $standard = q:to/STANDARD/;
          ____        _                    __      _    _    _             _       
         |  _ \ _   _(_)_ __  ___    ___  / _|    / \  | | _| |_ __ _ _ __(_) __ _ 
@@ -425,6 +455,7 @@ sub MAIN(
         PAGGA
 
     print-centered(0, 0, w, h * 3/4, $ascii ?? $standard !! $pagga);
+    record-time("Draw {w} x {h} title screen", $t0);
 
     # XXXX: Loading bar
     my $bar = ProgressBar.new(:x((w - 50) div 2), :y(h * 2/3), :w(50), :h(3),
@@ -435,9 +466,12 @@ sub MAIN(
 
     # XXXX: Basic UI
     # XXXX: What about clearing grid?
+    $t0 = now;
     T.clear-screen;
+    record-time("Clear {w} x {h} screen", $t0);
 
     # Basic 3-viewport layout (map, party stats, log/input)
+    $t0 = now;
     my $party-width = 34;
     my $log-height  = h div 6;
     my $h-break     = w - $party-width - 2;
@@ -455,6 +489,7 @@ sub MAIN(
         T.print-cell($h-break, 0, '╦');
         T.print-cell($h-break, $v-break, '╩');
     }
+    record-time("Lay out {w} x {h} game screen", $t0);
 
     # Map
     my $map-w = 300;
@@ -501,7 +536,9 @@ sub MAIN(
     sleep $long-sleep;
 
     # Return to our regularly scheduled not-gaming
+    $t0 = now;
     T.shutdown-screen;
+    record-time("Shut down {w} x {h} screen", $t0);
 
     # Show timing results
     show-timings(1) if $bench;
