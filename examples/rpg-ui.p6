@@ -63,7 +63,7 @@ class Widget {
             for ^$!w -> $x {
                 $to[$x + $!x][$y + $!y] = $from[$x][$y];
             }
-            $out ~= $cg.span-string($!x, $x2, $y + $!y) if $print;  # )))
+            $out ~= $cg.span-string($!x, $x2, $y + $!y) if $print;  # ))
         }
 
         print $out if $print;
