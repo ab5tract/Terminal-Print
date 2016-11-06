@@ -57,18 +57,10 @@ class Widget {
         my $cg   = T.current-grid;
         my $to   = $cg.grid;
         my $x2   = $!x + $!w - 1;
-        my $out  = '';
 
-        for ^$!h -> $y {
-            my $from-row = $from[$y];
-            my $to-row   = $to[$y + $!y];
+        $to[$_ + $!y].splice($!x, $!w, $from[$_]) for ^$!h;  # ]
 
-            $to-row[$_ + $!x] = $from-row[$_] for ^$!w;
-
-            $out ~= $cg.span-string($!x, $x2, $y + $!y) if $print;  # ))
-        }
-
-        print $out if $print;
+        (^$!h).map({ $cg.span-string($!x, $x2, $_ + $!y) }).join.print if $print;
 
         record-time("Composite $.w x $.h {self.^name}", $t0);
     }
