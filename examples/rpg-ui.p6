@@ -60,9 +60,11 @@ class Widget {
         my $out  = '';
 
         for ^$!h -> $y {
-            for ^$!w -> $x {
-                $to[$x + $!x][$y + $!y] = $from[$x][$y];
-            }
+            my $from-row = $from[$y];
+            my $to-row   = $to[$y + $!y];
+
+            $to-row[$_ + $!x] = $from-row[$_] for ^$!w;
+
             $out ~= $cg.span-string($!x, $x2, $y + $!y) if $print;  # ))
         }
 
@@ -210,7 +212,7 @@ class MapViewer is Widget {
         my $marker = $.color-bits > 4 ?? %( :char('+'), :color('242')) !! '+';
 
         my $t1 = now;
-        $.grid.grid = [ [ ' ' xx $.h ] xx $.w ];
+        $.grid.grid = [ [ ' ' xx $.w ] xx $.h ];
         for ^$.h -> $y {
             my $row = @!map[$!map-y + $y];  # ++
             my $marker-row = ($!map-y + $y) %% 10;  # ++

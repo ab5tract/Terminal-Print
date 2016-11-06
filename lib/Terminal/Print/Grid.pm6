@@ -24,7 +24,7 @@ has $.move-cursor;
 has $!print-enabled = True;
 
 method new($columns, $rows, :$move-cursor = move-cursor-template) {
-    my @grid = [ [ ' ' xx $rows ] xx $columns ];
+    my @grid = [ [ ' ' xx $columns ] xx $rows ];
 
     self.bless(:$columns, :$rows, :@grid, :$move-cursor);
 }
@@ -34,28 +34,31 @@ method indices() {
 }
 
 method cell-string($x, $y) {
-    "{$!move-cursor($x, $y)}{~@!grid[$x][$y]}"
+    "{$!move-cursor($x, $y)}{~@!grid[$y][$x]}"
 }
 
 method span-string($x1, $x2, $y) {
-    $!move-cursor($x1, $y) ~ ($x1..$x2).map(-> $x { @!grid[$x][$y] }).join
+    my $row = @!grid[$y];
+    $!move-cursor($x1, $y) ~ $row[$x1..$x2].join
 }
 
 #| Set both the text and color of a span
 method set-span($x, $y, Str $text, $color) {
     $!grid-string = '';
+    my $row = @!grid[$y];
     for $text.comb.kv -> $i, $char {
-        @!grid[$x + $i][$y] = Cell.new(:$char, :$color);
+        $row[$x + $i] = Cell.new(:$char, :$color);
     }
 }
 
 #| Set the text of a span, but keep the color unchanged
 method set-span-text($x, $y, Str $text) {
     $!grid-string = '';
+    my $row = @!grid[$y];
     for $text.comb.kv -> $i, $char {
-        given @!grid[$x + $i][$y] {
-            when Cell { @!grid[$x + $i][$y] = Cell.new(:$char, :color(.color)) }
-            default   { @!grid[$x + $i][$y] = Cell.new(:$char) }
+        given $row[$x + $i] {
+            when Cell { $row[$x + $i] = Cell.new(:$char, :color(.color)) }
+            default   { $row[$x + $i] = $char }
         }
     }
 }
@@ -63,27 +66,28 @@ method set-span-text($x, $y, Str $text) {
 #| Set the color of a span, but keep the text unchanged
 method set-span-color($x1, $x2, $y, $color) {
     $!grid-string = '';
+    my $row = @!grid[$y];
     for $x1..$x2 -> $x {
-        given @!grid[$x][$y] {
-            when Cell { @!grid[$x][$y] = Cell.new(:char(.char),     :$color) }
-            default   { @!grid[$x][$y] = Cell.new(:char($_ // ' '), :$color) }
+        given $row[$x] {
+            when Cell { $row[$x] = Cell.new(:char(.char),     :$color) }
+            default   { $row[$x] = Cell.new(:char($_ // ' '), :$color) }
         }
     }
 }
 
 multi method change-cell($x, $y, %c) {
     $!grid-string = '';
-    @!grid[$x][$y] = Cell.new(|%c)
+    @!grid[$y][$x] = Cell.new(|%c);
 }
 
 multi method change-cell($x, $y, Str $char) {
     $!grid-string = '';
-    @!grid[$x][$y] = $char;
+    @!grid[$y][$x] = $char;
 }
 
 multi method change-cell($x, $y, Cell $cell) {
     $!grid-string = '';
-    @!grid[$x][$y] = $cell
+    @!grid[$y][$x] = $cell;
 }
 
 multi method print-cell($x, $y) {
