@@ -434,8 +434,9 @@ sub MAIN(
     Int  :$color-bits = 4 #= Enable extended colors (8 = 256-color, 24 = 24-bit RGB)
     ) {
 
-    my $short-sleep =  1 * !$bench;
-    my $long-sleep  = 10 * !$bench;
+    my $short-sleep  = .1 * !$bench;
+    my $medium-sleep =  1 * !$bench;
+    my $long-sleep   = 10 * !$bench;
 
     # Start up the fun!
     my $t0 = now;
@@ -515,8 +516,8 @@ sub MAIN(
     $lv.add-entry('Game state loaded.');
 
     # XXXX: Accordion character details down, back up, and then collapse
-    $pv.show-state($_) && sleep $short-sleep for  ^$party;
-    $pv.show-state($_) && sleep $short-sleep for (^$party).reverse;
+    $pv.show-state($_) && sleep $medium-sleep for  ^$party;
+    $pv.show-state($_) && sleep $medium-sleep for (^$party).reverse;
     $pv.show-state;
 
     # XXXX: Popup help
@@ -526,6 +527,7 @@ sub MAIN(
         $mv.party-x += $dx;
         $mv.party-y += $dy;  # ++
         $mv.draw;
+        sleep $short-sleep;
     }
 
     move-party( 0, -1) for ^2;
