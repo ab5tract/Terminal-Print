@@ -554,5 +554,6 @@ sub MAIN(
     record-time("Shut down {w} x {h} screen", $t0);
 
     # Show timing results
+    record-time('TOTAL TIME', $*INITTIME);
     show-timings(1) if $bench;
 }
