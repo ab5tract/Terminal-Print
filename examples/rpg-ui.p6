@@ -209,22 +209,23 @@ class MapViewer is Widget {
         # Main map, panned to correct location
         my $marker = $.color-bits > 4 ?? %( :char('+'), :color('242')) !! '+';
 
+        my $t1 = now;
+        $.grid.grid = [ [ ' ' xx $.h ] xx $.w ];
         for ^$.h -> $y {
-            for ^$.w -> $x {
-                my $mapped = @!map[$!map-y + $y][$!map-x + $x] // '';  # +
-                $mapped = %tiles{$mapped} unless $.ascii;
+            my $row = @!map[$!map-y + $y];  # ++
+            my $marker-row = ($!map-y + $y) %% 10;  # ++
 
-                if $mapped {
-                    $.grid.change-cell($x, $y, $mapped);
-                }
-                else {
-                    my $need-marker = ($!map-x + $x) %% 10 && ($!map-y + $y) %% 10;  # ++
-                    $.grid.change-cell($x, $y, $need-marker ?? $marker !! ' ');
-                }
+            for ^$.w -> $x {
+                my $mapped = $row[$!map-x + $x] // '';
+                   $mapped = %tiles{$mapped} unless $.ascii;
+                my $marked = $marker-row && !$mapped && ($!map-x + $x) %% 10;
+                $.grid.change-cell($x, $y, $mapped) if $mapped;
+                $.grid.change-cell($x, $y, $marker) if $marked;
             }
         }
 
         # Party location
+        my $t2 = now;
         my $px = $.party-x - $.map-x;
         my $py = $.party-y - $.map-y;  # ;;
         if 0 <= $px < $.w && 0 <= $py < $.h {
@@ -233,19 +234,22 @@ class MapViewer is Widget {
 
         # Party's light source glow
         # XXXX: This naively lights up areas the glow couldn't actually reach
+        my $t3      = now;
+        my $r_num   = $radius.Num;
+        my $radius2 = $radius * $radius;
         for (-$radius) .. $radius -> $dy {
             my $y = $py + $dy;
-            next unless 0 <= $y < $.h;
 
             for (-$radius) .. $radius -> $dx {
                 my $x = $px + $dx;
-                next unless 0 <= $x < $.w;
 
-                my $dist = sqrt($dy * $dy + $dx * $dx);
-                next if $dist > $radius || $dist =~= $radius;
+                my $dist2 = $dy * $dy + $dx * $dx;
+                next if $dist2 >= $radius2;
 
                 # Calculates a sqrt dropoff, which looks better than realism
-                my $brightness = ceiling max 2, 5 * sqrt(1 - $dist / $radius);
+                # Oddness of following lines brought to you by micro-optimization
+                my $brightness = 5e0 * (1e0 - $dist2.sqrt / $r_num).sqrt;
+                   $brightness = $brightness > 2e0 ?? $brightness.ceiling !! 2;
                 my $color      = 16 + 42 * $brightness;  # 16 + 36 * r + 6 * g + b
                 # $.grid.change-cell($x, $y, ~$brightness);  # DEBUG: show brightness levels
                 $.grid.set-span-color($x, $x, $y, $.color-bits > 4 ?? ~$color       !!
@@ -253,7 +257,12 @@ class MapViewer is Widget {
             }
         }
 
-        record-time("Draw $.w x $.h {self.^name}", $t0);
+        my $t4 = now;
+        record-time("Draw $.w x $.h {self.^name} -- setup", $t0, $t1);
+        record-time("Draw $.w x $.h {self.^name} -- fill",  $t1, $t2);
+        record-time("Draw $.w x $.h {self.^name} -- party", $t2, $t3);
+        record-time("Draw $.w x $.h {self.^name} -- glow",  $t3, $t4);
+        record-time("Draw $.w x $.h {self.^name}", $t0, $t4);
 
         # Update screen
         self.composite(True);
