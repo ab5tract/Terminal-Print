@@ -78,7 +78,7 @@ multi method change-cell($x, $y, %c) {
 
 multi method change-cell($x, $y, Str $char) {
     $!grid-string = '';
-    @!grid[$x][$y] = Cell.new(:$char)
+    @!grid[$x][$y] = $char;
 }
 
 multi method change-cell($x, $y, Cell $cell) {
@@ -91,7 +91,7 @@ multi method print-cell($x, $y) {
 }
 
 multi method print-cell($x, $y, Str $char) {
-    self.change-cell($x, $y, Cell.new(:$char));
+    self.change-cell($x, $y, $char);
     self.print-cell($x, $y);
 }
 
@@ -108,15 +108,11 @@ multi method print-string($x, $y, Str() $string, $color?) {
     if $string.chars == 1 {
         self.print-cell($x, $y, $string);
     } else {
-        my ($off-x, $off-y) = 0, 0;
+        my $off-y = 0;
         for $string.lines -> $line {
-            for $line.comb -> $char {
-                $color ?? self.print-cell($x + $off-x, $y + $off-y, %( :$char, :$color ))
-                       !! self.print-cell($x + $off-x, $y + $off-y, $char);
-                $off-x++;
-            }
+            self.set-span($x, $y + $off-y, $line, $color);
+            print self.span-string($x, $x + $line.chars - 1, $y + $off-y);
             $off-y++;
-            $off-x = 0;
         }
     }
 }
