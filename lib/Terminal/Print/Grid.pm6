@@ -41,6 +41,10 @@ method new($columns, $rows, :$move-cursor = move-cursor-template) {
     self.bless(:$columns, :$rows, :@grid, :$move-cursor);
 }
 
+method clear() {
+    @!grid = [ [ ' ' xx $!columns ] xx $!rows ];
+}
+
 method indices() {
     @!indices ||= (^$.columns X ^$.rows)>>.Array;
 }
