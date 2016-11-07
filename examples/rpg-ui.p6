@@ -206,7 +206,7 @@ class MapViewer is Widget {
         my $marker = $.color-bits > 4 ?? %( :char('+'), :color('242')) !! '+';
 
         my $t1 = now;
-        $.grid.grid = [ [ ' ' xx $.w ] xx $.h ];
+        $.grid.clear;
         for ^$.h -> $y {
             my $row = @!map[$!map-y + $y];  # ++
             my $marker-row = ($!map-y + $y) %% 10;  # ++
@@ -471,7 +471,6 @@ sub MAIN(
     # XXXX: Transition animation?
 
     # XXXX: Basic UI
-    # XXXX: What about clearing grid?
     $t0 = now;
     T.clear-screen;
     record-time("Clear {w} x {h} screen", $t0);
