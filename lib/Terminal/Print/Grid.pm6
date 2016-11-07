@@ -10,9 +10,21 @@ my class Cell {
     has $.color;
     has $!string;
 
-    method Str {
-        $!string //= $!color ?? colored($!char, $!color) !! $!char
+    my $reset = color('reset');
+    my %cache = '' => '';
+
+    submethod BUILD(:$!char, :$color) {
+        $!color = $color // '';
+        if $!color.contains(',') {
+            $!string = colored($!char, $!color);
+        }
+        else {
+            %cache{$!color} //= color($!color);
+            $!string = $!color ?? "%cache{$!color}$!char$reset" !! $!char;
+        }
     }
+
+    method Str { $!string }
 }
 
 has $.rows;
