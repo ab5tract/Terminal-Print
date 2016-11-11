@@ -3,12 +3,16 @@ use v6;
 use Terminal::Print;
 
 
-#| Timing measurements
+#| Multi-thread timing measurements
 my @timings;
+my $timings-supplier = Supplier.new;
+my $timings-supply = $timings-supplier.Supply;
+$timings-supply.act(-> $timing { @timings.push: $timing });
 
 #| Keep track of timing measurements
 sub record-time($desc, $start, $end = now) {
-    @timings.push: %( :$start, :$end, :delta($end - $start), :$desc );
+    $timings-supplier.emit: %( :$start, :$end, :delta($end - $start), :$desc,
+                               :thread($*THREAD.id) );
 }
 
 #| Show all timings so far
@@ -25,9 +29,9 @@ sub show-timings($verbosity) {
 
     # Details of every timing
     if $verbosity >= 2 {
-        my $raw-format = "%7.3f %6.3f  %s\n";
-        say '  START SECONDS DESCRIPTION';
-        printf $raw-format, .<start> - $*INITTIME, .<delta>, .<desc> for @timings;
+        my $raw-format = "%7.3f %7.3f %6d  %s\n";
+        say '  START SECONDS THREAD  DESCRIPTION';
+        printf $raw-format, .<start> - $*INITTIME, .<delta>, .<thread>, .<desc> for @timings;
         say '';
     }
 
