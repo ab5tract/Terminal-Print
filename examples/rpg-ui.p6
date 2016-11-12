@@ -7,7 +7,7 @@ use Terminal::Print;
 my @timings;
 my $timings-supplier = Supplier.new;
 my $timings-supply = $timings-supplier.Supply;
-$timings-supply.act(-> $timing { @timings.push: $timing });
+$timings-supply.act: { @timings.push: $^timing };
 
 #| Keep track of timing measurements
 sub record-time($desc, $start, $end = now) {
