@@ -87,6 +87,24 @@ method set-span-color($x1, $x2, $y, $color) {
     }
 }
 
+#| Copy an entire other grid into this grid with upper left at ($x, $y)
+method copy-from(Terminal::Print::Grid $grid, $x, $y) {
+    my $from = $grid.grid;
+    my $rows = $grid.rows;
+    my $cols = $grid.columns;
+
+    $!grid-string = '';
+    @!grid[$_ + $y].splice($x, $cols, $from[$_]) for ^$rows;
+}
+
+#| Copy another grid into this one and print the modified area
+method print-from(Terminal::Print::Grid $grid, $x, $y) {
+    self.copy-from($grid, $x, $y);
+
+    my $x2 = $x + $grid.columns - 1;
+    (^$grid.rows).map({ self.span-string($x, $x2, $_ + $y) }).join.print;
+}
+
 multi method change-cell($x, $y, %c) {
     $!grid-string = '';
     @!grid[$y][$x] = Cell.new(|%c);

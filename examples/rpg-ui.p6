@@ -56,15 +56,11 @@ class Widget {
     # Simply copies widget contents onto the current display grid for now,
     # optionally also printing updated contents to the screen
     method composite(Bool $print?) {
-        my $t0   = now;
-        my $from = $!grid.grid;
-        my $cg   = T.current-grid;
-        my $to   = $cg.grid;
-        my $x2   = $!x + $!w - 1;
+        my $t0 = now;
 
-        $to[$_ + $!y].splice($!x, $!w, $from[$_]) for ^$!h;  # ]
-
-        (^$!h).map({ $cg.span-string($!x, $x2, $_ + $!y) }).join.print if $print;
+        # Ask the destination grid (a monitor) to do the copy for thread safety
+        $print ?? T.current-grid.print-from($!grid, $!x, $!y)
+               !! T.current-grid .copy-from($!grid, $!x, $!y);  # )
 
         record-time("Composite $.w x $.h {self.^name}", $t0);
     }
