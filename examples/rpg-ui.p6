@@ -75,21 +75,49 @@ class ProgressBar is Widget {
     has $.remaining  = 'red';
     has $.text-color = 'white';
     has $.text       = '';
+
+    has $!progress-supplier = Supplier.new;
+    has $!progress-supply = $!progress-supplier.Supply;
     has $!initialized;
 
+    # My kingdom for submethod TWEAK
+    method init() {
+        return if $!initialized;
+
+        # Render initial text
+        my @lines = $!text.lines;
+        my $top = ($.h - @lines) div 2;
+        for @lines.kv -> $i, $line {
+            $.grid.set-span-text(($.w - $line.chars) div 2, $top + $i, $line);
+        }
+
+        # Update progress bar display whenever supply is updated
+        $!progress-supply.act: -> (:$key, :$value) {
+            self!update-progress: $!progress * ($key eq 'add') + $value
+        };
+
+        $!initialized = True;
+    }
+
+    #| Add an increment to the current progress level
+    method add-progress($increment) {
+        self.init unless $!initialized;
+
+        $!progress-supplier.emit('add' => $increment);
+    }
+
+    #| Set the current progress level to an absolute value
+    method set-progress($value) {
+        self.init unless $!initialized;
+
+        $!progress-supplier.emit('set' => $value);
+    }
+
     #| Set the current progress level and update the screen
-    method set-progress($p) {
+    method !update-progress($p) {
         my $t0 = now;
 
-        # Overlay text on first initialization
-        unless $!initialized {
-            my @lines = $!text.lines;
-            my $top = ($.h - @lines) div 2;
-            for @lines.kv -> $i, $line {
-                $.grid.set-span-text(($.w - $line.chars) div 2, $top + $i, $line);
-            }
-            $!initialized = True;
-        }
+        self.init unless $!initialized;
 
         # Compute length of completed portion of bar
         $!progress    = max(0, min($!max, $p));
