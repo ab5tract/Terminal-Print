@@ -578,17 +578,17 @@ sub MAIN(
 
     record-time("Setup animation for $title-w x $title-h title screen", $t0);
 
-    # Make sure all loading and title animations finish before showing main screen
-    await @loading-promises;
-    $bar.set-progress(100);
-
     # Basic 3-viewport layout (map, party stats, log/input)
-    $t0 = now;
-    my $ui-grid     = T.add-grid('main');
     my $party-width = 34;
     my $log-height  = h div 6;
     my $h-break     = w - $party-width - 2;
     my $v-break     = h - $log-height  - 2;
+
+    # We'll need these later, but will initialize them in a different thread
+    my ($ui-grid, $map, $mv, $party, $pv, $lv);
+
+    $t0 = now;
+    $ui-grid = T.add-grid('main');
 
     my $style = $ascii ?? 'ascii' !! 'double';
     draw-box(  $ui-grid, 0, 0, w - 1, h - 1, $style);
@@ -608,25 +608,30 @@ sub MAIN(
     # Map
     my $map-w = 300;
     my $map-h = 200;
-    my $map  := make-map($map-w, $map-h);
-    my $mv    = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
-                              :party-x(6), :party-y(8), :$ascii, :$color-bits,
-                              :map-x(3), :map-y(3), :$map-w, :$map-h, :$map,
-                              :parent($ui-grid));
+
+    $map := make-map($map-w, $map-h);
+    $mv   = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
+                          :party-x(6), :party-y(8), :$ascii, :$color-bits,
+                          :map-x(3), :map-y(3), :$map-w, :$map-h, :$map,
+                          :parent($ui-grid));
     $mv.draw(False);
 
     # Characters
-    my $party := make-party;
-    my $pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width),
-                             :h($v-break - 2), :$party, :parent($ui-grid));
+    $party := make-party;
+    $pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width),
+                          :h($v-break - 2), :$party, :parent($ui-grid));
     $pv.show-state(False);
 
     # Log/input
-    my $lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2), :h($log-height),
-                           :parent($ui-grid));
+    $lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2), :h($log-height),
+                        :parent($ui-grid));
     $lv.add-entry('Game state loaded.', False);
 
-    # Main UI now ready, show it and set it current
+    # Make sure all loading and title animations finish, and main screen is
+    # fully ready, before showing main screen and setting it current
+    await @loading-promises;
+    $bar.set-progress(100);
+
     T.switch-grid('main', :blit);
 
     # XXXX: Accordion character details down, back up, and then collapse
