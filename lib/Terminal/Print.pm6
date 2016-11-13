@@ -103,12 +103,24 @@ submethod BUILD( :$!current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!mov
     }
 }
 
-method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( :$!columns, :$!rows, :$!move-cursor ) ) {
+method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( $!columns, $!rows, :$!move-cursor ) ) {
     push @!grids, $new-grid;
     if $name {
         %!grid-name-map{$name} = +@!grids-1;
     }
     $new-grid;
+}
+
+multi method switch-grid( Int $index, :$blit ) {
+    die "Grid index $index does not exist" unless @!grids[$index]:exists;
+    self.blit($index) if $blit;
+    $!current-grid = @!grids[$index];
+}
+
+multi method switch-grid( Str $name, :$blit ) {
+    die "No grid has been named $name" unless my $index = %!grid-name-map{$name};
+    self.blit($index) if $blit;
+    $!current-grid = @!grids[$index];
 }
 
 method blit( $grid-identifier = 0 ) {
@@ -226,12 +238,13 @@ method change-cell( $x, $y, Str $c ) {
 #### print-grid stuff
 
 multi method print-grid( Int $index ) {
-    @!grids[$index].print-grid;
+    die "Grid index $index does not exist" unless @!grids[$index]:exists;
+    print @!grids[$index];
 }
 
 multi method print-grid( Str $name ) {
-    die "No grid has been named $name" unless my $grid-index = %!grid-name-map{$name};
-    @!grids[$grid-index].print-grid;
+    die "No grid has been named $name" unless my $index = %!grid-name-map{$name};
+    print @!grids[$index];
 }
 
 # method !clone-grid-index( $origin, $dest? ) {
