@@ -53,14 +53,14 @@ class Widget {
 
     has $.grid = Terminal::Print::Grid.new($!w, $!h);
 
-    # Simply copies widget contents onto the current display grid for now,
-    # optionally also printing updated contents to the screen
-    method composite(Bool $print?) {
+    # Simply copies widget contents onto another grid (by default the current
+    # display grid), optionally also printing updated contents to the screen
+    method composite(Bool $print?, :$to = T.current-grid) {
         my $t0 = now;
 
         # Ask the destination grid (a monitor) to do the copy for thread safety
-        $print ?? T.current-grid.print-from($!grid, $!x, $!y)
-               !! T.current-grid .copy-from($!grid, $!x, $!y);  # )
+        $print ?? $to.print-from($!grid, $!x, $!y)
+               !! $to .copy-from($!grid, $!x, $!y);  # )
 
         record-time("Composite $.w x $.h {self.^name}", $t0);
     }
@@ -191,29 +191,29 @@ my %corners = ascii  => < + + + + >,
               heavy  => < ┏ ┓ ┗ ┛ >;
 
 #| Draw a horizontal line
-sub draw-hline($y, $x1, $x2, $style = 'double') {
-    T.print-string($x1, $y, %hline{$style} x ($x2 - $x1 + 1));
+sub draw-hline($grid, $y, $x1, $x2, $style = 'double') {
+    $grid.print-string($x1, $y, %hline{$style} x ($x2 - $x1 + 1));
 }
 
 #| Draw a vertical line
-sub draw-vline($x, $y1, $y2, $style = 'double') {
-    T.print-cell($x, $_, %vline{$style}) for $y1..$y2;
+sub draw-vline($grid, $x, $y1, $y2, $style = 'double') {
+    $grid.print-cell($x, $_, %vline{$style}) for $y1..$y2;
 }
 
 #| Draw a box
-sub draw-box($x1, $y1, $x2, $y2, $style = Empty) {
+sub draw-box($grid, $x1, $y1, $x2, $y2, $style = Empty) {
     # Draw sides in order: left, right, top, bottom
-    draw-vline($x1, $y1 + 1, $y2 - 1, |$style);
-    draw-vline($x2, $y1 + 1, $y2 - 1, |$style);
-    draw-hline($y1, $x1 + 1, $x2 - 1, |$style);
-    draw-hline($y2, $x1 + 1, $x2 - 1, |$style);
+    draw-vline($grid, $x1, $y1 + 1, $y2 - 1, |$style);
+    draw-vline($grid, $x2, $y1 + 1, $y2 - 1, |$style);
+    draw-hline($grid, $y1, $x1 + 1, $x2 - 1, |$style);
+    draw-hline($grid, $y2, $x1 + 1, $x2 - 1, |$style);
 
     # Draw corners
     my @corners = |%corners{%weight{$style}};
-    T.print-cell($x1, $y1, @corners[0]);
-    T.print-cell($x2, $y1, @corners[1]);
-    T.print-cell($x1, $y2, @corners[2]);
-    T.print-cell($x2, $y2, @corners[3]);
+    $grid.print-cell($x1, $y1, @corners[0]);
+    $grid.print-cell($x2, $y1, @corners[1]);
+    $grid.print-cell($x1, $y2, @corners[2]);
+    $grid.print-cell($x2, $y2, @corners[3]);
 }
 
 sub wrap-text($w, $text, $prefix = '') {
@@ -588,16 +588,17 @@ sub MAIN(
     my $v-break     = h - $log-height  - 2;
 
     my $style = $ascii ?? 'ascii' !! 'double';
-    draw-box(0, 0, w - 1, h - 1, $style);
-    draw-hline($v-break, 1, w - 2, $style);
-    draw-vline($h-break, 1, $v-break - 1, $style);
+    my $grid  = T.current-grid;
+    draw-box($grid, 0, 0, w - 1, h - 1, $style);
+    draw-hline($grid, $v-break, 1, w - 2, $style);
+    draw-vline($grid, $h-break, 1, $v-break - 1, $style);
 
     # Draw intersections if in full Unicode mode
     unless $ascii {
-        T.print-cell(0, $v-break, '╠');
-        T.print-cell(w, $v-break, '╣');
-        T.print-cell($h-break, 0, '╦');
-        T.print-cell($h-break, $v-break, '╩');
+        $grid.print-cell(0, $v-break, '╠');
+        $grid.print-cell(w, $v-break, '╣');
+        $grid.print-cell($h-break, 0, '╦');
+        $grid.print-cell($h-break, $v-break, '╩');
     }
     record-time("Lay out {w} x {h} game screen", $t0);
 
