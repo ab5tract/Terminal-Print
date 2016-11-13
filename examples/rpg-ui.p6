@@ -46,10 +46,10 @@ sub show-timings($verbosity) {
 
 #| A basic rectangular widget that can work in relative coordinates
 class Widget {
-    has $.x is required;
-    has $.y is required;  # i
-    has $.w is required;
-    has $.h is required;
+    has Int $.x is required;
+    has Int $.y is required;  # i
+    has Int $.w is required;
+    has Int $.h is required;
 
     has $.grid = Terminal::Print::Grid.new($!w, $!h);
 
