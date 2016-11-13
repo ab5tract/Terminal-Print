@@ -154,8 +154,6 @@ method print-command( $command ) {
 # Because we have AT-POS on the column object as well,
 # we get
 #   $b[$x][$y]
-#
-# TODO: implement $!current-grid switching
 method AT-POS( $column-idx ) {
     $!current-grid.grid[ $column-idx ];
 }
