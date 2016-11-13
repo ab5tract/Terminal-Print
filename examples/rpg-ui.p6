@@ -121,7 +121,7 @@ class ProgressBar is Widget {
 
         # Compute length of completed portion of bar
         $!progress    = max(0, min($!max, $p));
-        my $completed = $.w * $!progress div $!max;
+        my $completed = floor $.w * $!progress / $!max;
 
         # Loop over bar thickness (height) setting color spans
         $.grid.set-span-color(0, $completed - 1,   $_, "$!text-color on_$!completed") for ^$.h;
