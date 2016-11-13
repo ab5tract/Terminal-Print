@@ -171,14 +171,6 @@ class KeyframeAnimation is Widget {
 }
 
 
-#| Center a (possibly-multiline) string in a viewport rectangle
-sub print-centered($x1, $y1, $x2, $y2, $string) {
-    my @lines = $string.lines;
-    my $x = $x1 + ($x2 - $x1 - max(@lines>>.chars)) / 2;
-    my $y = $y1 + ($y2 - $y1 - @lines) / 2;
-    T.print-string($x, $y, $string);
-}
-
 my %hline = ascii  => '-', double => '═',
             light1 => '─', light2 => '╌', light3 => '┄', light4 => '┈',
             heavy1 => '━', heavy2 => '╍', heavy3 => '┅', heavy4 => '┉';
