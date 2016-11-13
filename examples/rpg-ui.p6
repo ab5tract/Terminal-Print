@@ -565,7 +565,7 @@ sub MAIN(
 
     $anim.on-keyframe.Supply.tap: { $bar.add-progress(100 / ($grids - 1)) if $^frame }
 
-    @loading-promises.push: $anim.speckle(!$bench * 6 / ($grids * $title-w * $title-h));
+    @loading-promises.push: $anim.speckle($bench ?? .001 !! 6 / ($grids * $title-w * $title-h));
 
     record-time("Setup animation for $title-w x $title-h title screen", $t0);
 
@@ -621,8 +621,8 @@ sub MAIN(
     $lv.add-entry('Game state loaded.');
 
     # XXXX: Accordion character details down, back up, and then collapse
-    $pv.show-state($_) && sleep $medium-sleep for  ^$party;
-    $pv.show-state($_) && sleep $medium-sleep for (^$party).reverse;
+    { $pv.show-state($_); sleep $medium-sleep } for  ^$party;
+    { $pv.show-state($_); sleep $medium-sleep } for (^$party).reverse;
     $pv.show-state;
 
     # XXXX: Popup help
