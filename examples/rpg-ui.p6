@@ -135,6 +135,42 @@ class ProgressBar is Widget {
 }
 
 
+#| Animate between keyframes
+class KeyframeAnimation is Widget {
+    has @.keyframes;
+    has $.on-keyframe = Supplier.new;
+
+    method speckle($delay = .01) {
+        my $p = Promise.new;
+        my $v = $p.vow;
+
+        $.grid.copy-from(@!keyframes[0], 0, 0);
+        self.composite(True);
+
+        my @indices = $.grid.indices.pick(*);
+        my $tap = Supply.interval($delay).tap: -> $frame {
+            my $keyframe = 1 + $frame div +@indices;
+            $!on-keyframe.emit($keyframe - 1) if $frame %% @indices;
+
+            if $keyframe < @.keyframes {
+                my ($x, $y) = @indices[$frame % @indices][0,1];
+
+                $.grid.grid[$y][$x] = @!keyframes[$keyframe].grid[$y][$x];
+                self.composite(True);
+
+            }
+            else {
+                $!on-keyframe.done;
+                $tap.close;
+                $v.keep(True);
+            }
+        }
+
+        $p;
+    }
+}
+
+
 #| Center a (possibly-multiline) string in a viewport rectangle
 sub print-centered($x1, $y1, $x2, $y2, $string) {
     my @lines = $string.lines;
