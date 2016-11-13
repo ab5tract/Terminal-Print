@@ -52,10 +52,19 @@ class Widget {
     has Int $.h is required;
 
     has $.grid = Terminal::Print::Grid.new($!w, $!h);
+    has $.parent;
+
+    #| Return T::P::Grid object that this Widget will draw on
+    method target-grid() {
+        given $!parent {
+            when Terminal::Print::Grid  { $!parent       }
+            default                     { T.current-grid }
+        }
+    }
 
     # Simply copies widget contents onto another grid (by default the current
-    # display grid), optionally also printing updated contents to the screen
-    method composite(Bool $print?, :$to = T.current-grid) {
+    # target grid), optionally also printing updated contents to the screen
+    method composite(Bool $print?, :$to = self.target-grid) {
         my $t0 = now;
 
         # Ask the destination grid (a monitor) to do the copy for thread safety
@@ -192,12 +201,12 @@ my %corners = ascii  => < + + + + >,
 
 #| Draw a horizontal line
 sub draw-hline($grid, $y, $x1, $x2, $style = 'double') {
-    $grid.print-string($x1, $y, %hline{$style} x ($x2 - $x1 + 1));
+    $grid.set-span-text($x1, $y, %hline{$style} x ($x2 - $x1 + 1));
 }
 
 #| Draw a vertical line
 sub draw-vline($grid, $x, $y1, $y2, $style = 'double') {
-    $grid.print-cell($x, $_, %vline{$style}) for $y1..$y2;
+    $grid.set-span-text($x, $_, %vline{$style}) for $y1..$y2;
 }
 
 #| Draw a box
@@ -210,10 +219,10 @@ sub draw-box($grid, $x1, $y1, $x2, $y2, $style = Empty) {
 
     # Draw corners
     my @corners = |%corners{%weight{$style}};
-    $grid.print-cell($x1, $y1, @corners[0]);
-    $grid.print-cell($x2, $y1, @corners[1]);
-    $grid.print-cell($x1, $y2, @corners[2]);
-    $grid.print-cell($x2, $y2, @corners[3]);
+    $grid.set-span-text($x1, $y1, @corners[0]);
+    $grid.set-span-text($x2, $y1, @corners[1]);
+    $grid.set-span-text($x1, $y2, @corners[2]);
+    $grid.set-span-text($x2, $y2, @corners[3]);
 }
 
 sub wrap-text($w, $text, $prefix = '') {
@@ -250,7 +259,7 @@ class MapViewer is Widget {
     has $.ascii;
     has $.color-bits;
 
-    method draw() {
+    method draw($print = True) {
         my $t0 = now;
 
         # Make sure party (plus a comfortable radius around them) is still visible
@@ -317,7 +326,7 @@ class MapViewer is Widget {
         record-time("Draw $.w x $.h {self.^name}", $t0, $t4);
 
         # Update screen
-        self.composite(True);
+        self.composite($print);
     }
 }
 
@@ -326,7 +335,7 @@ class PartyViewer is Widget {
     has @.party;
 
     #| Draw the current party state
-    method show-state($expanded = -1) {
+    method show-state($print = True, :$expanded = -1) {
         my $t0 = now;
 
         # XXXX: Nicer bars
@@ -356,7 +365,7 @@ class PartyViewer is Widget {
 
         record-time("Draw $.w x $.h {self.^name}", $t0);
 
-        self.composite(True);
+        self.composite($print);
     }
 }
 
@@ -366,7 +375,7 @@ class LogViewer is Widget {
     has @.wrapped;
     has $.scroll-pos = 0;
 
-    method add-entry($text) {
+    method add-entry($text, $print = True) {
         my $t0 = now;
 
         @.log.push($text);
@@ -384,7 +393,7 @@ class LogViewer is Widget {
 
         record-time("Draw $.w x $.h {self.^name}", $t0);
 
-        self.composite(True);
+        self.composite($print);
     }
 }
 
@@ -573,33 +582,27 @@ sub MAIN(
     await @loading-promises;
     $bar.set-progress(100);
 
-    # XXXX: Transition animation?
-
-    # XXXX: Basic UI
-    $t0 = now;
-    T.clear-screen;
-    record-time("Clear {w} x {h} screen", $t0);
-
     # Basic 3-viewport layout (map, party stats, log/input)
     $t0 = now;
+    my $ui-grid     = T.add-grid('main');
     my $party-width = 34;
     my $log-height  = h div 6;
     my $h-break     = w - $party-width - 2;
     my $v-break     = h - $log-height  - 2;
 
     my $style = $ascii ?? 'ascii' !! 'double';
-    my $grid  = T.current-grid;
-    draw-box($grid, 0, 0, w - 1, h - 1, $style);
-    draw-hline($grid, $v-break, 1, w - 2, $style);
-    draw-vline($grid, $h-break, 1, $v-break - 1, $style);
+    draw-box(  $ui-grid, 0, 0, w - 1, h - 1, $style);
+    draw-hline($ui-grid, $v-break, 1, w - 2, $style);
+    draw-vline($ui-grid, $h-break, 1, $v-break - 1, $style);
 
     # Draw intersections if in full Unicode mode
     unless $ascii {
-        $grid.print-cell(0, $v-break, '╠');
-        $grid.print-cell(w, $v-break, '╣');
-        $grid.print-cell($h-break, 0, '╦');
-        $grid.print-cell($h-break, $v-break, '╩');
+        $ui-grid.set-span-text(0, $v-break, '╠');
+        $ui-grid.set-span-text(w, $v-break, '╣');
+        $ui-grid.set-span-text($h-break, 0, '╦');
+        $ui-grid.set-span-text($h-break, $v-break, '╩');
     }
+
     record-time("Lay out {w} x {h} game screen", $t0);
 
     # Map
@@ -608,21 +611,27 @@ sub MAIN(
     my $map  := make-map($map-w, $map-h);
     my $mv    = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
                               :party-x(6), :party-y(8), :$ascii, :$color-bits,
-                              :map-x(3), :map-y(3), :$map-w, :$map-h, :$map);
-    $mv.draw;
+                              :map-x(3), :map-y(3), :$map-w, :$map-h, :$map,
+                              :parent($ui-grid));
+    $mv.draw(False);
 
     # Characters
     my $party := make-party;
-    my $pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width), :h($v-break - 2), :$party);
-    $pv.show-state;
+    my $pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width),
+                             :h($v-break - 2), :$party, :parent($ui-grid));
+    $pv.show-state(False);
 
     # Log/input
-    my $lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2), :h($log-height));
-    $lv.add-entry('Game state loaded.');
+    my $lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2), :h($log-height),
+                           :parent($ui-grid));
+    $lv.add-entry('Game state loaded.', False);
+
+    # Main UI now ready, show it and set it current
+    T.switch-grid('main', :blit);
 
     # XXXX: Accordion character details down, back up, and then collapse
-    { $pv.show-state($_); sleep $medium-sleep } for  ^$party;
-    { $pv.show-state($_); sleep $medium-sleep } for (^$party).reverse;
+    { $pv.show-state(:expanded($_)); sleep $medium-sleep } for  ^$party;
+    { $pv.show-state(:expanded($_)); sleep $medium-sleep } for (^$party).reverse;
     $pv.show-state;
 
     # XXXX: Popup help
