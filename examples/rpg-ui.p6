@@ -502,13 +502,19 @@ sub MAIN(
     my $medium-sleep =  1 * !$bench;
     my $long-sleep   = 10 * !$bench;
 
+    my @loading-promises;
+
     # Start up the fun!
     my $t0 = now;
     T.initialize-screen;
     record-time("Initialize {w} x {h} screen", $t0);
 
-    # XXXX: Title screen
-    # XXXX: Draw rubble below/to sides of title?
+    # XXXX: Loading bar
+    my $bar = ProgressBar.new(:x((w - 50) div 2), :y(h * 2 div 3), :w(50), :h(3),
+                              :text('L O A D I N G'));
+    $bar.set-progress(0);
+
+    # XXXX: Animated title
     $t0 = now;
     my $standard = q:to/STANDARD/;
          ____        _                    __      _    _    _             _       
@@ -524,13 +530,56 @@ sub MAIN(
         ░▀░▀░▀▀▀░▀▀▀░▀░▀░▀▀▀░░░▀▀▀░▀░░░░░▀░▀░▀░▀░░▀░░▀░▀░▀░▀░▀▀▀░▀░▀░
         PAGGA
 
-    print-centered(0, 0, w, h * 3/4, $ascii ?? $standard !! $pagga);
-    record-time("Draw {w} x {h} title screen", $t0);
+    my $solid = q:to/SOLID/;  # :
+        ░███░███░███░███░███░░░███░███░░░███░███░███░███░███░███░███░
+        ░███░███░███░███░███░░░███░███░░░███░███░███░███░███░███░███░
+        ░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░░░▀▀▀░▀▀▀░░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░
+        SOLID
 
-    # XXXX: Loading bar
-    my $bar = ProgressBar.new(:x((w - 50) div 2), :y(h * 2/3), :w(50), :h(3),
-                              :text('L O A D I N G'));
-    $bar.set-progress($_) for 0..100;
+    sub make-matching-blank($orig, $char = ' ') {
+        my $w = $orig.lines[0].chars;
+        my $h = $orig.lines.elems;
+
+        ($char x $w ~ "\n") x $h;
+    }
+
+    sub make-text-grids(*@texts) {
+        my $w = @texts[0].lines[0].chars;
+        my $h = @texts[0].lines.elems;
+
+        my @grids = Terminal::Print::Grid.new($w, $h) xx @texts;
+        for ^@texts {
+            my $grid = @grids[$_];
+            my @text = @texts[$_].lines;
+
+            for @text.kv -> $y, $line {
+                $grid.set-span-text(0, $y, $line);
+            }
+        }
+
+        @grids
+    }
+
+    my $grids = $ascii ?? make-text-grids($standard, $standard, $standard, make-matching-blank($standard))
+                       !! make-text-grids($solid, $pagga, $pagga, $pagga, make-matching-blank($pagga));
+
+    my $title-w = $grids[0].columns;
+    my $title-h = $grids[0].rows;
+    my $title-x = floor (w       - $title-w) / 2;
+    my $title-y = floor (h * 3/4 - $title-h) / 2;  # ==
+    my $anim    = KeyframeAnimation.new(:keyframes(|$grids),
+                                        :x($title-x), :y($title-y),  # ,
+                                        :w($title-w), :h($title-h));
+
+    $anim.on-keyframe.Supply.tap: { $bar.add-progress(100 / ($grids - 1)) if $^frame }
+
+    @loading-promises.push: $anim.speckle(!$bench * 6 / ($grids * $title-w * $title-h));
+
+    record-time("Setup animation for $title-w x $title-h title screen", $t0);
+
+    # Make sure all loading and title animations finish before showing main screen
+    await @loading-promises;
+    $bar.set-progress(100);
 
     # XXXX: Transition animation?
 
