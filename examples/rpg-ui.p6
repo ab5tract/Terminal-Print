@@ -398,6 +398,75 @@ class LogViewer is Widget {
 }
 
 
+#| Create title animation
+sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
+    my $t0 = now;
+
+    my $standard = q:to/STANDARD/;
+         ____        _                    __      _    _    _             _       
+        |  _ \ _   _(_)_ __  ___    ___  / _|    / \  | | _| |_ __ _ _ __(_) __ _ 
+        | |_) | | | | | '_ \/ __|  / _ \| |_    / _ \ | |/ / __/ _` | '__| |/ _` |
+        |  _ <| |_| | | | | \__ \ | (_) |  _|  / ___ \|   <| || (_| | |  | | (_| |
+        |_| \_\\\\__,_|_|_| |_|___/  \___/|_|   /_/   \_\_|\_\\\\__\__,_|_|  |_|\__,_|
+        STANDARD
+
+    my $pagga = q:to/PAGGA/;
+        ░█▀▄░█░█░▀█▀░█▀█░█▀▀░░░█▀█░█▀▀░░░█▀█░█░█░▀█▀░█▀█░█▀▄░▀█▀░█▀█░
+        ░█▀▄░█░█░░█░░█░█░▀▀█░░░█░█░█▀▀░░░█▀█░█▀▄░░█░░█▀█░█▀▄░░█░░█▀█░
+        ░▀░▀░▀▀▀░▀▀▀░▀░▀░▀▀▀░░░▀▀▀░▀░░░░░▀░▀░▀░▀░░▀░░▀░▀░▀░▀░▀▀▀░▀░▀░
+        PAGGA
+
+    my $solid = q:to/SOLID/;  # :
+        ░███░███░███░███░███░░░███░███░░░███░███░███░███░███░███░███░
+        ░███░███░███░███░███░░░███░███░░░███░███░███░███░███░███░███░
+        ░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░░░▀▀▀░▀▀▀░░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░
+        SOLID
+
+    sub make-matching-blank($orig, $char = ' ') {
+        my $w = $orig.lines[0].chars;
+        my $h = $orig.lines.elems;
+
+        ($char x $w ~ "\n") x $h;
+    }
+
+    sub make-text-grids(*@texts) {
+        my $w = @texts[0].lines[0].chars;
+        my $h = @texts[0].lines.elems;
+
+        my @grids = Terminal::Print::Grid.new($w, $h) xx @texts;
+        for ^@texts {
+            my $grid = @grids[$_];
+            my @text = @texts[$_].lines;
+
+            for @text.kv -> $y, $line {
+                $grid.set-span-text(0, $y, $line);
+            }
+        }
+
+        @grids
+    }
+
+    my $grids = $ascii ?? make-text-grids($standard, $standard, $standard, make-matching-blank($standard))
+                       !! make-text-grids($solid, $pagga, $pagga, $pagga, make-matching-blank($pagga));
+
+    my $title-w = $grids[0].columns;
+    my $title-h = $grids[0].rows;
+    my $title-x = floor (w       - $title-w) / 2;
+    my $title-y = floor (h * 3/4 - $title-h) / 2;  # ==
+    my $anim    = KeyframeAnimation.new(:keyframes(|$grids),
+                                        :x($title-x), :y($title-y),  # ,
+                                        :w($title-w), :h($title-h));
+
+    $anim.on-keyframe.Supply.tap: { $bar.add-progress(60 / ($grids - 1)) if $^frame }
+    $bar.add-progress(5);
+
+    my $promise = $anim.speckle($bench ?? .001 !! 6 / ($grids * $title-w * $title-h));
+    record-time("Setup animation for $title-w x $title-h title screen", $t0);
+
+    $promise;
+}
+
+
 #| Create the initial map state
 sub make-map($map-w, $map-h) {
     my $t0 = now;
@@ -510,74 +579,13 @@ sub MAIN(
     T.initialize-screen;
     record-time("Initialize {w} x {h} screen", $t0);
 
-    # XXXX: Loading bar
+    # Loading bar
     my $bar = ProgressBar.new(:x((w - 50) div 2), :y(h * 2 div 3), :w(50), :h(3),
                               :text('L O A D I N G'));
     $bar.set-progress(0);
 
-    # XXXX: Animated title
-    $t0 = now;
-    my $standard = q:to/STANDARD/;
-         ____        _                    __      _    _    _             _       
-        |  _ \ _   _(_)_ __  ___    ___  / _|    / \  | | _| |_ __ _ _ __(_) __ _ 
-        | |_) | | | | | '_ \/ __|  / _ \| |_    / _ \ | |/ / __/ _` | '__| |/ _` |
-        |  _ <| |_| | | | | \__ \ | (_) |  _|  / ___ \|   <| || (_| | |  | | (_| |
-        |_| \_\\\\__,_|_|_| |_|___/  \___/|_|   /_/   \_\_|\_\\\\__\__,_|_|  |_|\__,_|
-        STANDARD
-
-    my $pagga = q:to/PAGGA/;
-        ░█▀▄░█░█░▀█▀░█▀█░█▀▀░░░█▀█░█▀▀░░░█▀█░█░█░▀█▀░█▀█░█▀▄░▀█▀░█▀█░
-        ░█▀▄░█░█░░█░░█░█░▀▀█░░░█░█░█▀▀░░░█▀█░█▀▄░░█░░█▀█░█▀▄░░█░░█▀█░
-        ░▀░▀░▀▀▀░▀▀▀░▀░▀░▀▀▀░░░▀▀▀░▀░░░░░▀░▀░▀░▀░░▀░░▀░▀░▀░▀░▀▀▀░▀░▀░
-        PAGGA
-
-    my $solid = q:to/SOLID/;  # :
-        ░███░███░███░███░███░░░███░███░░░███░███░███░███░███░███░███░
-        ░███░███░███░███░███░░░███░███░░░███░███░███░███░███░███░███░
-        ░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░░░▀▀▀░▀▀▀░░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░
-        SOLID
-
-    sub make-matching-blank($orig, $char = ' ') {
-        my $w = $orig.lines[0].chars;
-        my $h = $orig.lines.elems;
-
-        ($char x $w ~ "\n") x $h;
-    }
-
-    sub make-text-grids(*@texts) {
-        my $w = @texts[0].lines[0].chars;
-        my $h = @texts[0].lines.elems;
-
-        my @grids = Terminal::Print::Grid.new($w, $h) xx @texts;
-        for ^@texts {
-            my $grid = @grids[$_];
-            my @text = @texts[$_].lines;
-
-            for @text.kv -> $y, $line {
-                $grid.set-span-text(0, $y, $line);
-            }
-        }
-
-        @grids
-    }
-
-    my $grids = $ascii ?? make-text-grids($standard, $standard, $standard, make-matching-blank($standard))
-                       !! make-text-grids($solid, $pagga, $pagga, $pagga, make-matching-blank($pagga));
-
-    my $title-w = $grids[0].columns;
-    my $title-h = $grids[0].rows;
-    my $title-x = floor (w       - $title-w) / 2;
-    my $title-y = floor (h * 3/4 - $title-h) / 2;  # ==
-    my $anim    = KeyframeAnimation.new(:keyframes(|$grids),
-                                        :x($title-x), :y($title-y),  # ,
-                                        :w($title-w), :h($title-h));
-
-    $anim.on-keyframe.Supply.tap: { $bar.add-progress(60 / ($grids - 1)) if $^frame }
-    $bar.add-progress(5);
-
-    @loading-promises.push: $anim.speckle($bench ?? .001 !! 6 / ($grids * $title-w * $title-h));
-
-    record-time("Setup animation for $title-w x $title-h title screen", $t0);
+    # Animated title
+    @loading-promises.push: make-title-animation(:$bar, :$ascii, :$bench);
 
     # Basic 3-viewport layout (map, party stats, log/input)
     my $party-width = 34;
