@@ -572,7 +572,8 @@ sub MAIN(
                                         :x($title-x), :y($title-y),  # ,
                                         :w($title-w), :h($title-h));
 
-    $anim.on-keyframe.Supply.tap: { $bar.add-progress(100 / ($grids - 1)) if $^frame }
+    $anim.on-keyframe.Supply.tap: { $bar.add-progress(60 / ($grids - 1)) if $^frame }
+    $bar.add-progress(5);
 
     @loading-promises.push: $anim.speckle($bench ?? .001 !! 6 / ($grids * $title-w * $title-h));
 
@@ -587,45 +588,65 @@ sub MAIN(
     # We'll need these later, but will initialize them in a different thread
     my ($ui-grid, $map, $mv, $party, $pv, $lv);
 
-    $t0 = now;
-    $ui-grid = T.add-grid('main');
+    # Build main UI in a separate thread
+    @loading-promises.push: start {
+        my $t-ui = now;
+        $ui-grid = T.add-grid('main');
+        record-time("Add new {w} x {h} grid 'main'", $t-ui);
+        $bar.add-progress(5);
 
-    my $style = $ascii ?? 'ascii' !! 'double';
-    draw-box(  $ui-grid, 0, 0, w - 1, h - 1, $style);
-    draw-hline($ui-grid, $v-break, 1, w - 2, $style);
-    draw-vline($ui-grid, $h-break, 1, $v-break - 1, $style);
+        $t0 = now;
+        my $style = $ascii ?? 'ascii' !! 'double';
+        draw-box(  $ui-grid, 0, 0, w - 1, h - 1, $style);
+        draw-hline($ui-grid, $v-break, 1, w - 2, $style);
+        draw-vline($ui-grid, $h-break, 1, $v-break - 1, $style);
 
-    # Draw intersections if in full Unicode mode
-    unless $ascii {
-        $ui-grid.set-span-text(0, $v-break, '╠');
-        $ui-grid.set-span-text(w, $v-break, '╣');
-        $ui-grid.set-span-text($h-break, 0, '╦');
-        $ui-grid.set-span-text($h-break, $v-break, '╩');
+        # Draw intersections if in full Unicode mode
+        unless $ascii {
+            $ui-grid.set-span-text(0, $v-break, '╠');
+            $ui-grid.set-span-text(w, $v-break, '╣');
+            $ui-grid.set-span-text($h-break, 0, '╦');
+            $ui-grid.set-span-text($h-break, $v-break, '╩');
+        }
+        record-time("Lay out {w} x {h} main UI sections", $t0);
+        $bar.add-progress(5);
+
+        # Map
+        my $map-w = 300;
+        my $map-h = 200;
+        $map := make-map($map-w, $map-h);
+        $bar.add-progress(5);
+
+        $t0 = now;
+        $mv = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
+                            :party-x(6), :party-y(8), :$ascii, :$color-bits,
+                            :map-x(3), :map-y(3), :$map-w, :$map-h, :$map,
+                            :parent($ui-grid));
+        record-time("Create {$mv.w} x {$mv.h} MapViewer", $t0);
+        $mv.draw(False);
+        $bar.add-progress(5);
+
+        # Characters
+        $party := make-party;
+        $bar.add-progress(5);
+
+        $t0 = now;
+        $pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width),
+                              :h($v-break - 2), :$party, :parent($ui-grid));
+        record-time("Create {$pv.w} x {$pv.h} PartyViewer", $t0);
+        $pv.show-state(False);
+        $bar.add-progress(5);
+
+        # Log/input
+        $t0 = now;
+        $lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2), :h($log-height),
+                            :parent($ui-grid));
+        record-time("Create {$lv.w} x {$lv.h} LogViewer", $t0);
+        $lv.add-entry('Game state loaded.', False);
+        $bar.add-progress(5);
+
+        record-time("Build and draw main {w} x {h} game screen", $t-ui);
     }
-
-    record-time("Lay out {w} x {h} game screen", $t0);
-
-    # Map
-    my $map-w = 300;
-    my $map-h = 200;
-
-    $map := make-map($map-w, $map-h);
-    $mv   = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
-                          :party-x(6), :party-y(8), :$ascii, :$color-bits,
-                          :map-x(3), :map-y(3), :$map-w, :$map-h, :$map,
-                          :parent($ui-grid));
-    $mv.draw(False);
-
-    # Characters
-    $party := make-party;
-    $pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width),
-                          :h($v-break - 2), :$party, :parent($ui-grid));
-    $pv.show-state(False);
-
-    # Log/input
-    $lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2), :h($log-height),
-                        :parent($ui-grid));
-    $lv.add-entry('Game state loaded.', False);
 
     # Make sure all loading and title animations finish, and main screen is
     # fully ready, before showing main screen and setting it current
@@ -633,6 +654,7 @@ sub MAIN(
     $bar.set-progress(100);
 
     T.switch-grid('main', :blit);
+    sleep $medium-sleep;
 
     # XXXX: Accordion character details down, back up, and then collapse
     { $pv.show-state(:expanded($_)); sleep $medium-sleep } for  ^$party;
