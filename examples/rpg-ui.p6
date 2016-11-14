@@ -561,6 +561,80 @@ sub make-party() {
 }
 
 
+class Game {
+    has $.map-w;
+    has $.map-h;
+    has $.map;
+
+    has $.party;
+}
+
+class UI is Widget {
+    has Int         $.color-bits;
+    has Bool        $.ascii;
+    has Game        $.game;
+    has ProgressBar $.bar;
+    has PartyViewer $.pv;
+    has MapViewer   $.mv;
+    has LogViewer   $.lv;
+
+    method build-layout() {
+        # Basic 3-viewport layout (map, party stats, log/input)
+        my $party-width = 34;
+        my $log-height  = $.h div 6;
+        my $h-break     = $.w - $party-width - 2;
+        my $v-break     = $.h - $log-height  - 2;
+
+        my $t-ui = now;
+        T.add-grid('main', :new-grid($.grid));
+        record-time("Add new {$.w} x {$.h} grid 'main'", $t-ui);
+        $.bar.add-progress(5);
+
+        my $t0 = now;
+        my $style = $.ascii ?? 'ascii' !! 'double';
+        draw-box($.grid, 0, 0, $.w - 1, $.h - 1, $style);
+        draw-hline($.grid, $v-break, 1, $.w - 2, $style);
+        draw-vline($.grid, $h-break, 1, $v-break - 1, $style);
+
+        # Draw intersections if in full Unicode mode
+        unless $.ascii {
+            $.grid.set-span-text(0, $v-break, '╠');
+            $.grid.set-span-text($.w, $v-break, '╣');
+            $.grid.set-span-text($h-break, 0, '╦');
+            $.grid.set-span-text($h-break, $v-break, '╩');
+        }
+        record-time("Lay out $.w x $.h main UI sections", $t0);
+        $.bar.add-progress(5);
+
+        $t0 = now;
+        $!mv = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
+                             :party-x(6), :party-y(8), :$.ascii, :$.color-bits,
+                             :map-x(3), :map-y(3), :map-w($.game.map-w),
+                             :map-h($.game.map-h), :map($.game.map),
+                             :parent($.grid));
+        record-time("Create {$!mv.w} x {$!mv.h} MapViewer", $t0);
+        $!mv.draw(False);
+        $.bar.add-progress(5);
+
+        $t0 = now;
+        $!pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width),
+                               :h($v-break - 2), :party($.game.party),
+                               :parent($.grid));
+        record-time("Create {$!pv.w} x {$!pv.h} PartyViewer", $t0);
+        $!pv.show-state(False);
+        $.bar.add-progress(5);
+
+        # Log/input
+        $t0 = now;
+        $!lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2), :h($log-height),
+                             :parent($.grid));
+        record-time("Create {$!lv.w} x {$!lv.h} LogViewer", $t0);
+        $!lv.add-entry('Game state loaded.', False);
+        $.bar.add-progress(5);
+    }
+}
+
+
 #| Simulate a CRPG or Roguelike interface
 sub MAIN(
     Bool :$ascii, #= Use only ASCII characters, no >127 codepoints
@@ -587,73 +661,28 @@ sub MAIN(
     # Animated title
     @loading-promises.push: make-title-animation(:$bar, :$ascii, :$bench);
 
-    # Basic 3-viewport layout (map, party stats, log/input)
-    my $party-width = 34;
-    my $log-height  = h div 6;
-    my $h-break     = w - $party-width - 2;
-    my $v-break     = h - $log-height  - 2;
-
     # We'll need these later, but will initialize them in a different thread
-    my ($ui-grid, $map, $mv, $party, $pv, $lv);
+    my ($game, $ui);
 
     # Build main UI in a separate thread
     @loading-promises.push: start {
-        my $t-ui = now;
-        $ui-grid = T.add-grid('main');
-        record-time("Add new {w} x {h} grid 'main'", $t-ui);
-        $bar.add-progress(5);
-
-        $t0 = now;
-        my $style = $ascii ?? 'ascii' !! 'double';
-        draw-box(  $ui-grid, 0, 0, w - 1, h - 1, $style);
-        draw-hline($ui-grid, $v-break, 1, w - 2, $style);
-        draw-vline($ui-grid, $h-break, 1, $v-break - 1, $style);
-
-        # Draw intersections if in full Unicode mode
-        unless $ascii {
-            $ui-grid.set-span-text(0, $v-break, '╠');
-            $ui-grid.set-span-text(w, $v-break, '╣');
-            $ui-grid.set-span-text($h-break, 0, '╦');
-            $ui-grid.set-span-text($h-break, $v-break, '╩');
-        }
-        record-time("Lay out {w} x {h} main UI sections", $t0);
-        $bar.add-progress(5);
-
         # Map
         my $map-w = 300;
         my $map-h = 200;
-        $map := make-map($map-w, $map-h);
-        $bar.add-progress(5);
-
-        $t0 = now;
-        $mv = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
-                            :party-x(6), :party-y(8), :$ascii, :$color-bits,
-                            :map-x(3), :map-y(3), :$map-w, :$map-h, :$map,
-                            :parent($ui-grid));
-        record-time("Create {$mv.w} x {$mv.h} MapViewer", $t0);
-        $mv.draw(False);
+        my $map := make-map($map-w, $map-h);
         $bar.add-progress(5);
 
         # Characters
-        $party := make-party;
+        my $party := make-party;
         $bar.add-progress(5);
 
-        $t0 = now;
-        $pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width),
-                              :h($v-break - 2), :$party, :parent($ui-grid));
-        record-time("Create {$pv.w} x {$pv.h} PartyViewer", $t0);
-        $pv.show-state(False);
-        $bar.add-progress(5);
+        # Global Game object
+        $game = Game.new(:$map-w, :$map-h, :$map, :$party);
 
-        # Log/input
-        $t0 = now;
-        $lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2), :h($log-height),
-                            :parent($ui-grid));
-        record-time("Create {$lv.w} x {$lv.h} LogViewer", $t0);
-        $lv.add-entry('Game state loaded.', False);
-        $bar.add-progress(5);
-
-        record-time("Build and draw main {w} x {h} game screen", $t-ui);
+        # Global main UI object
+        $ui = UI.new(:w(w), :h(h), :x(0), :y(0),  # ,
+                     :$game, :$bar, :$ascii, :$color-bits);
+        $ui.build-layout;
     }
 
     # Make sure all loading and title animations finish, and main screen is
@@ -665,17 +694,17 @@ sub MAIN(
     sleep $medium-sleep;
 
     # XXXX: Accordion character details down, back up, and then collapse
-    { $pv.show-state(:expanded($_)); sleep $medium-sleep } for  ^$party;
-    { $pv.show-state(:expanded($_)); sleep $medium-sleep } for (^$party).reverse;
-    $pv.show-state;
+    { $ui.pv.show-state(:expanded($_)); sleep $medium-sleep } for  ^$game.party;
+    { $ui.pv.show-state(:expanded($_)); sleep $medium-sleep } for (^$game.party).reverse;
+    $ui.pv.show-state;
 
     # XXXX: Popup help
 
     # XXXX: Move party around, panning game map as necessary
     sub move-party($dx, $dy) {
-        $mv.party-x += $dx;
-        $mv.party-y += $dy;  # ++
-        $mv.draw;
+        $ui.mv.party-x += $dx;
+        $ui.mv.party-y += $dy;  # ++
+        $ui.mv.draw;
         sleep $short-sleep;
     }
 
