@@ -253,8 +253,7 @@ class MapViewer is Widget {
     has $.map-h is required;
     has @.map   is required;
 
-    has $.party-x is required is rw;
-    has $.party-y is required is rw;
+    has $.party is required;
 
     has $.ascii;
     has $.color-bits;
@@ -263,9 +262,11 @@ class MapViewer is Widget {
         my $t0 = now;
 
         # Make sure party (plus a comfortable radius around them) is still visible
-        my $radius = 3;
-        $!map-x = max(min($.map-x, $.party-x - $radius), $.party-x + $radius + 1 - $.w);
-        $!map-y = max(min($.map-y, $.party-y - $radius), $.party-y + $radius + 1 - $.h);  # ==
+        my $radius  = 3;
+        my $party-x = $.party.map-x;
+        my $party-y = $.party.map-y;
+        $!map-x = max(min($.map-x, $party-x - $radius), $party-x + $radius + 1 - $.w);
+        $!map-y = max(min($.map-y, $party-y - $radius), $party-y + $radius + 1 - $.h);  # ==
 
         # Main map, panned to correct location
         my $marker = $.color-bits > 4 ?? %( :char('+'), :color('242')) !! '+';
@@ -287,8 +288,8 @@ class MapViewer is Widget {
 
         # Party location
         my $t2 = now;
-        my $px = $.party-x - $.map-x;
-        my $py = $.party-y - $.map-y;  # ;;
+        my $px = $party-x - $.map-x;
+        my $py = $party-y - $.map-y;  # ;;
         if 0 <= $px < $.w && 0 <= $py < $.h {
             $.grid.change-cell($px, $py, '@');
         }
@@ -332,7 +333,7 @@ class MapViewer is Widget {
 
 
 class PartyViewer is Widget {
-    has @.party;
+    has $.party;
 
     #| Draw the current party state
     method show-state($print = True, :$expanded = -1) {
@@ -343,7 +344,7 @@ class PartyViewer is Widget {
         $.grid.set-span-text(0, 0, '  NAME    CLASS     HEALTH MAGIC');
 
         my $y = 1;
-        for @.party.kv -> $i, $pc {
+        for $.party.members.kv -> $i, $pc {
             my $row = sprintf '%d %-7s %-9s %-6s %-6s', $i + 1, $pc<name>, $pc<class>,
                               '*' x $pc<hp>, '-' x $pc<mp>;
             $.grid.set-span-text(0, $y++, $row);
@@ -516,7 +517,7 @@ sub make-map($map-w, $map-h) {
 
 
 #| Create the initial character party
-sub make-party() {
+sub make-party-members() {
     my $t0 = now;
 
     my @party =
@@ -555,9 +556,16 @@ sub make-party() {
           :spells(()),
         };
 
-    record-time("Create {+@party}-member party", $t0);
+    record-time("Create {+@party} party members", $t0);
 
     @party;
+}
+
+
+class Party {
+    has @.members is required;
+    has $.map-x   is required is rw;
+    has $.map-y   is required is rw;
 }
 
 
@@ -566,8 +574,9 @@ class Game {
     has $.map-h;
     has $.map;
 
-    has $.party;
+    has Party $.party;
 }
+
 
 class UI is Widget {
     has Int         $.color-bits;
@@ -608,7 +617,7 @@ class UI is Widget {
 
         $t0 = now;
         $!mv = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
-                             :party-x(6), :party-y(8), :$.ascii, :$.color-bits,
+                             :party($.game.party), :$.ascii, :$.color-bits,
                              :map-x(3), :map-y(3), :map-w($.game.map-w),
                              :map-h($.game.map-h), :map($.game.map),
                              :parent($.grid));
@@ -673,7 +682,8 @@ sub MAIN(
         $bar.add-progress(5);
 
         # Characters
-        my $party := make-party;
+        my @members := make-party-members;
+        my $party = Party.new(:@members, :map-x(6), :map-y(8));  # )
         $bar.add-progress(5);
 
         # Global Game object
@@ -694,16 +704,16 @@ sub MAIN(
     sleep $medium-sleep;
 
     # XXXX: Accordion character details down, back up, and then collapse
-    { $ui.pv.show-state(:expanded($_)); sleep $medium-sleep } for  ^$game.party;
-    { $ui.pv.show-state(:expanded($_)); sleep $medium-sleep } for (^$game.party).reverse;
+    { $ui.pv.show-state(:expanded($_)); sleep $medium-sleep } for  ^$game.party.members;
+    { $ui.pv.show-state(:expanded($_)); sleep $medium-sleep } for (^$game.party.members).reverse;
     $ui.pv.show-state;
 
     # XXXX: Popup help
 
     # XXXX: Move party around, panning game map as necessary
     sub move-party($dx, $dy) {
-        $ui.mv.party-x += $dx;
-        $ui.mv.party-y += $dy;  # ++
+        $game.party.map-x += $dx;
+        $game.party.map-y += $dy;  # ++
         $ui.mv.draw;
         sleep $short-sleep;
     }
