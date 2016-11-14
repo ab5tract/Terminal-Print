@@ -249,9 +249,7 @@ my %tiles = '' => '',  '.' => '⋅', '#' => '█',   # Layout: empty, floor, wal
 class MapViewer is Widget {
     has $.map-x is required;
     has $.map-y is required;  # i
-    has $.map-w is required;
-    has $.map-h is required;
-    has @.map   is required;
+    has $.map   is required;
 
     has $.party is required;
 
@@ -274,7 +272,7 @@ class MapViewer is Widget {
         my $t1 = now;
         $.grid.clear;
         for ^$.h -> $y {
-            my $row = @!map[$!map-y + $y];  # ++
+            my $row = $!map.terrain[$!map-y + $y];  # ++
             my $marker-row = ($!map-y + $y) %% 10;  # ++
 
             for ^$.w -> $x {
@@ -562,6 +560,14 @@ sub make-party-members() {
 }
 
 
+class Map {
+    has $.w is required;
+    has $.h is required;
+
+    has $.terrain = make-map($!w, $!h);
+}
+
+
 class Party {
     has @.members is required;
     has $.map-x   is required is rw;
@@ -570,10 +576,7 @@ class Party {
 
 
 class Game {
-    has $.map-w;
-    has $.map-h;
-    has $.map;
-
+    has Map   $.map;
     has Party $.party;
 }
 
@@ -618,8 +621,7 @@ class UI is Widget {
         $t0 = now;
         $!mv = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
                              :party($.game.party), :$.ascii, :$.color-bits,
-                             :map-x(3), :map-y(3), :map-w($.game.map-w),
-                             :map-h($.game.map-h), :map($.game.map),
+                             :map-x(3), :map-y(3), :map($.game.map),
                              :parent($.grid));
         record-time("Create {$!mv.w} x {$!mv.h} MapViewer", $t0);
         $!mv.draw(False);
@@ -676,9 +678,7 @@ sub MAIN(
     # Build main UI in a separate thread
     @loading-promises.push: start {
         # Map
-        my $map-w = 300;
-        my $map-h = 200;
-        my $map := make-map($map-w, $map-h);
+        my $map = Map.new(:w(300), :h(200));
         $bar.add-progress(5);
 
         # Characters
@@ -687,7 +687,7 @@ sub MAIN(
         $bar.add-progress(5);
 
         # Global Game object
-        $game = Game.new(:$map-w, :$map-h, :$map, :$party);
+        $game = Game.new(:$map, :$party);
 
         # Global main UI object
         $ui = UI.new(:w(w), :h(h), :x(0), :y(0),  # ,
