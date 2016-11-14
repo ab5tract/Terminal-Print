@@ -568,10 +568,24 @@ class Map {
 }
 
 
+my %direction =
+    nw => (-1, -1), n => (0, -1), ne => (1, -1),
+     w => (-1,  0),                e => (1,  0),
+    sw => (-1,  1), s => (0,  1), se => (1,  1);
+
 class Party {
     has @.members is required;
     has $.map-x   is required is rw;
     has $.map-y   is required is rw;
+
+    multi method move(Int $dx, Int $dy) {
+        $!map-x += $dx;
+        $!map-y += $dy;  # ++
+    }
+
+    multi method move(Str $dir where %direction) {
+        self.move(|%direction{$dir});
+    }
 }
 
 
@@ -711,18 +725,17 @@ sub MAIN(
     # XXXX: Popup help
 
     # XXXX: Move party around, panning game map as necessary
-    sub move-party($dx, $dy) {
-        $game.party.map-x += $dx;
-        $game.party.map-y += $dy;  # ++
+    sub move-party($dir) {
+        $game.party.move($dir);
         $ui.mv.draw;
         sleep $short-sleep;
     }
 
-    move-party( 0, -1) for ^2;
-    move-party(-1, -1) for ^5;
-    move-party( 1,  0) for ^5;
-    move-party( 1,  1) for ^3;
-    move-party( 1,  0) for ^12;
+    move-party('n' ) for ^2;
+    move-party('nw') for ^5;
+    move-party('e' ) for ^5;
+    move-party('se') for ^3;
+    move-party('e' ) for ^12;
 
     # XXXX: Battle!
     # XXXX: Battle results splash
