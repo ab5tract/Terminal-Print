@@ -226,9 +226,9 @@ sub draw-box($grid, $x1, $y1, $x2, $y2, $style = Empty) {
     $grid.set-span-text($x2, $y2, @corners[3]);
 }
 
-sub wrap-text($w, $text, $prefix = '') {
+sub wrap-text($w, $text, $prefix = '', $first-prefix = '') {
     my @words = $text.words;
-    my @lines = @words.shift;
+    my @lines = $first-prefix ~ @words.shift;
 
     for @words -> $word {
         if $w < @lines[*-1].chars + 1 + $word.chars {
