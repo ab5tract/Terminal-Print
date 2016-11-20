@@ -331,43 +331,78 @@ class MapViewer is Widget {
 }
 
 
+class CharacterViewer is Widget {
+    has $.character;
+    has $.rows;
+    has $.id;
+
+    method render($state) {
+        my $t0 = now;
+
+        my $color = { highlight => 'bold white', lowlight => 'blue' }{$state} // '';
+        my $body-row = "  %-{$.w - 2}s";
+
+        # Render character stats into rows of the proper width
+        # XXXX: Nicer bars
+        # XXXX: Condition icons (poisoned, low health, etc.)
+        my @rows;
+        @rows.append: sprintf('%d %-7s %-9s %-6s %-6s ', $.id,
+                              $.character<name>, $.character<class>,
+                              '*' x $.character<hp>, '-' x $.character<mp>),
+                      sprintf($body-row, "Armor:  $.character<armor>, AC $.character<ac>"),
+                      sprintf($body-row, "Weapon: $.character<weapon>");
+
+        if $.character<spells> -> @spells {
+            my $spells = 'Spells: ' ~ @spells.join(', ');
+            @rows.append: wrap-text($.w, $spells, '      ', '  ');
+        }
+
+        # Draw filled rows into the top of the widget in the proper color
+        for @rows.kv -> $y, $row {
+            $.grid.set-span(0, $y, $row, $color);
+        }
+
+        # Clear all remaining rows
+        $!rows = +@rows;
+        my $blank = ' ' x $.w;
+        $.grid.set-span(0, $_, $blank, $color) for $!rows ..^ $.h;
+
+        record-time("Draw $.w x $.h {self.^name}", $t0);
+    }
+}
+
+
 class PartyViewer is Widget {
     has $.party;
+    has @.cvs;
 
     #| Draw the current party state
     method show-state($print = True, :$expand = -1) {
         my $t0 = now;
 
-        # XXXX: Nicer bars
-        # XXXX: Condition icons (poisoned, low health, etc.)
+        my @cvs = do for $.party.members.kv -> $i, $pc {
+            CharacterViewer.new(:id($i + 1), :$.w, :h(7), :x(0), :y(0),
+                                :parent(self), :character($pc));
+        }
+        record-time("Draw $.w x $.h {self.^name} -- create CVs", $t0);
+
+        # Render as a header line followed by composited CharacterViewers
         $.grid.set-span-text(0, 0, '  NAME    CLASS     HEALTH MAGIC');
-
         my $y = 1;
-        my $highlight = 'bold white';
-        my $lowlight  = 'blue';
-        my $normal    = '';
-        for $.party.members.kv -> $i, $pc {
-            my $row = sprintf '%d %-7s %-9s %-6s %-6s ', $i + 1, $pc<name>, $pc<class>,
-                              '*' x $pc<hp>, '-' x $pc<mp>;
-            my $color = $expand < 0   ?? $normal    !!
-                        $i == $expand ?? $highlight !!
-                                         $lowlight  ;
-            $.grid.set-span(0, $y++, $row, $color);
+        for @cvs.kv -> $i, $cv {
+            my $state = $expand <  0  ?? 'normal'    !!
+                        $expand == $i ?? 'highlight' !!
+                                         'lowlight'  ;
+            $cv.render($state);
 
-            if $i == $expand {
-                 $.grid.set-span(0, $y++, sprintf("  %-{$.w - 2}s", "Armor:  $pc<armor>, AC $pc<ac>"), $highlight);
-                 $.grid.set-span(0, $y++, sprintf("  %-{$.w - 2}s", "Weapon: $pc<weapon>"), $highlight);
-                 if $pc<spells> {
-                     my $spells = 'Spells: ' ~ $pc<spells>.join(', ');
-                     my @spells = wrap-text($.w - 2, $spells, '    ');
-                     $.grid.set-span(0, $y++, sprintf("  %-{$.w - 2}s", $_), $highlight) for @spells;
-                 }
-                 $.grid.set-span(0, $y++, sprintf("  %-{$.w - 2}s", ''), $highlight);
-            }
+            $cv.y = $y;
+            $y   += $i == $expand ?? $cv.rows + 1 !! 1;
+
+            $cv.composite;
         }
 
         # Make sure extra rows are cleared after collapsing
-        $.grid.set-span(0, $y++, ' ' x $.w, $normal) for ^(min 5, $.h - $y);
+        $.grid.set-span(0, $y++, ' ' x $.w, '') for ^(min 5, $.h - $y);
 
         record-time("Draw $.w x $.h {self.^name}", $t0);
 
