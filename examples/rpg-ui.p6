@@ -344,10 +344,15 @@ class CharacterViewer is Widget {
         # Render character stats into rows of the proper width
         # XXXX: Nicer bars
         # XXXX: Condition icons (poisoned, low health, etc.)
-        my $hp-bar = sprintf('%-6s', '+' x $.character<max-hp>);
-        my $mp-bar = sprintf('%-6s', '-' x $.character<max-mp>);
-        $hp-bar = '*' x $.character<hp> ~ substr($hp-bar, $.character<hp>);
-        $mp-bar = '=' x $.character<mp> ~ substr($mp-bar, $.character<mp>);
+        my $ascii   = $.parent.parent.ascii;
+        my $hp-left = $ascii ?? '*' !! '▆';
+        my $mp-left = $ascii ?? '=' !! '▆';
+        my $max-hp  = $ascii ?? '+' !! '▃';
+        my $max-mp  = $ascii ?? '-' !! '▃';
+        my $hp-bar  = sprintf('%-6s', $max-hp x $.character<max-hp>);
+        my $mp-bar  = sprintf('%-6s', $max-mp x $.character<max-mp>);
+        $hp-bar = $hp-left x $.character<hp> ~ substr($hp-bar, $.character<hp>);
+        $mp-bar = $mp-left x $.character<mp> ~ substr($mp-bar, $.character<mp>);
 
         my @rows = sprintf('%d %-7s %-9s %s %s ', $.id,
                            $.character<name>, $.character<class>,
@@ -363,6 +368,12 @@ class CharacterViewer is Widget {
         # Draw filled rows into the top of the widget in the proper color
         for @rows.kv -> $y, $row {
             $.grid.set-span(0, $y, $row, $color);
+        }
+
+        # Add some color to the bar graphs
+        if $state ne 'lowlight' {
+            $.grid.set-span-color(20, 25, 0, 'red');
+            $.grid.set-span-color(27, 32, 0, 'blue');
         }
 
         # Clear all remaining rows
