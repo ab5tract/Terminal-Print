@@ -344,12 +344,16 @@ class CharacterViewer is Widget {
         # Render character stats into rows of the proper width
         # XXXX: Nicer bars
         # XXXX: Condition icons (poisoned, low health, etc.)
-        my @rows;
-        @rows.append: sprintf('%d %-7s %-9s %-6s %-6s ', $.id,
-                              $.character<name>, $.character<class>,
-                              '*' x $.character<hp>, '-' x $.character<mp>),
-                      sprintf($body-row, "Armor:  $.character<armor>, AC $.character<ac>"),
-                      sprintf($body-row, "Weapon: $.character<weapon>");
+        my $hp-bar = sprintf('%-6s', '+' x $.character<max-hp>);
+        my $mp-bar = sprintf('%-6s', '-' x $.character<max-mp>);
+        $hp-bar = '*' x $.character<hp> ~ substr($hp-bar, $.character<hp>);
+        $mp-bar = '=' x $.character<mp> ~ substr($mp-bar, $.character<mp>);
+
+        my @rows = sprintf('%d %-7s %-9s %s %s ', $.id,
+                           $.character<name>, $.character<class>,
+                           $hp-bar, $mp-bar),
+                   sprintf($body-row, "Armor:  $.character<armor>, AC $.character<ac>"),
+                   sprintf($body-row, "Weapon: $.character<weapon>");
 
         if $.character<spells> -> @spells {
             my $spells = 'Spells: ' ~ @spells.join(', ');
