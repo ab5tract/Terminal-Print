@@ -46,8 +46,8 @@ sub show-timings($verbosity) {
 
 #| A basic rectangular widget that can work in relative coordinates
 class Widget {
-    has Int $.x is required;
-    has Int $.y is required;  # i
+    has Int $.x is required is rw;
+    has Int $.y is required is rw;
     has Int $.w is required;
     has Int $.h is required;
 
@@ -58,6 +58,7 @@ class Widget {
     method target-grid() {
         given $!parent {
             when Terminal::Print::Grid  { $!parent       }
+            when Widget                 { $!parent.grid  }
             default                     { T.current-grid }
         }
     }
