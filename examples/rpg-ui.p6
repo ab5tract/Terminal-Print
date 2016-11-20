@@ -334,7 +334,7 @@ class PartyViewer is Widget {
     has $.party;
 
     #| Draw the current party state
-    method show-state($print = True, :$expanded = -1) {
+    method show-state($print = True, :$expand = -1) {
         my $t0 = now;
 
         # XXXX: Nicer bars
@@ -342,25 +342,31 @@ class PartyViewer is Widget {
         $.grid.set-span-text(0, 0, '  NAME    CLASS     HEALTH MAGIC');
 
         my $y = 1;
+        my $highlight = 'bold white';
+        my $lowlight  = 'blue';
+        my $normal    = '';
         for $.party.members.kv -> $i, $pc {
-            my $row = sprintf '%d %-7s %-9s %-6s %-6s', $i + 1, $pc<name>, $pc<class>,
+            my $row = sprintf '%d %-7s %-9s %-6s %-6s ', $i + 1, $pc<name>, $pc<class>,
                               '*' x $pc<hp>, '-' x $pc<mp>;
-            $.grid.set-span-text(0, $y++, $row);
+            my $color = $expand < 0   ?? $normal    !!
+                        $i == $expand ?? $highlight !!
+                                         $lowlight  ;
+            $.grid.set-span(0, $y++, $row, $color);
 
-            if $i == $expanded {
-                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", "Armor:  $pc<armor>, AC $pc<ac>");
-                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", "Weapon: $pc<weapon>");
+            if $i == $expand {
+                 $.grid.set-span(0, $y++, sprintf("  %-{$.w - 2}s", "Armor:  $pc<armor>, AC $pc<ac>"), $highlight);
+                 $.grid.set-span(0, $y++, sprintf("  %-{$.w - 2}s", "Weapon: $pc<weapon>"), $highlight);
                  if $pc<spells> {
                      my $spells = 'Spells: ' ~ $pc<spells>.join(', ');
                      my @spells = wrap-text($.w - 2, $spells, '    ');
-                     $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", $_) for @spells;
+                     $.grid.set-span(0, $y++, sprintf("  %-{$.w - 2}s", $_), $highlight) for @spells;
                  }
-                 $.grid.set-span-text(0, $y++, sprintf "  %-{$.w - 2}s", '');
+                 $.grid.set-span(0, $y++, sprintf("  %-{$.w - 2}s", ''), $highlight);
             }
         }
 
         # Make sure extra rows are cleared after collapsing
-        $.grid.set-span-text(0, $y++, ' ' x $.w) for ^(min 5, $.h - $y);
+        $.grid.set-span(0, $y++, ' ' x $.w, $normal) for ^(min 5, $.h - $y);
 
         record-time("Draw $.w x $.h {self.^name}", $t0);
 
@@ -718,8 +724,8 @@ sub MAIN(
     sleep $medium-sleep;
 
     # XXXX: Accordion character details down, back up, and then collapse
-    { $ui.pv.show-state(:expanded($_)); sleep $medium-sleep } for  ^$game.party.members;
-    { $ui.pv.show-state(:expanded($_)); sleep $medium-sleep } for (^$game.party.members).reverse;
+    { $ui.pv.show-state(:expand($_)); sleep $medium-sleep } for  ^$game.party.members;
+    { $ui.pv.show-state(:expand($_)); sleep $medium-sleep } for (^$game.party.members).reverse;
     $ui.pv.show-state;
 
     # XXXX: Popup help
