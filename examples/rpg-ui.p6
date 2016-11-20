@@ -774,11 +774,6 @@ sub MAIN(
     T.switch-grid('main', :blit);
     sleep $medium-sleep;
 
-    # XXXX: Accordion character details down, back up, and then collapse
-    { $ui.pv.show-state(:expand($_)); sleep $medium-sleep } for  ^$game.party.members;
-    { $ui.pv.show-state(:expand($_)); sleep $medium-sleep } for (^$game.party.members).reverse;
-    $ui.pv.show-state;
-
     # XXXX: Popup help
 
     # XXXX: Move party around, panning game map as necessary
