@@ -251,11 +251,7 @@ class MapViewer is Widget {
     has $.map-x is required;
     has $.map-y is required;  # i
     has $.map   is required;
-
     has $.party is required;
-
-    has $.ascii;
-    has $.color-bits;
 
     method draw($print = True) {
         my $t0 = now;
@@ -268,7 +264,10 @@ class MapViewer is Widget {
         $!map-y = max(min($.map-y, $party-y - $radius), $party-y + $radius + 1 - $.h);  # ==
 
         # Main map, panned to correct location
-        my $marker = $.color-bits > 4 ?? %( :char('+'), :color('242')) !! '+';
+        my $ascii      = $.parent.ascii;
+        my $color-bits = $.parent.color-bits;
+
+        my $marker = $color-bits > 4 ?? %( :char('+'), :color('242')) !! '+';
 
         my $t1 = now;
         $.grid.clear;
@@ -278,7 +277,7 @@ class MapViewer is Widget {
 
             for ^$.w -> $x {
                 my $mapped = $row[$!map-x + $x] // '';
-                   $mapped = %tiles{$mapped} unless $.ascii;
+                   $mapped = %tiles{$mapped} unless $ascii;
                 my $marked = $marker-row && !$mapped && ($!map-x + $x) %% 10;
                 $.grid.change-cell($x, $y, $mapped) if $mapped;
                 $.grid.change-cell($x, $y, $marker) if $marked;
@@ -313,8 +312,8 @@ class MapViewer is Widget {
                    $brightness = $brightness > 2e0 ?? $brightness.ceiling !! 2;
                 my $color      = 16 + 42 * $brightness;  # 16 + 36 * r + 6 * g + b
                 # $.grid.change-cell($x, $y, ~$brightness);  # DEBUG: show brightness levels
-                $.grid.set-span-color($x, $x, $y, $.color-bits > 4 ?? ~$color       !!
-                                                  $brightness  > 3 ?? 'bold yellow' !! 'yellow');
+                $.grid.set-span-color($x, $x, $y, $color-bits > 4 ?? ~$color       !!
+                                                  $brightness > 3 ?? 'bold yellow' !! 'yellow');
             }
         }
 
@@ -676,9 +675,8 @@ class UI is Widget {
 
         $t0 = now;
         $!mv = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
-                             :party($.game.party), :$.ascii, :$.color-bits,
-                             :map-x(3), :map-y(3), :map($.game.map),
-                             :parent($.grid));
+                             :map($.game.map), :map-x(3), :map-y(3),
+                             :party($.game.party), :parent(self));
         record-time("Create {$!mv.w} x {$!mv.h} MapViewer", $t0);
         $!mv.draw(False);
         $.bar.add-progress(5);
@@ -686,15 +684,15 @@ class UI is Widget {
         $t0 = now;
         $!pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width),
                                :h($v-break - 2), :party($.game.party),
-                               :parent($.grid));
+                               :parent(self));
         record-time("Create {$!pv.w} x {$!pv.h} PartyViewer", $t0);
         $!pv.show-state(False);
         $.bar.add-progress(5);
 
         # Log/input
         $t0 = now;
-        $!lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2), :h($log-height),
-                             :parent($.grid));
+        $!lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2),
+                             :h($log-height), :parent(self));
         record-time("Create {$!lv.w} x {$!lv.h} LogViewer", $t0);
         $!lv.add-entry('Game state loaded.', False);
         $.bar.add-progress(5);
