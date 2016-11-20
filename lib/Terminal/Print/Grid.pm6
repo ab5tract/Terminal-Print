@@ -93,8 +93,23 @@ method copy-from(Terminal::Print::Grid $grid, $x, $y) {
     my $rows = $grid.rows;
     my $cols = $grid.columns;
 
+    # Clip to edges of this grid
+    return if $x >= $!columns || $y >= $!rows;
+
+    if $x < 0 { $cols += $x; $x = 0 }
+    if $y < 0 { $rows += $y; $y = 0 }
+
+    $cols = min $cols, $!columns - $x;
+    $rows = min $rows, $!rows    - $y;
+
+    # Actually do the copy (actually a splice because immutable Cells)
     $!grid-string = '';
-    @!grid[$_ + $y].splice($x, $cols, $from[$_]) for ^$rows;
+    if $cols == $grid.columns {
+        @!grid[$_ + $y].splice($x, $cols, $from[$_]) for ^$rows;
+    }
+    else {
+        @!grid[$_ + $y].splice($x, $cols, $from[$_][^$cols]) for ^$rows;
+    }
 }
 
 #| Copy another grid into this one and print the modified area
