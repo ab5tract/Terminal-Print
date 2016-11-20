@@ -795,6 +795,50 @@ sub MAIN(
     move-party('e' ) for ^12;
 
     # XXXX: Battle!
+    $ui.lv.add-entry("The party encounters a red dragon.");
+    $ui.lv.add-entry("The dragon is enraged by Torfin's dragon hide armor and immediately attacks.");
+    $ui.lv.add-entry("The dragon breathes a great blast of fire!");
+    $ui.lv.add-entry("--> Fennic performs a diving roll and dodges the fire blast.");
+    $ui.lv.add-entry("--> Galtar is partially shielded and takes minor damage.");
+    $game.party.members[1]<hp>--;
+    $ui.pv.show-state;
+    $ui.lv.add-entry("--> Salnax melts into the dancing shadows, avoiding the brunt of the blast.");
+    $ui.lv.add-entry("--> Torfin's dragon hide armor shrugs off the fire.");
+    $ui.lv.add-entry("--> Trentis hid behind Torfin and is untouched.");
+
+    $ui.pv.show-state(:expand(0));
+    $ui.lv.user-input('[Fennic]>', 'fire bow');
+    $ui.lv.add-entry("--> Fennic fires a glowing arrow from the longbow and pierces the dragon's hide.");
+
+    $ui.pv.show-state(:expand(1));
+    $ui.lv.user-input('[Galtar]>', 'cast solar blast');
+    $ui.lv.add-entry("--> Galtar calls upon the power of the sun and bathes the dragon in searing golden light.");
+    $game.party.members[1]<mp>--;
+    $ui.pv.show-state;
+    $ui.lv.add-entry("--> The dragon is blinded!");
+
+    $ui.pv.show-state(:expand(2));
+    $ui.lv.user-input('[Salnax]>', 'trigger ice cone');
+    $ui.lv.add-entry("--> Salnax calls a cone of ice from the staff.");
+    $ui.lv.add-entry("--> The dragon is encased in ice!");
+
+    $ui.pv.show-state(:expand(3));
+    $ui.lv.user-input('[Torfin]>', 'swing sword');
+    $ui.lv.add-entry("--> Torfin swings the fearsome sword, biting deep into the dragon's flesh.");
+    $ui.lv.add-entry("--> The dragon howls in pain!");
+
+    $ui.pv.show-state(:expand(4));
+    $ui.lv.user-input('[Trentis]>', 'throw dagger');
+    $ui.lv.add-entry("--> Trentis throws a dagger towards the dragon's softer underbelly but misses.");
+
+    $ui.pv.show-state;
+    $ui.lv.add-entry("The dragon smashes through its icy shell.");
+    $ui.lv.add-entry("The dragon blindly swings its mighty tail.");
+    $ui.lv.add-entry("--> Galtar and Torfin are painfully knocked down!");
+    $game.party.members[1]<hp>--;
+    $game.party.members[3]<hp>--;
+    $ui.pv.show-state;
+
     # XXXX: Battle results splash
 
     # Final sleep
