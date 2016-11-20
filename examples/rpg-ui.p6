@@ -429,15 +429,28 @@ class LogViewer is Widget {
         $!scroll-pos += @lines if $.scroll-pos == @.wrapped;
         @.wrapped.append(@lines);
 
-        my $top = max 0, $.scroll-pos - $.h + 1;
+        my $top = max 0, $.scroll-pos - $.h;
         for ^$.h {
-            my $line = @.wrapped[$top + $_] // '';
-            $.grid.set-span-text(0, $_, $line ~ ' ' x ($.w - $line.chars));
+            my $line  = @.wrapped[$top + $_] // '';
+            my $color = @.wrapped - $top - $_ <= @lines ?? 'bold white' !! '';
+            $.grid.set-span(0, $_, $line ~ ' ' x ($.w - $line.chars), $color);
         }
 
         record-time("Draw $.w x $.h {self.^name}", $t0);
 
         self.composite($print);
+        sleep .5 * @lines if $print;
+    }
+
+    method user-input($prompt, $input, $print = True) {
+        my $text = $prompt;
+        self.add-entry($text, $print);
+
+        for $input.words -> $word {
+            @.log.pop;
+            @.wrapped.pop;
+            self.add-entry($text ~= " $word", $print);
+        }
     }
 }
 
