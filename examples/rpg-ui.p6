@@ -794,7 +794,7 @@ sub MAIN(
     $ui.lv.add-entry("The dragon is enraged by Torfin's dragon hide armor and immediately attacks.");
     $ui.lv.add-entry("The dragon breathes a great blast of fire!");
     $ui.lv.add-entry("--> Fennic performs a diving roll and dodges the fire blast.");
-    $ui.lv.add-entry("--> Galtar is partially shielded and takes minor damage.");
+    $ui.lv.add-entry("--> Galtar is partially shielded but still takes minor damage.");
     $game.party.members[1]<hp>--;
     $ui.pv.show-state;
     $ui.lv.add-entry("--> Salnax melts into the dancing shadows, avoiding the brunt of the blast.");
