@@ -801,6 +801,7 @@ sub MAIN(
     move-party('e' ) for ^12;
 
     # XXXX: Battle!
+    # Dragon turn #1
     $ui.lv.add-entry("The party encounters a red dragon.");
     $ui.lv.add-entry("The dragon is enraged by Torfin's dragon hide armor and immediately attacks.");
     $ui.lv.add-entry("The dragon breathes a great blast of fire!");
@@ -812,6 +813,7 @@ sub MAIN(
     $ui.lv.add-entry("--> Torfin's dragon hide armor shrugs off the fire.");
     $ui.lv.add-entry("--> Trentis hid behind Torfin and is untouched.");
 
+    # Party turn #1
     $ui.pv.show-state(:expand(0));
     $ui.lv.user-input('[Fennic]>', 'fire bow');
     $ui.lv.add-entry("--> Fennic fires a glowing arrow from the longbow and pierces the dragon's hide.");
@@ -835,8 +837,9 @@ sub MAIN(
 
     $ui.pv.show-state(:expand(4));
     $ui.lv.user-input('[Trentis]>', 'throw dagger');
-    $ui.lv.add-entry("--> Trentis throws a dagger towards the dragon's softer underbelly but misses.");
+    $ui.lv.add-entry("--> Trentis throws a dagger towards the dragon's underbelly but misses.");
 
+    # Dragon turn #2
     $ui.pv.show-state;
     $ui.lv.add-entry("The dragon smashes through its icy shell.");
     $ui.lv.add-entry("The dragon blindly swings its mighty tail.");
@@ -845,7 +848,72 @@ sub MAIN(
     $game.party.members[3]<hp>--;
     $ui.pv.show-state;
 
+    # Party turn #2
+    $ui.pv.show-state(:expand(0));
+    $ui.lv.user-input('[Fennic]>', 'fire bow');
+    $ui.lv.add-entry("--> Fennic fires the longbow again, embedding a second arrow in the dragon's neck.");
+
+    $ui.pv.show-state(:expand(1));
+    $ui.lv.user-input('[Galtar]>', 'swing mace');
+    $ui.lv.add-entry("--> Galtar swings the mace with all his might, slamming it into the dragon's left foreleg with a resounding crunch.");
+    $ui.lv.add-entry("--> The dragon staggers from the blow!");
+
+    $ui.pv.show-state(:expand(2));
+    $ui.lv.user-input('[Salnax]>', 'cast lightning bolt');
+    $ui.lv.add-entry("--> Salnax ionizes the air with a white-hot bolt of electricity.");
+    $game.party.members[2]<mp>--;
+    $ui.lv.add-entry("--> The dragon shudders as electric arcs course through it.");
+
+    $ui.pv.show-state(:expand(3));
+    $ui.lv.user-input('[Torfin]>', 'rise');
+    $ui.lv.add-entry("--> Torfin staggers to his feet, ready to fight again.");
+
+    $ui.pv.show-state(:expand(4));
+    $ui.lv.user-input('[Trentis]>', 'throw dagger');
+    $ui.lv.add-entry("--> Trentis throws a dagger and impales the dragon's throat.");
+
+    # Dragon turn #3
+    $ui.pv.show-state;
+    $ui.lv.add-entry("The dragon blindly casts explosive fireball.");
+    $ui.lv.add-entry("--> The fiery blast knocks everyone back, singing cloth and heating metal.");
+    $game.party.members[$_]<hp>-- for ^5;
+    $ui.pv.show-state;
+
+    # Party turn #3
+    $ui.pv.show-state(:expand(0));
+    $ui.lv.user-input('[Fennic]>', 'fire bow');
+    $ui.lv.add-entry("--> Fennic fires a third arrow into the dragon.");
+
+    $ui.pv.show-state(:expand(1));
+    $ui.lv.user-input('[Galtar]>', 'swing mace');
+    $ui.lv.add-entry("--> Galtar swings the mace and lands a solid blow to the dragon's right foreleg.");
+    $ui.lv.add-entry("--> The dragon remains staggered.");
+
+    $ui.pv.show-state(:expand(2));
+    $ui.lv.user-input('[Salnax]>', 'cast magic missile');
+    $ui.lv.add-entry("--> Salnax launches a quintet of octarine missiles, scattering them across the dragon's massive frame.");
+    $game.party.members[2]<mp>--;
+    $ui.lv.add-entry("--> The dragon howls with growing rage!");
+
+    $ui.pv.show-state(:expand(3));
+    $ui.lv.user-input('[Torfin]>', 'sword charge');
+    $ui.lv.add-entry("--> Torfin charges the dragon at full speed, focusing battle rage into a massive swing.");
+    $ui.lv.add-entry("--> The dragon is critically wounded!");
+
+    $ui.pv.show-state(:expand(4));
+    $ui.lv.user-input('[Trentis]>', 'mount dragon');
+    $ui.lv.add-entry("--> Trentis leaps acrobatically onto the dragon's back, scrambling for purchase on the thick scales.");
+
+    # Dragon turn #4
+    $ui.pv.show-state;
+    $ui.lv.add-entry("The dragon's vision clears.");
+    $ui.lv.add-entry("Beaten and bleeding and realizing all party members are still fighting, the dragon decides to flee.  Shimmering symbols appear in the air around it and reality twists as the dragon teleports to safety.");
+    $ui.lv.add-entry("--> Trentis falls to the floor with a thud.");
+    $game.party.members[4]<hp>--;
+    $ui.pv.show-state;
+
     # XXXX: Battle results splash
+    $ui.lv.add-entry("YOU ARE VICTORIOUS!");
 
     # Final sleep
     sleep $long-sleep;
