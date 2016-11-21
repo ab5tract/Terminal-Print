@@ -584,16 +584,16 @@ sub make-terrain($map-w, $map-h) {
     # Rooms
     map-room(0, 0, 16, 7);
     map-room(20, 2, 8, 4);
-    map-room(0, 10, 8, 12);
+    map-room(0, 10, 7, 12);
 
     # Corridors
     @map[4][$_] = '.' for 16..20;
-    @map[$_][6] = '.' for  6..10;
+    @map[$_][5] = '.' for  6..10;
 
     # Doors
     @map[4][15] = '/';
-    @map[12][7] = '|';
-    @map[19][7] = '|';
+    @map[12][6] = '|';
+    @map[19][6] = '|';
     @map[5][26] = '-';
 
     record-time("Create $map-w x $map-h map terrain", $t0);
@@ -909,7 +909,7 @@ sub MAIN(
 
         # Characters
         my @members := make-party-members;
-        my $party = Party.new(:@members, :map-x(6), :map-y(8));  # )
+        my $party = Party.new(:@members, :map-x(3), :map-y(19));  # )
         $bar.add-progress(5);
 
         # Global Game object
@@ -938,11 +938,13 @@ sub MAIN(
         sleep $short-sleep;
     }
 
-    move-party('n' ) for ^2;
-    move-party('nw') for ^5;
-    move-party('e' ) for ^5;
-    move-party('se') for ^3;
-    move-party('e' ) for ^12;
+    move-party('n' ) for ^7;
+    move-party('ne') for ^2;
+    move-party('n' ) for ^4;
+    move-party('nw') for ^3;
+    move-party('e' ) for ^11;
+    move-party('se') for ^1;
+    move-party('e' ) for ^8;
 
     # XXXX: Battle!
     dragon-battle($ui, $game);
