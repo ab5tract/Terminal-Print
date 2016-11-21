@@ -783,7 +783,7 @@ sub dragon-battle(UI $ui, Game $game) {
 
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'swing mace');
-    $ui.lv.add-entry("--> Galtar swings the mace with all his might, slamming it into the dragon's left foreleg with a resounding crunch.");
+    $ui.lv.add-entry("--> Galtar swings the mace in a perfect arc, slamming it into the dragon's left foreleg with a resounding crunch.");
     $ui.lv.add-entry("--> The dragon staggers from the blow!");
 
     $ui.pv.show-state(:expand(2));
@@ -794,7 +794,7 @@ sub dragon-battle(UI $ui, Game $game) {
 
     $ui.pv.show-state(:expand(3));
     $ui.lv.user-input('[Torfin]>', 'rise');
-    $ui.lv.add-entry("--> Torfin staggers to his feet, ready to fight again.");
+    $ui.lv.add-entry("--> Torfin staggers upright, ready to fight again.");
 
     $ui.pv.show-state(:expand(4));
     $ui.lv.user-input('[Trentis]>', 'throw dagger');
@@ -803,7 +803,7 @@ sub dragon-battle(UI $ui, Game $game) {
     # Dragon turn #3
     $ui.pv.show-state;
     $ui.lv.add-entry("The dragon blindly casts explosive fireball.");
-    $ui.lv.add-entry("--> The fiery blast knocks everyone back, singing cloth and heating metal.");
+    $ui.lv.add-entry("--> The fiery blast knocks everyone back, singeing cloth and heating metal.");
     $game.party.members[$_]<hp>-- for ^5;
     $ui.pv.show-state;
 
