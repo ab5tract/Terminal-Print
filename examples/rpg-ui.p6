@@ -536,7 +536,7 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
 
 
 #| Create the initial map state
-sub make-map($map-w, $map-h) {
+sub make-terrain($map-w, $map-h) {
     my $t0 = now;
 
     my @map = [ '' xx $map-w ] xx $map-h;
@@ -577,11 +577,21 @@ sub make-map($map-w, $map-h) {
     @map[19][7] = '|';
     @map[5][26] = '-';
 
-    record-time("Create $map-w x $map-h map array", $t0);
+    record-time("Create $map-w x $map-h map terrain", $t0);
 
     @map
 }
 
+#| Create the initial map state
+sub make-seen($map-w, $map-h) {
+    my $t0 = now;
+
+    my @seen = [ 0 xx $map-w ] xx $map-h;
+
+    record-time("Create $map-w x $map-h map seen state", $t0);
+
+    @seen
+}
 
 #| Create the initial character party
 sub make-party-members() {
@@ -633,7 +643,8 @@ class Map {
     has $.w is required;
     has $.h is required;
 
-    has $.terrain = make-map($!w, $!h);
+    has $.terrain = make-terrain($!w, $!h);
+    has $.seen    = make-seen($!w, $!h);
 }
 
 
