@@ -606,7 +606,7 @@ sub make-party-members() {
           :ac<2>, :hp<3>, :max-hp<3>, :mp<6>, :max-mp<6>,
           :armor('Robe of Shadows'),
           :weapon('Staff of Ice'),
-          :spells('Acid Splash', 'Geyser', 'Fireball', 'Lightning Bolt', 'Magic Missle', 'Passwall',),
+          :spells('Acid Splash', 'Geyser', 'Fireball', 'Lightning Bolt', 'Magic Missile', 'Passwall',),
         },
 
         { :name<Torfin>,  :class<Barbarian>,
