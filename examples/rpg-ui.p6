@@ -728,79 +728,7 @@ class UI is Widget {
 }
 
 
-#| Simulate a CRPG or Roguelike interface
-sub MAIN(
-    Bool :$ascii, #= Use only ASCII characters, no >127 codepoints
-    Bool :$bench, #= Benchmark mode (run as fast as possible, with no sleeps or rate limiting)
-    Int  :$color-bits = 4 #= Enable extended colors (8 = 256-color, 24 = 24-bit RGB)
-    ) {
-
-    my $short-sleep  = .1 * !$bench;
-    my $medium-sleep =  1 * !$bench;
-    my $long-sleep   = 10 * !$bench;
-
-    my @loading-promises;
-
-    # Start up the fun!
-    my $t0 = now;
-    T.initialize-screen;
-    record-time("Initialize {w} x {h} screen", $t0);
-
-    # Loading bar
-    my $bar = ProgressBar.new(:x((w - 50) div 2), :y(h * 2 div 3), :w(50), :h(3),
-                              :text('L O A D I N G'));
-    $bar.set-progress(0);
-
-    # Animated title
-    @loading-promises.push: make-title-animation(:$bar, :$ascii, :$bench);
-
-    # We'll need these later, but will initialize them in a different thread
-    my ($game, $ui);
-
-    # Build main UI in a separate thread
-    @loading-promises.push: start {
-        # Map
-        my $map = Map.new(:w(300), :h(200));
-        $bar.add-progress(5);
-
-        # Characters
-        my @members := make-party-members;
-        my $party = Party.new(:@members, :map-x(6), :map-y(8));  # )
-        $bar.add-progress(5);
-
-        # Global Game object
-        $game = Game.new(:$map, :$party);
-
-        # Global main UI object
-        $ui = UI.new(:w(w), :h(h), :x(0), :y(0),  # ,
-                     :$game, :$bar, :$ascii, :$color-bits);
-        $ui.build-layout;
-    }
-
-    # Make sure all loading and title animations finish, and main screen is
-    # fully ready, before showing main screen and setting it current
-    await @loading-promises;
-    $bar.set-progress(100);
-
-    T.switch-grid('main', :blit);
-    sleep $medium-sleep;
-
-    # XXXX: Popup help
-
-    # XXXX: Move party around, panning game map as necessary
-    sub move-party($dir) {
-        $game.party.move($dir);
-        $ui.mv.draw;
-        sleep $short-sleep;
-    }
-
-    move-party('n' ) for ^2;
-    move-party('nw') for ^5;
-    move-party('e' ) for ^5;
-    move-party('se') for ^3;
-    move-party('e' ) for ^12;
-
-    # XXXX: Battle!
+sub dragon-battle(UI $ui, Game $game) {
     # Dragon turn #1
     $ui.lv.add-entry("The party encounters a red dragon.");
     $ui.lv.add-entry("The dragon is enraged by Torfin's dragon hide armor and immediately attacks.");
@@ -911,6 +839,83 @@ sub MAIN(
     $ui.lv.add-entry("--> Trentis falls to the floor with a thud.");
     $game.party.members[4]<hp>--;
     $ui.pv.show-state;
+}
+
+
+#| Simulate a CRPG or Roguelike interface
+sub MAIN(
+    Bool :$ascii, #= Use only ASCII characters, no >127 codepoints
+    Bool :$bench, #= Benchmark mode (run as fast as possible, with no sleeps or rate limiting)
+    Int  :$color-bits = 4 #= Enable extended colors (8 = 256-color, 24 = 24-bit RGB)
+    ) {
+
+    my $short-sleep  = .1 * !$bench;
+    my $medium-sleep =  1 * !$bench;
+    my $long-sleep   = 10 * !$bench;
+
+    my @loading-promises;
+
+    # Start up the fun!
+    my $t0 = now;
+    T.initialize-screen;
+    record-time("Initialize {w} x {h} screen", $t0);
+
+    # Loading bar
+    my $bar = ProgressBar.new(:x((w - 50) div 2), :y(h * 2 div 3), :w(50), :h(3),
+                              :text('L O A D I N G'));
+    $bar.set-progress(0);
+
+    # Animated title
+    @loading-promises.push: make-title-animation(:$bar, :$ascii, :$bench);
+
+    # We'll need these later, but will initialize them in a different thread
+    my ($game, $ui);
+
+    # Build main UI in a separate thread
+    @loading-promises.push: start {
+        # Map
+        my $map = Map.new(:w(300), :h(200));
+        $bar.add-progress(5);
+
+        # Characters
+        my @members := make-party-members;
+        my $party = Party.new(:@members, :map-x(6), :map-y(8));  # )
+        $bar.add-progress(5);
+
+        # Global Game object
+        $game = Game.new(:$map, :$party);
+
+        # Global main UI object
+        $ui = UI.new(:w(w), :h(h), :x(0), :y(0),  # ,
+                     :$game, :$bar, :$ascii, :$color-bits);
+        $ui.build-layout;
+    }
+
+    # Make sure all loading and title animations finish, and main screen is
+    # fully ready, before showing main screen and setting it current
+    await @loading-promises;
+    $bar.set-progress(100);
+
+    T.switch-grid('main', :blit);
+    sleep $medium-sleep;
+
+    # XXXX: Popup help
+
+    # XXXX: Move party around, panning game map as necessary
+    sub move-party($dir) {
+        $game.party.move($dir);
+        $ui.mv.draw;
+        sleep $short-sleep;
+    }
+
+    move-party('n' ) for ^2;
+    move-party('nw') for ^5;
+    move-party('e' ) for ^5;
+    move-party('se') for ^3;
+    move-party('e' ) for ^12;
+
+    # XXXX: Battle!
+    dragon-battle($ui, $game);
 
     # XXXX: Battle results splash
     $ui.lv.add-entry("YOU ARE VICTORIOUS!");
