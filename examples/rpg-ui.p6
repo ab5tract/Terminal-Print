@@ -257,11 +257,29 @@ class MapViewer is Widget {
         my $t0 = now;
 
         # Make sure party (plus a comfortable radius around them) is still visible
-        my $radius  = 3;
+        my $radius  = 4;
         my $party-x = $.party.map-x;
         my $party-y = $.party.map-y;
         $!map-x = max(min($.map-x, $party-x - $radius), $party-x + $radius + 1 - $.w);
-        $!map-y = max(min($.map-y, $party-y - $radius), $party-y + $radius + 1 - $.h);  # ==
+        $!map-y = max(min($.map-y, $party-y - $radius), $party-y + $radius + 1 - $.h);  # ,
+
+        # Update party's seen area
+        # XXXX: This naively marks as seen places that aren't actually in line of sight
+        my $radius2 = $radius * $radius;
+        for (-$radius) .. $radius -> $dy {
+            my $y = $party-y + $dy;  # ++
+            next unless 0 <= $y < $.h;
+
+            my $seen-row = $!map.seen[$y];
+
+            for (-$radius) .. $radius -> $dx {
+                my $x = $party-x + $dx;
+                next unless 0 <= $x < $.w;
+
+                my $dist2 = $dy * $dy + $dx * $dx;
+                $seen-row[$x] = 1 if $dist2 < $radius2;
+            }
+        }
 
         # Main map, panned to correct location
         my $ascii      = $.parent.ascii;
@@ -273,10 +291,12 @@ class MapViewer is Widget {
         $.grid.clear;
         for ^$.h -> $y {
             my $row = $!map.terrain[$!map-y + $y];  # ++
+            my $seen-row = $!map.seen[$!map-y + $y];  # ++
             my $marker-row = ($!map-y + $y) %% 10;  # ++
 
             for ^$.w -> $x {
                 my $mapped = $row[$!map-x + $x] // '';
+                   $mapped = '' unless $seen-row[$!map-x + $x];
                    $mapped = %tiles{$mapped} unless $ascii;
                 my $marked = $marker-row && !$mapped && ($!map-x + $x) %% 10;
                 $.grid.change-cell($x, $y, $mapped) if $mapped;
@@ -296,7 +316,6 @@ class MapViewer is Widget {
         # XXXX: This naively lights up areas the glow couldn't actually reach
         my $t3      = now;
         my $r_num   = $radius.Num;
-        my $radius2 = $radius * $radius;
         for (-$radius) .. $radius -> $dy {
             my $y = $py + $dy;
 
