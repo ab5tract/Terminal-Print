@@ -3,6 +3,10 @@ use v6;
 use Terminal::Print;
 
 
+#
+# WHITE-BOX PERFORMANCE MEASUREMENT
+#
+
 #| Multi-thread timing measurements
 my @timings;
 my $timings-supplier = Supplier.new;
@@ -43,6 +47,10 @@ sub show-timings($verbosity) {
     }
 }
 
+
+#
+# UI WIDGETS
+#
 
 #| A basic rectangular widget that can work in relative coordinates
 class Widget {
@@ -554,6 +562,10 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
 }
 
 
+#
+# GAME WORLD AND PARTY
+#
+
 #| Create the initial map state
 sub make-terrain($map-w, $map-h) {
     my $t0 = now;
@@ -758,6 +770,10 @@ class UI is Widget {
 }
 
 
+#
+# DEMO EVENTS
+#
+
 sub dragon-battle(UI $ui, Game $game) {
     # Dragon turn #1
     $ui.lv.add-entry("The party encounters a red dragon.");
@@ -871,6 +887,10 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state;
 }
 
+
+#
+# MAIN PROGRAM
+#
 
 #| Simulate a CRPG or Roguelike interface
 sub MAIN(
