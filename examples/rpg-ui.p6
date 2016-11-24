@@ -49,6 +49,150 @@ sub show-timings($verbosity) {
 
 
 #
+# GAME WORLD AND PARTY
+#
+
+#| Create the initial map state
+sub make-terrain($map-w, $map-h) {
+    my $t0 = now;
+
+    my @map = [ '' xx $map-w ] xx $map-h;
+
+    my sub map-room($x1, $y1, $w, $h) {
+        # Top and bottom walls
+        for ^$w -> $x {
+            @map[$y1][$x1 + $x] = '#';
+            @map[$y1 + $h - 1][$x1 + $x] = '#';
+        }
+
+        # Left and right walls
+        for 0 ^..^ ($h - 1) -> $y {
+            @map[$y1 + $y][$x1] = '#';
+            @map[$y1 + $y][$x1 + $w - 1] = '#';
+        }
+
+        # Floor
+        for 0 ^..^ ($h - 1) -> $y {
+            for 0 ^..^ ($w - 1) -> $x {
+                @map[$y1 + $y][$x1 + $x] = '.';
+            }
+        }
+    }
+
+    # Rooms
+    map-room(0, 0, 16, 7);
+    map-room(20, 2, 8, 4);
+    map-room(0, 10, 7, 12);
+
+    # Corridors
+    @map[4][$_] = '.' for 16..20;
+    @map[$_][5] = '.' for  6..10;
+
+    # Doors
+    @map[4][15] = '/';
+    @map[12][6] = '|';
+    @map[19][6] = '|';
+    @map[5][26] = '-';
+
+    record-time("Create $map-w x $map-h map terrain", $t0);
+
+    @map
+}
+
+#| Create the initial map state
+sub make-seen($map-w, $map-h) {
+    my $t0 = now;
+
+    my @seen = [ 0 xx $map-w ] xx $map-h;
+
+    record-time("Create $map-w x $map-h map seen state", $t0);
+
+    @seen
+}
+
+#| Create the initial character party
+sub make-party-members() {
+    my $t0 = now;
+
+    my @party =
+        { :name<Fennic>,  :class<Ranger>,
+          :ac<6>, :hp<5>, :max-hp<5>, :mp<3>, :max-mp<3>,
+          :armor('Leaf Mail +2'),
+          :weapon('Longbow +1'),
+          :spells('Flaming Arrow', 'Summon Animal', 'Wall of Thorns',)
+        },
+
+        { :name<Galtar>,  :class<Cleric>,
+          :ac<5>, :hp<4>, :max-hp<4>, :mp<4>, :max-mp<4>,
+          :armor('Solar Breastplate'),
+          :weapon('Holy Mace'),
+          :spells('Cure Disease', 'Flame Strike', 'Heal', 'Protection from Evil', 'Solar Blast',)
+        },
+
+        { :name<Salnax>,  :class<Sorcerer>,
+          :ac<2>, :hp<3>, :max-hp<3>, :mp<6>, :max-mp<6>,
+          :armor('Robe of Shadows'),
+          :weapon('Staff of Ice'),
+          :spells('Acid Splash', 'Geyser', 'Fireball', 'Lightning Bolt', 'Magic Missile', 'Passwall',),
+        },
+
+        { :name<Torfin>,  :class<Barbarian>,
+          :ac<7>, :hp<6>, :max-hp<6>, :mp<0>, :max-mp<0>,
+          :armor('Dragon Hide'),
+          :weapon('Dragonbane Greatsword'),
+          :spells(()),
+        },
+
+        { :name<Trentis>, :class<Rogue>,
+          :ac<3>, :hp<4>, :max-hp<4>, :mp<0>, :max-mp<0>,
+          :armor('Silent Leather'),
+          :weapon('Throwing Dagger +1'),
+          :spells(()),
+        };
+
+    record-time("Create {+@party} party members", $t0);
+
+    @party;
+}
+
+
+class Map {
+    has $.w is required;
+    has $.h is required;
+
+    has $.terrain = make-terrain($!w, $!h);
+    has $.seen    = make-seen($!w, $!h);
+}
+
+
+my %direction =
+    nw => (-1, -1), n => (0, -1), ne => (1, -1),
+     w => (-1,  0),                e => (1,  0),
+    sw => (-1,  1), s => (0,  1), se => (1,  1);
+
+class Party {
+    has @.members is required;
+    has $.map-x   is required is rw;
+    has $.map-y   is required is rw;
+
+    multi method move(Int $dx, Int $dy) {
+        $!map-x += $dx;
+        $!map-y += $dy;  # ++
+    }
+
+    multi method move(Str $dir where %direction) {
+        self.move(|%direction{$dir});
+    }
+}
+
+
+class Game {
+    has Map   $.map;
+    has Party $.party;
+}
+
+
+#
 # UI WIDGETS
 #
 
@@ -559,150 +703,6 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
     record-time("Setup animation for $title-w x $title-h title screen", $t0);
 
     $promise;
-}
-
-
-#
-# GAME WORLD AND PARTY
-#
-
-#| Create the initial map state
-sub make-terrain($map-w, $map-h) {
-    my $t0 = now;
-
-    my @map = [ '' xx $map-w ] xx $map-h;
-
-    my sub map-room($x1, $y1, $w, $h) {
-        # Top and bottom walls
-        for ^$w -> $x {
-            @map[$y1][$x1 + $x] = '#';
-            @map[$y1 + $h - 1][$x1 + $x] = '#';
-        }
-
-        # Left and right walls
-        for 0 ^..^ ($h - 1) -> $y {
-            @map[$y1 + $y][$x1] = '#';
-            @map[$y1 + $y][$x1 + $w - 1] = '#';
-        }
-
-        # Floor
-        for 0 ^..^ ($h - 1) -> $y {
-            for 0 ^..^ ($w - 1) -> $x {
-                @map[$y1 + $y][$x1 + $x] = '.';
-            }
-        }
-    }
-
-    # Rooms
-    map-room(0, 0, 16, 7);
-    map-room(20, 2, 8, 4);
-    map-room(0, 10, 7, 12);
-
-    # Corridors
-    @map[4][$_] = '.' for 16..20;
-    @map[$_][5] = '.' for  6..10;
-
-    # Doors
-    @map[4][15] = '/';
-    @map[12][6] = '|';
-    @map[19][6] = '|';
-    @map[5][26] = '-';
-
-    record-time("Create $map-w x $map-h map terrain", $t0);
-
-    @map
-}
-
-#| Create the initial map state
-sub make-seen($map-w, $map-h) {
-    my $t0 = now;
-
-    my @seen = [ 0 xx $map-w ] xx $map-h;
-
-    record-time("Create $map-w x $map-h map seen state", $t0);
-
-    @seen
-}
-
-#| Create the initial character party
-sub make-party-members() {
-    my $t0 = now;
-
-    my @party =
-        { :name<Fennic>,  :class<Ranger>,
-          :ac<6>, :hp<5>, :max-hp<5>, :mp<3>, :max-mp<3>,
-          :armor('Leaf Mail +2'),
-          :weapon('Longbow +1'),
-          :spells('Flaming Arrow', 'Summon Animal', 'Wall of Thorns',)
-        },
-
-        { :name<Galtar>,  :class<Cleric>,
-          :ac<5>, :hp<4>, :max-hp<4>, :mp<4>, :max-mp<4>,
-          :armor('Solar Breastplate'),
-          :weapon('Holy Mace'),
-          :spells('Cure Disease', 'Flame Strike', 'Heal', 'Protection from Evil', 'Solar Blast',)
-        },
-
-        { :name<Salnax>,  :class<Sorcerer>,
-          :ac<2>, :hp<3>, :max-hp<3>, :mp<6>, :max-mp<6>,
-          :armor('Robe of Shadows'),
-          :weapon('Staff of Ice'),
-          :spells('Acid Splash', 'Geyser', 'Fireball', 'Lightning Bolt', 'Magic Missile', 'Passwall',),
-        },
-
-        { :name<Torfin>,  :class<Barbarian>,
-          :ac<7>, :hp<6>, :max-hp<6>, :mp<0>, :max-mp<0>,
-          :armor('Dragon Hide'),
-          :weapon('Dragonbane Greatsword'),
-          :spells(()),
-        },
-
-        { :name<Trentis>, :class<Rogue>,
-          :ac<3>, :hp<4>, :max-hp<4>, :mp<0>, :max-mp<0>,
-          :armor('Silent Leather'),
-          :weapon('Throwing Dagger +1'),
-          :spells(()),
-        };
-
-    record-time("Create {+@party} party members", $t0);
-
-    @party;
-}
-
-
-class Map {
-    has $.w is required;
-    has $.h is required;
-
-    has $.terrain = make-terrain($!w, $!h);
-    has $.seen    = make-seen($!w, $!h);
-}
-
-
-my %direction =
-    nw => (-1, -1), n => (0, -1), ne => (1, -1),
-     w => (-1,  0),                e => (1,  0),
-    sw => (-1,  1), s => (0,  1), se => (1,  1);
-
-class Party {
-    has @.members is required;
-    has $.map-x   is required is rw;
-    has $.map-y   is required is rw;
-
-    multi method move(Int $dx, Int $dy) {
-        $!map-x += $dx;
-        $!map-y += $dy;  # ++
-    }
-
-    multi method move(Str $dir where %direction) {
-        self.move(|%direction{$dir});
-    }
-}
-
-
-class Game {
-    has Map   $.map;
-    has Party $.party;
 }
 
 
