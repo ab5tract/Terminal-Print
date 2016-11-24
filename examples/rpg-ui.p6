@@ -178,11 +178,13 @@ class Party {
     has $.map-x   is required is rw;
     has $.map-y   is required is rw;
 
+    #| Move the party's location by (Δx, Δy)
     multi method move(Int $dx, Int $dy) {
         $!map-x += $dx;
         $!map-y += $dy;  # ++
     }
 
+    #| Move the party's location one step in a cardinal or diagonal direction
     multi method move(Str $dir where %direction) {
         self.move(|%direction{$dir});
     }
@@ -287,8 +289,8 @@ class Widget {
         }
     }
 
-    # Simply copies widget contents onto another grid (by default the current
-    # target grid), optionally also printing updated contents to the screen
+    #| Composite this widget onto a target grid, optionally printing to screen
+    # For now, simply copies widget contents (effects such as alpha blend NYI)
     method composite(Bool :$print, :$to = self.target-grid) {
         my $t0 = now;
 
@@ -314,6 +316,7 @@ class ProgressBar is Widget {
     has $!progress-supply = $!progress-supplier.Supply;
     has $!initialized;
 
+    #| Initialize the progress bar beyond simply setting attributes
     # My kingdom for submethod TWEAK
     method init() {
         return if $!initialized;
@@ -374,6 +377,7 @@ class KeyframeAnimation is Widget {
     has @.keyframes;
     has $.on-keyframe = Supplier.new;
 
+    #| Blend from one keyframe to the next by replacing cells randomly over time
     method speckle($delay = .01) {
         my $p = Promise.new;
         my $v = $p.vow;
@@ -416,6 +420,7 @@ class MapViewer is Widget {
     has $.map   is required;
     has $.party is required;
 
+    #| Draw the current map viewport, respecting seen state, party glow, etc.
     method draw(:$print = True) {
         my $t0 = now;
 
@@ -518,6 +523,7 @@ class CharacterViewer is Widget {
     has $.rows;
     has $.id;
 
+    #| Render the character's stats sheet, health/magic bars, etc.
     method render($state) {
         my $t0 = now;
 
@@ -615,6 +621,7 @@ class LogViewer is Widget {
     has @.wrapped;
     has $.scroll-pos = 0;
 
+    #| Add a single text entry to the log and optionally print it
     method add-entry($text, :$print = True) {
         my $t0 = now;
 
@@ -638,6 +645,7 @@ class LogViewer is Widget {
         sleep .5 * @lines if $print;
     }
 
+    #| Simulate a user entering commands at a prompt
     method user-input($prompt, $input, :$print = True) {
         my $text = $prompt;
         self.add-entry($text, :$print);
@@ -732,6 +740,7 @@ class UI is Widget {
     has MapViewer   $.mv;
     has LogViewer   $.lv;
 
+    #| Lay out main UI subwidgets and dividing lines, updating the progress bar
     method build-layout() {
         # Basic 3-viewport layout (map, party stats, log/input)
         my $party-width = 34;
