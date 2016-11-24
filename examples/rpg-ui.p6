@@ -65,7 +65,7 @@ class Widget {
 
     # Simply copies widget contents onto another grid (by default the current
     # target grid), optionally also printing updated contents to the screen
-    method composite(Bool $print?, :$to = self.target-grid) {
+    method composite(Bool :$print, :$to = self.target-grid) {
         my $t0 = now;
 
         # Ask the destination grid (a monitor) to do the copy for thread safety
@@ -140,7 +140,7 @@ class ProgressBar is Widget {
         record-time("Draw $.w x $.h {self.^name}", $t0);
 
         # Update screen
-        self.composite(True);
+        self.composite(:print);
     }
 }
 
@@ -155,7 +155,7 @@ class KeyframeAnimation is Widget {
         my $v = $p.vow;
 
         $.grid.copy-from(@!keyframes[0], 0, 0);
-        self.composite(True);
+        self.composite(:print);
 
         my @indices = $.grid.indices.pick(*);
         my $tap = Supply.interval($delay).tap: -> $frame {
@@ -166,7 +166,7 @@ class KeyframeAnimation is Widget {
                 my ($x, $y) = @indices[$frame % @indices][0,1];
 
                 $.grid.grid[$y][$x] = @!keyframes[$keyframe].grid[$y][$x];
-                self.composite(True);
+                self.composite(:print);
 
             }
             else {
@@ -253,7 +253,7 @@ class MapViewer is Widget {
     has $.map   is required;
     has $.party is required;
 
-    method draw($print = True) {
+    method draw(:$print = True) {
         my $t0 = now;
 
         # Make sure party (plus a comfortable radius around them) is still visible
@@ -344,7 +344,7 @@ class MapViewer is Widget {
         record-time("Draw $.w x $.h {self.^name}", $t0, $t4);
 
         # Update screen
-        self.composite($print);
+        self.composite(:$print);
     }
 }
 
@@ -410,7 +410,7 @@ class PartyViewer is Widget {
     has @.cvs;
 
     #| Draw the current party state
-    method show-state($print = True, :$expand = -1) {
+    method show-state(:$print = True, :$expand = -1) {
         my $t0 = now;
 
         my @cvs = do for $.party.members.kv -> $i, $pc {
@@ -439,7 +439,7 @@ class PartyViewer is Widget {
 
         record-time("Draw $.w x $.h {self.^name}", $t0);
 
-        self.composite($print);
+        self.composite(:$print);
     }
 }
 
@@ -449,7 +449,7 @@ class LogViewer is Widget {
     has @.wrapped;
     has $.scroll-pos = 0;
 
-    method add-entry($text, $print = True) {
+    method add-entry($text, :$print = True) {
         my $t0 = now;
 
         @.log.push($text);
@@ -468,18 +468,18 @@ class LogViewer is Widget {
 
         record-time("Draw $.w x $.h {self.^name}", $t0);
 
-        self.composite($print);
+        self.composite(:$print);
         sleep .5 * @lines if $print;
     }
 
-    method user-input($prompt, $input, $print = True) {
+    method user-input($prompt, $input, :$print = True) {
         my $text = $prompt;
-        self.add-entry($text, $print);
+        self.add-entry($text, :$print);
 
         for $input.words -> $word {
             @.log.pop;
             @.wrapped.pop;
-            self.add-entry($text ~= " $word", $print);
+            self.add-entry($text ~= " $word", :$print);
         }
     }
 }
@@ -736,7 +736,7 @@ class UI is Widget {
                              :map($.game.map), :map-x(3), :map-y(3),
                              :party($.game.party), :parent(self));
         record-time("Create {$!mv.w} x {$!mv.h} MapViewer", $t0);
-        $!mv.draw(False);
+        $!mv.draw(:!print);
         $.bar.add-progress(5);
 
         $t0 = now;
@@ -744,7 +744,7 @@ class UI is Widget {
                                :h($v-break - 2), :party($.game.party),
                                :parent(self));
         record-time("Create {$!pv.w} x {$!pv.h} PartyViewer", $t0);
-        $!pv.show-state(False);
+        $!pv.show-state(:!print);
         $.bar.add-progress(5);
 
         # Log/input
@@ -752,7 +752,7 @@ class UI is Widget {
         $!lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2),
                              :h($log-height), :parent(self));
         record-time("Create {$!lv.w} x {$!lv.h} LogViewer", $t0);
-        $!lv.add-entry('Game state loaded.', False);
+        $!lv.add-entry('Game state loaded.', :!print);
         $.bar.add-progress(5);
     }
 }
