@@ -171,6 +171,7 @@ class Map {
 }
 
 
+#| Coordinate deltas for cardinal and diagonal directions
 my %direction =
     nw => (-1, -1), n => (0, -1), ne => (1, -1),
      w => (-1,  0),                e => (1,  0),
@@ -206,21 +207,24 @@ class Game {
 # UI HELPER FUNCTIONS
 #
 
-
+#| Unicode horizontal lines in different patterns, with ASCII fallback
 my %hline = ascii  => '-', double => '═',
             light1 => '─', light2 => '╌', light3 => '┄', light4 => '┈',
             heavy1 => '━', heavy2 => '╍', heavy3 => '┅', heavy4 => '┉';
 
+#| Unicode vertical lines in different patterns, with ASCII fallback
 my %vline = ascii  => '|', double => '║',
             light1 => '│', light2 => '╎', light3 => '┆', light4 => '┊',
             heavy1 => '┃', heavy2 => '╏', heavy3 => '┇', heavy4 => '┋';
 
+#| Overall weight for each line pattern, with ASCII fallback
 my %weight = ascii  => 'ascii', double => 'double',
              light1 => 'light', light2 => 'light',
              light3 => 'light', light4 => 'light',
              heavy1 => 'heavy', heavy2 => 'heavy',
              heavy3 => 'heavy', heavy4 => 'heavy';
 
+#| Box corner characters for each line weight, with ASCII fallback
 my %corners = ascii  => < + + + + >,
               double => < ╔ ╗ ╚ ╝ >,
               light  => < ┌ ┐ └ ┘ >,
@@ -413,6 +417,7 @@ class KeyframeAnimation is Widget {
 }
 
 
+#| Map terrain types from pure ASCII to full Unicode
 my %tiles = '' => '',  '.' => '⋅', '#' => '█',   # Layout: empty, floor, wall
            '-' => '─', '|' => '│', '/' => '╱',   # Doors: closed, closed, open
            '@' => '@';                           # Where party is 'at'
