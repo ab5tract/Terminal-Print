@@ -60,6 +60,7 @@ sub show-timings($verbosity) {
 sub make-terrain($map-w, $map-h) {
     my $t0 = now;
 
+    # Start with a map of the right shape but empty of actual terrain
     my @map = [ '' xx $map-w ] xx $map-h;
 
     #| Add floor and walls for a rectangular room
@@ -108,6 +109,7 @@ sub make-terrain($map-w, $map-h) {
 sub make-seen($map-w, $map-h) {
     my $t0 = now;
 
+    # Map is initially entirely hidden and must be exposed by walking around
     my @seen = [ 0 xx $map-w ] xx $map-h;
 
     record-time("Create $map-w x $map-h map seen state", $t0);
@@ -119,6 +121,7 @@ sub make-seen($map-w, $map-h) {
 sub make-party-members() {
     my $t0 = now;
 
+    # Use a plain old hash for each character; no need for a bespoke class yet
     my @party =
         { :name<Fennic>,  :class<Ranger>,
           :ac<6>, :hp<5>, :max-hp<5>, :mp<3>, :max-mp<3>,
@@ -259,12 +262,19 @@ sub draw-box($grid, $x1, $y1, $x2, $y2, $style = Empty) {
 #| Wrap $text to width $w, adding $prefix at the start of each line after the first and $first-prefix to the first line
 sub wrap-text($w, $text, $prefix = '', $first-prefix = '') {
     my @words = $text.words;
+
+    # Invariants:
+    #  * Latest line in @lines always contains at least a prefix and one word
+    #  * No line is wider than $w unless it contains only one very long word
+    #    (no attempt is made to split single words across multiple lines)
     my @lines = $first-prefix ~ @words.shift;
 
     for @words -> $word {
+        # If next word won't fit, use it to start a new line
         if $w < @lines[*-1].chars + 1 + $word.chars {
             push @lines, "$prefix$word";
         }
+        # ... otherwise just extend the last line
         else {
             @lines[*-1] ~= " $word";
         }
@@ -302,7 +312,7 @@ class Widget {
     method composite(Bool :$print, :$to = self.target-grid) {
         my $t0 = now;
 
-        # Ask the destination grid (a monitor) to do the copy for thread safety
+        # Ask the destination grid (a Monitor) to do the copy for thread safety
         $print ?? $to.print-from($!grid, $!x, $!y)
                !! $to .copy-from($!grid, $!x, $!y);  # )
 
@@ -358,7 +368,7 @@ class ProgressBar is Widget {
         $!progress-supplier.emit('set' => $value);
     }
 
-    #| Set the current progress level and update the screen
+    #| Make sure current progress level is sane and update the screen
     method !update-progress($p) {
         my $t0 = now;
 
@@ -390,10 +400,21 @@ class KeyframeAnimation is Widget {
         my $p = Promise.new;
         my $v = $p.vow;
 
+        # Start by simply copying first frame and printing that
         $.grid.copy-from(@!keyframes[0], 0, 0);
         self.composite(:print);
 
+        # Determine random speckling order once, reused for all transitions
+        # in this particular animation
         my @indices = $.grid.indices.pick(*);
+
+        # Keep a constant pace through the entire animation, changing one cell
+        # at a time until converted to the next keyframe and then continuing
+        # with the next one.  As each transition completes, emit the 0-based
+        # number of the keyframe just completed into $.on-keyframe.  Note, due
+        # to choosing 'tap' instead of 'act', if this code is running slowly
+        # most of it will end up scheduling on alternating threads (only the
+        # internals of the composite call will single-thread).
         my $tap = Supply.interval($delay).tap: -> $frame {
             my $keyframe = 1 + $frame div +@indices;
             $!on-keyframe.emit($keyframe - 1) if $frame %% @indices;
@@ -412,6 +433,7 @@ class KeyframeAnimation is Widget {
             }
         }
 
+        # Return a promise that is kept when the animation fully completes
         $p;
     }
 }
@@ -593,6 +615,7 @@ class PartyViewer is Widget {
     method show-state(:$print = True, :$expand = -1) {
         my $t0 = now;
 
+        # Create a CharacterViewer for each character
         my @cvs = do for $.party.members.kv -> $i, $pc {
             CharacterViewer.new(:id($i + 1), :$.w, :h(7), :x(0), :y(0),
                                 :parent(self), :character($pc));
@@ -641,6 +664,7 @@ class LogViewer is Widget {
         $!scroll-pos += @lines if $.scroll-pos == @.wrapped;
         @.wrapped.append(@lines);
 
+        # Print most recent $.h wrapped lines, highlighting most recent entry
         my $top = max 0, $.scroll-pos - $.h;
         for ^$.h {
             my $line  = @.wrapped[$top + $_] // '';
@@ -718,9 +742,12 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
         @grids
     }
 
+    # Matching keyframes make it appear as if the animation paused, even though
+    # in reality it is continuously running from the first frame to the last
     my $grids = $ascii ?? make-text-grids($standard, $standard, $standard, make-matching-blank($standard))
                        !! make-text-grids($solid, $pagga, $pagga, $pagga, make-matching-blank($pagga));
 
+    # Center the title animation in the upper 3/4 of the screen
     my $title-w = $grids[0].columns;
     my $title-h = $grids[0].rows;
     my $title-x = floor (w       - $title-w) / 2;
@@ -732,6 +759,10 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
     $anim.on-keyframe.Supply.tap: { $bar.add-progress(60 / ($grids - 1)) if $^frame }
     $bar.add-progress(5);
 
+    # Make total animation time relatively constant, despite different number
+    # of keyframes and different size for ASCII and full Unicode versions
+    # Note: interval supplies are unstable and may stop progressing below 1 ms
+    # per tick!
     my $promise = $anim.speckle($bench ?? .001 !! 6 / ($grids * $title-w * $title-h));
     record-time("Setup animation for $title-w x $title-h title screen", $t0);
 
@@ -757,11 +788,13 @@ class UI is Widget {
         my $h-break     = $.w - $party-width - 2;
         my $v-break     = $.h - $log-height  - 2;
 
+        # Let Terminal::Print know this will be a new screen
         my $t-ui = now;
         T.add-grid('main', :new-grid($.grid));
         record-time("Add new {$.w} x {$.h} grid 'main'", $t-ui);
         $.bar.add-progress(5);
 
+        # Draw viewport borders
         my $t0 = now;
         my $style = $.ascii ?? 'ascii' !! 'double';
         draw-box($.grid, 0, 0, $.w - 1, $.h - 1, $style);
@@ -778,6 +811,8 @@ class UI is Widget {
         record-time("Lay out $.w x $.h main UI sections", $t0);
         $.bar.add-progress(5);
 
+        # Add map, party, and log viewers, compositing them to the new UI grid
+        # but not printing them yet (just updating the progress bar)
         $t0 = now;
         $!mv = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
                              :map($.game.map), :map-x(3), :map-y(3),
@@ -996,6 +1031,7 @@ sub MAIN(
         sleep $short-sleep;
     }
 
+    # Simulate searching for the dragon
     move-party('n' ) for ^7;
     move-party('ne') for ^2;
     move-party('n' ) for ^4;
