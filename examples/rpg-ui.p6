@@ -52,12 +52,13 @@ sub show-timings($verbosity) {
 # GAME WORLD AND PARTY
 #
 
-#| Create the initial map state
+#| Create the initial map terrain state
 sub make-terrain($map-w, $map-h) {
     my $t0 = now;
 
     my @map = [ '' xx $map-w ] xx $map-h;
 
+    #| Add floor and walls for a rectangular room
     my sub map-room($x1, $y1, $w, $h) {
         # Top and bottom walls
         for ^$w -> $x {
@@ -99,7 +100,7 @@ sub make-terrain($map-w, $map-h) {
     @map
 }
 
-#| Create the initial map state
+#| Create the initial map seen ("fog of war") state
 sub make-seen($map-w, $map-h) {
     my $t0 = now;
 
@@ -245,6 +246,7 @@ sub draw-box($grid, $x1, $y1, $x2, $y2, $style = Empty) {
     $grid.set-span-text($x2, $y2, @corners[3]);
 }
 
+#| Wrap $text to width $w, adding $prefix at the start of each line after the first and $first-prefix to the first line
 sub wrap-text($w, $text, $prefix = '', $first-prefix = '') {
     my @words = $text.words;
     my @lines = $first-prefix ~ @words.shift;
@@ -673,6 +675,7 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
         ░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░░░▀▀▀░▀▀▀░░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░
         SOLID
 
+    #| Make an array of lines filled with $char, the same dimensions as $orig
     sub make-matching-blank($orig, $char = ' ') {
         my $w = $orig.lines[0].chars;
         my $h = $orig.lines.elems;
@@ -680,6 +683,7 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
         ($char x $w ~ "\n") x $h;
     }
 
+    #| Turn several multiline text blocks into an array of T::P::Grid objects
     sub make-text-grids(*@texts) {
         my $w = @texts[0].lines[0].chars;
         my $h = @texts[0].lines.elems;
@@ -787,6 +791,7 @@ class UI is Widget {
 # DEMO EVENTS
 #
 
+#| Play out the turns of the climactic red dragon battle
 sub dragon-battle(UI $ui, Game $game) {
     # Dragon turn #1
     $ui.lv.add-entry("The party encounters a red dragon.");
@@ -965,6 +970,8 @@ sub MAIN(
     # XXXX: Popup help
 
     # XXXX: Move party around, panning game map as necessary
+
+    #| Move the party, update the map viewer, and don't go excessively fast
     sub move-party($dir) {
         $game.party.move($dir);
         $ui.mv.draw;
