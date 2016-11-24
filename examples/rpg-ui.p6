@@ -1,3 +1,7 @@
+# ABSTRACT: Simulates a user playing a text-based computer game, exercising
+#           many parts of the Terminal::Print API.  The simulated game is a
+#           mashup of a Roguelike and a high fantasy CRPG.
+
 use v6;
 
 use Terminal::Print;
