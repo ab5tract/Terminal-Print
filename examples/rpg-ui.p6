@@ -425,7 +425,6 @@ class KeyframeAnimation is Widget {
 
                 $.grid.grid[$y][$x] = @!keyframes[$keyframe].grid[$y][$x];
                 self.composite(:print);
-
             }
             else {
                 $!on-keyframe.done;
