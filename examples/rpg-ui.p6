@@ -262,6 +262,7 @@ sub draw-box($grid, $x1, $y1, $x2, $y2, $style = Empty) {
 #| Wrap $text to width $w, adding $prefix at the start of each line after the first and $first-prefix to the first line
 sub wrap-text($w, $text, $prefix = '', $first-prefix = '') {
     my @words = $text.words;
+    return [] unless @words;
 
     # Invariants:
     #  * Latest line in @lines always contains at least a prefix and one word
