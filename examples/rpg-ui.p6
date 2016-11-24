@@ -193,6 +193,73 @@ class Game {
 
 
 #
+# UI HELPER FUNCTIONS
+#
+
+
+my %hline = ascii  => '-', double => '═',
+            light1 => '─', light2 => '╌', light3 => '┄', light4 => '┈',
+            heavy1 => '━', heavy2 => '╍', heavy3 => '┅', heavy4 => '┉';
+
+my %vline = ascii  => '|', double => '║',
+            light1 => '│', light2 => '╎', light3 => '┆', light4 => '┊',
+            heavy1 => '┃', heavy2 => '╏', heavy3 => '┇', heavy4 => '┋';
+
+my %weight = ascii  => 'ascii', double => 'double',
+             light1 => 'light', light2 => 'light',
+             light3 => 'light', light4 => 'light',
+             heavy1 => 'heavy', heavy2 => 'heavy',
+             heavy3 => 'heavy', heavy4 => 'heavy';
+
+my %corners = ascii  => < + + + + >,
+              double => < ╔ ╗ ╚ ╝ >,
+              light  => < ┌ ┐ └ ┘ >,
+              heavy  => < ┏ ┓ ┗ ┛ >;
+
+#| Draw a horizontal line
+sub draw-hline($grid, $y, $x1, $x2, $style = 'double') {
+    $grid.set-span-text($x1, $y, %hline{$style} x ($x2 - $x1 + 1));
+}
+
+#| Draw a vertical line
+sub draw-vline($grid, $x, $y1, $y2, $style = 'double') {
+    $grid.set-span-text($x, $_, %vline{$style}) for $y1..$y2;
+}
+
+#| Draw a box
+sub draw-box($grid, $x1, $y1, $x2, $y2, $style = Empty) {
+    # Draw sides in order: left, right, top, bottom
+    draw-vline($grid, $x1, $y1 + 1, $y2 - 1, |$style);
+    draw-vline($grid, $x2, $y1 + 1, $y2 - 1, |$style);
+    draw-hline($grid, $y1, $x1 + 1, $x2 - 1, |$style);
+    draw-hline($grid, $y2, $x1 + 1, $x2 - 1, |$style);
+
+    # Draw corners
+    my @corners = |%corners{%weight{$style}};
+    $grid.set-span-text($x1, $y1, @corners[0]);
+    $grid.set-span-text($x2, $y1, @corners[1]);
+    $grid.set-span-text($x1, $y2, @corners[2]);
+    $grid.set-span-text($x2, $y2, @corners[3]);
+}
+
+sub wrap-text($w, $text, $prefix = '', $first-prefix = '') {
+    my @words = $text.words;
+    my @lines = $first-prefix ~ @words.shift;
+
+    for @words -> $word {
+        if $w < @lines[*-1].chars + 1 + $word.chars {
+            push @lines, "$prefix$word";
+        }
+        else {
+            @lines[*-1] ~= " $word";
+        }
+    }
+
+    @lines
+}
+
+
+#
 # UI WIDGETS
 #
 
@@ -330,68 +397,6 @@ class KeyframeAnimation is Widget {
 
         $p;
     }
-}
-
-
-my %hline = ascii  => '-', double => '═',
-            light1 => '─', light2 => '╌', light3 => '┄', light4 => '┈',
-            heavy1 => '━', heavy2 => '╍', heavy3 => '┅', heavy4 => '┉';
-
-my %vline = ascii  => '|', double => '║',
-            light1 => '│', light2 => '╎', light3 => '┆', light4 => '┊',
-            heavy1 => '┃', heavy2 => '╏', heavy3 => '┇', heavy4 => '┋';
-
-my %weight = ascii  => 'ascii', double => 'double',
-             light1 => 'light', light2 => 'light',
-             light3 => 'light', light4 => 'light',
-             heavy1 => 'heavy', heavy2 => 'heavy',
-             heavy3 => 'heavy', heavy4 => 'heavy';
-
-my %corners = ascii  => < + + + + >,
-              double => < ╔ ╗ ╚ ╝ >,
-              light  => < ┌ ┐ └ ┘ >,
-              heavy  => < ┏ ┓ ┗ ┛ >;
-
-#| Draw a horizontal line
-sub draw-hline($grid, $y, $x1, $x2, $style = 'double') {
-    $grid.set-span-text($x1, $y, %hline{$style} x ($x2 - $x1 + 1));
-}
-
-#| Draw a vertical line
-sub draw-vline($grid, $x, $y1, $y2, $style = 'double') {
-    $grid.set-span-text($x, $_, %vline{$style}) for $y1..$y2;
-}
-
-#| Draw a box
-sub draw-box($grid, $x1, $y1, $x2, $y2, $style = Empty) {
-    # Draw sides in order: left, right, top, bottom
-    draw-vline($grid, $x1, $y1 + 1, $y2 - 1, |$style);
-    draw-vline($grid, $x2, $y1 + 1, $y2 - 1, |$style);
-    draw-hline($grid, $y1, $x1 + 1, $x2 - 1, |$style);
-    draw-hline($grid, $y2, $x1 + 1, $x2 - 1, |$style);
-
-    # Draw corners
-    my @corners = |%corners{%weight{$style}};
-    $grid.set-span-text($x1, $y1, @corners[0]);
-    $grid.set-span-text($x2, $y1, @corners[1]);
-    $grid.set-span-text($x1, $y2, @corners[2]);
-    $grid.set-span-text($x2, $y2, @corners[3]);
-}
-
-sub wrap-text($w, $text, $prefix = '', $first-prefix = '') {
-    my @words = $text.words;
-    my @lines = $first-prefix ~ @words.shift;
-
-    for @words -> $word {
-        if $w < @lines[*-1].chars + 1 + $word.chars {
-            push @lines, "$prefix$word";
-        }
-        else {
-            @lines[*-1] ~= " $word";
-        }
-    }
-
-    @lines
 }
 
 
