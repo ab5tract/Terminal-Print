@@ -156,6 +156,7 @@ sub make-party-members() {
 }
 
 
+#| A rectangular map with terrain and seen ("fog of war") layers
 class Map {
     has $.w is required;
     has $.h is required;
@@ -170,6 +171,7 @@ my %direction =
      w => (-1,  0),                e => (1,  0),
     sw => (-1,  1), s => (0,  1), se => (1,  1);
 
+#| The player's party, including members and location
 class Party {
     has @.members is required;
     has $.map-x   is required is rw;
@@ -186,6 +188,7 @@ class Party {
 }
 
 
+#| The overall game state (map and party info) independent of the UI
 class Game {
     has Map   $.map;
     has Party $.party;
@@ -404,6 +407,7 @@ my %tiles = '' => '',  '.' => '⋅', '#' => '█',   # Layout: empty, floor, wal
            '-' => '─', '|' => '│', '/' => '╱',   # Doors: closed, closed, open
            '@' => '@';                           # Where party is 'at'
 
+#| A map viewer widget, providing a panning viewport into the game map
 class MapViewer is Widget {
     has $.map-x is required;
     has $.map-y is required;  # i
@@ -506,6 +510,7 @@ class MapViewer is Widget {
 }
 
 
+#| Render an individual character's current stats
 class CharacterViewer is Widget {
     has $.character;
     has $.rows;
@@ -562,6 +567,7 @@ class CharacterViewer is Widget {
 }
 
 
+#| Compose a number of CharacterViewers into an overall party widget
 class PartyViewer is Widget {
     has $.party;
     has @.cvs;
@@ -601,6 +607,7 @@ class PartyViewer is Widget {
 }
 
 
+#| Keep/display a log of events and inputs, scrolling as needed
 class LogViewer is Widget {
     has @.log;
     has @.wrapped;
@@ -711,6 +718,7 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
 }
 
 
+#| The main user interface composed of map, party, and log panels
 class UI is Widget {
     has Int         $.color-bits;
     has Bool        $.ascii;
