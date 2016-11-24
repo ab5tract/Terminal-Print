@@ -762,7 +762,7 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
     # Make total animation time relatively constant, despite different number
     # of keyframes and different size for ASCII and full Unicode versions
     # Note: interval supplies are unstable and may stop progressing below 1 ms
-    # per tick!
+    # per tick!  (Rakudobug submitted as RT #130168)
     my $promise = $anim.speckle($bench ?? .001 !! 6 / ($grids * $title-w * $title-h));
     record-time("Setup animation for $title-w x $title-h title screen", $t0);
 
