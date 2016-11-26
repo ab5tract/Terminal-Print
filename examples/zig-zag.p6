@@ -29,7 +29,7 @@ my sub zig-zag( Int $start_y? ) {
             $b.print-cell($x-1, $cur_y-1, ' ');
             $b.print-cell($x-2, $cur_y-1, ' ');
         }
-        sleep (^0.9).roll;
+        sleep 0.3.rand;
     }
 }
 
