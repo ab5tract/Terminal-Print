@@ -26,7 +26,7 @@ my class Cell {
         }
     }
 
-    method Str { $!string }
+    method Str() { $!string }
 }
 
 has $.rows;
@@ -219,11 +219,11 @@ multi method print-string($x, $y, Str() $string, $color) {
 }
 
 #| Don't actually print in .print-* methods
-method disable {
+method disable() {
     $!print-enabled = False;
 }
 
 #| Lazily computed stringification of entire grid, including color escapes and cursor movement
-method Str {
+method Str() {
     $!grid-string ||= join '', ^$!rows .map({ self.span-string(0, $!columns - 1, $_) });
 }
