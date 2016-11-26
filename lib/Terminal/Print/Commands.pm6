@@ -15,7 +15,6 @@ our %human-command-names;
 our %human-commands;
 our %tput-commands;
 our %attributes;
-our %attribute-values;
 
 our @fg_colors = [ <black red green yellow blue magenta cyan white default> ];
 our @bg_colors = [ <on_black on_red on_green on_yellow on_blue on_magenta on_cyan on_white on_default> ];
