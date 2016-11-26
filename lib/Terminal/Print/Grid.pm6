@@ -2,8 +2,10 @@ use OO::Monitors;
 
 use Terminal::Print::Commands;
 
+#| A rectangular grid containing Unicode characters and color/style information
 unit monitor Terminal::Print::Grid;
 
+#| Internal (immutable) class holding all position-independent information about a single grid cell
 my class Cell {
     use Terminal::ANSIColor; # lexical imports FTW
     has $.char is required;
@@ -35,24 +37,29 @@ has $.grid-string = '';
 has $.move-cursor;
 has $!print-enabled = True;
 
+#| Instantiate a new (row-major) grid of size $columns x $rows
 method new($columns, $rows, :$move-cursor = move-cursor-template) {
     my @grid = [ [ ' ' xx $columns ] xx $rows ];
 
     self.bless(:$columns, :$rows, :@grid, :$move-cursor);
 }
 
+#| Clear the grid to blanks (ASCII spaces) with no color/style overrides
 method clear() {
     @!grid = [ [ ' ' xx $!columns ] xx $!rows ];
 }
 
+#| Lazily computed array of every [x, y] coordinate pair in the grid
 method indices() {
     @!indices ||= (^$.columns X ^$.rows)>>.Array;
 }
 
+#| Return the escape string necessary to move to, color, and output a single cell
 method cell-string($x, $y) {
     "{$!move-cursor($x, $y)}{~@!grid[$y][$x]}"
 }
 
+#| Return the escape string necessary to move to (x1, y) and output every cell (with color) on that row from x1..x2
 method span-string($x1, $x2, $y) {
     my $row = @!grid[$y];
     $!move-cursor($x1, $y) ~ $row[$x1..$x2].join
@@ -110,7 +117,7 @@ method clip-rect($x is copy, $y is copy, $w is copy, $h is copy) {
     }
 }
 
-#| Copy an entire other grid into this grid with upper left at ($x, $y)
+#| Copy an entire other grid into this grid with upper left at ($x, $y), clipping the copy to this grid's edges
 method copy-from(Terminal::Print::Grid $grid, $x, $y) {
     # Clip to edges of this grid
     my ($x1, $y1, $cols, $rows)
@@ -131,7 +138,7 @@ method copy-from(Terminal::Print::Grid $grid, $x, $y) {
     ($x1, $y1, $cols, $rows)
 }
 
-#| Copy another grid into this one and print the modified area
+#| Copy another grid into this one as with .copy-from and print the modified area
 method print-from(Terminal::Print::Grid $grid, $x, $y) {
     # Copy grid, remembering clipped area
     my ($x1, $y1, $cols, $rows) = self.copy-from($grid, $x, $y);
@@ -141,35 +148,42 @@ method print-from(Terminal::Print::Grid $grid, $x, $y) {
         if $!print-enabled;
 }
 
+#| Replace the contents of a single grid cell, specifying a hash with char and color keys
 multi method change-cell($x, $y, %c) {
     $!grid-string = '';
     @!grid[$y][$x] = Cell.new(|%c);
 }
 
+#| Replace the contents of a single grid cell with a single uncolored/unstyled character
 multi method change-cell($x, $y, Str $char) {
     $!grid-string = '';
     @!grid[$y][$x] = $char;
 }
 
+#| Replace the contents of a single grid cell with a prebuilt Cell object
 multi method change-cell($x, $y, Cell $cell) {
     $!grid-string = '';
     @!grid[$y][$x] = $cell;
 }
 
+#| Print the .cell-string for a single cell
 multi method print-cell($x, $y) {
     print self.cell-string($x, $y) if $!print-enabled;
 }
 
+#| Replace the contents of a cell with an uncolored/unstyled character, then print its .cell-string
 multi method print-cell($x, $y, Str $char) {
     self.change-cell($x, $y, $char);
     self.print-cell($x, $y);
 }
 
+#| Replace the contents of a cell, specifying a hash with char and color keys, then print its .cell-string
 multi method print-cell($x, $y, %c) {
     self.change-cell($x, $y, Cell.new(|%c));
     self.print-cell($x, $y);
 }
 
+#| Degenerate case: print an individual cell
 multi method print-string($x, $y) {
     self.print-cell($x, $y);
 }
@@ -204,10 +218,12 @@ multi method print-string($x, $y, Str() $string, $color) {
     }
 }
 
+#| Don't actually print in .print-* methods
 method disable {
     $!print-enabled = False;
 }
 
+#| Lazily computed stringification of entire grid, including color escapes and cursor movement
 method Str {
     $!grid-string ||= join '', ^$!rows .map({ self.span-string(0, $!columns - 1, $_) });
 }
