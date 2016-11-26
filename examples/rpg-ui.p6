@@ -333,47 +333,36 @@ class ProgressBar is Widget {
 
     has $!progress-supplier = Supplier.new;
     has $!progress-supply = $!progress-supplier.Supply;
-    has $!initialized;
 
     #| Initialize the progress bar beyond simply setting attributes
-    # My kingdom for submethod TWEAK
-    method init() {
-        return if $!initialized;
-
+    submethod TWEAK() {
         # Render initial text
         my @lines = $!text.lines;
-        my $top = ($.h - @lines) div 2;
+        my $top = (self.h - @lines) div 2;
         for @lines.kv -> $i, $line {
-            $.grid.set-span-text(($.w - $line.chars) div 2, $top + $i, $line);
+            self.grid.set-span-text((self.w - $line.chars) div 2,
+				    $top + $i, $line);
         }
 
         # Update progress bar display whenever supply is updated
         $!progress-supply.act: -> (:$key, :$value) {
             self!update-progress: $!progress * ($key eq 'add') + $value
-        };
-
-        $!initialized = True;
+        }
     }
 
     #| Add an increment to the current progress level
     method add-progress($increment) {
-        self.init unless $!initialized;
-
         $!progress-supplier.emit('add' => $increment);
     }
 
     #| Set the current progress level to an absolute value
     method set-progress($value) {
-        self.init unless $!initialized;
-
         $!progress-supplier.emit('set' => $value);
     }
 
     #| Make sure current progress level is sane and update the screen
     method !update-progress($p) {
         my $t0 = now;
-
-        self.init unless $!initialized;
 
         # Compute length of completed portion of bar
         $!progress    = max(0, min($!max, $p));
