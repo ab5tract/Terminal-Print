@@ -304,18 +304,32 @@ sub d($block) is export {
     draw($block);
 }
 
-sub p($x, $y, $string?) is export {
+multi sub p($x, $y) is export {
+    $T.current-grid.print-string($x, $y);
+}
+
+multi sub p($x, $y, $string) is export {
     $T.current-grid.print-string($x, $y, $string);
 }
 
-sub ch($x, $y, $char, $color?) is export {
-    my $cell = $color ?? %(:$char, :$color) !! $char;
-    $T.current-grid.change-cell($x, $y, $cell);
+multi sub p($x, $y, $string, $color) is export {
+    $T.current-grid.print-string($x, $y, $string, $color);
 }
 
-sub cl($x, $y, $char, $color?) is export {
-    my $cell = $color ?? %(:$char, :$color) !! $char;
-    $T.current-grid.print-cell($x, $y, $cell);
+multi sub ch($x, $y, $char) is export {
+    $T.current-grid.change-cell($x, $y, $char);
+}
+
+multi sub ch($x, $y, $char, $color) is export {
+    $T.current-grid.change-cell($x, $y, %(:$char, :$color) );
+}
+
+multi sub cl($x, $y, $char) is export {
+    $T.current-grid.print-cell($x, $y, $char);
+}
+
+multi sub cl($x, $y, $char, $color) is export {
+    $T.current-grid.print-cell($x, $y, %(:$char, :$color) );
 }
 
 sub slp($seconds) is export {
