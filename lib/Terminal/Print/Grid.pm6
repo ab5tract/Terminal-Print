@@ -174,9 +174,25 @@ multi method print-string($x, $y) {
     self.print-cell($x, $y);
 }
 
-multi method print-string($x, $y, Str() $string, $color?) {
+#| Print a (possibly ragged multi-line) string with first character at (x, y), incrementing y for each additional line
+multi method print-string($x, $y, Str() $string) {
     if $string.chars == 1 {
         self.print-cell($x, $y, $string);
+    } else {
+        my $off-y = 0;
+        for $string.lines -> $line {
+            self.set-span-text($x, $y + $off-y, $line);
+            print self.span-string($x, $x + $line.chars - 1, $y + $off-y)
+                if $!print-enabled;
+            $off-y++;
+        }
+    }
+}
+
+#| Print a (possibly ragged multi-line) string with first character at (x, y), and in a given color
+multi method print-string($x, $y, Str() $string, $color) {
+    if $string.chars == 1 {
+        self.print-cell($x, $y, %( :char($string), :$color ));
     } else {
         my $off-y = 0;
         for $string.lines -> $line {
