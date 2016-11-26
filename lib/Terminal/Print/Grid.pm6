@@ -137,7 +137,8 @@ method print-from(Terminal::Print::Grid $grid, $x, $y) {
     my ($x1, $y1, $cols, $rows) = self.copy-from($grid, $x, $y);
 
     my $x2 = $x1 + $cols - 1;
-    (^$rows).map({ self.span-string($x1, $x2, $_ + $y1) }).join.print;
+    (^$rows).map({ self.span-string($x1, $x2, $_ + $y1) }).join.print
+        if $!print-enabled;
 }
 
 multi method change-cell($x, $y, %c) {
@@ -180,7 +181,8 @@ multi method print-string($x, $y, Str() $string, $color?) {
         my $off-y = 0;
         for $string.lines -> $line {
             self.set-span($x, $y + $off-y, $line, $color);
-            print self.span-string($x, $x + $line.chars - 1, $y + $off-y);
+            print self.span-string($x, $x + $line.chars - 1, $y + $off-y)
+                if $!print-enabled;
             $off-y++;
         }
     }
