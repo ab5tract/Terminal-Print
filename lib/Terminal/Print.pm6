@@ -69,8 +69,6 @@ has %!grid-name-map;
 has $.columns;
 has $.rows;
 
-my Terminal::Print $PRINTER;    # singleton for golfing and subroutines
-
 use Terminal::Print::Commands;
 
 constant Commands = Terminal::Print::Commands;
