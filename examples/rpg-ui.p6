@@ -183,8 +183,8 @@ my %direction =
 #| The player's party, including members and location
 class Party {
     has @.members is required;
-    has $.map-x   is required is rw;
-    has $.map-y   is required is rw;
+    has $.map-x   is required;
+    has $.map-y   is required;  # i
 
     #| Move the party's location by (Δx, Δy)
     multi method move(Int $dx, Int $dy) {
@@ -291,13 +291,16 @@ sub wrap-text($w, $text, $prefix = '', $first-prefix = '') {
 
 #| A basic rectangular widget that can work in relative coordinates
 class Widget {
-    has Int $.x is required is rw;
-    has Int $.y is required is rw;
+    has Int $.x is required;
+    has Int $.y is required;
     has Int $.w is required;
     has Int $.h is required;
 
     has $.grid = Terminal::Print::Grid.new($!w, $!h);
     has $.parent;
+
+    #| Move upper left corner to (x, y) on the parent widget/grid
+    method move-to($!x, $!y) { }  # ))
 
     #| Return T::P::Grid object that this Widget will draw on
     method target-grid() {
@@ -620,8 +623,8 @@ class PartyViewer is Widget {
                                          'lowlight'  ;
             $cv.render($state);
 
-            $cv.y = $y;
-            $y   += $i == $expand ?? $cv.rows + 1 !! 1;
+            $cv.move-to($cv.x, $y);
+            $y += $i == $expand ?? $cv.rows + 1 !! 1;
 
             $cv.composite;
         }
