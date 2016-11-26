@@ -87,37 +87,57 @@ method set-span-color($x1, $x2, $y, $color) {
     }
 }
 
+#| Clip a rectangle to entirely fit within this grid
+method clip-rect($x is copy, $y is copy, $w is copy, $h is copy) {
+    # If the upper-left corner is outside the grid, move it back on the grid
+    # and shrink the rectangle size accordingly
+    if $x < 0 { $w += $x; $x = 0 }
+    if $y < 0 { $h += $y; $y = 0 }
+
+    # If it's entirely outside the grid or the rectangle doesn't have positive
+    # extent in both dimensions, clip to zero size
+    if $x >= $!columns || $y >= $!rows || $w <= 0 || $h <= 0 {
+        # Empty rect
+        ($x, $y, 0, 0)
+    }
+    else {
+        # Shrink the rectangle if it extends past the right or bottom edge
+        $w = min $w, $!columns - $x;
+        $h = min $h, $!rows    - $y;
+
+        # Clipped but non-empty rect
+        ($x, $y, $w, $h)
+    }
+}
+
 #| Copy an entire other grid into this grid with upper left at ($x, $y)
 method copy-from(Terminal::Print::Grid $grid, $x, $y) {
-    my $from = $grid.grid;
-    my $rows = $grid.rows;
-    my $cols = $grid.columns;
-
     # Clip to edges of this grid
-    return if $x >= $!columns || $y >= $!rows;
-
-    if $x < 0 { $cols += $x; $x = 0 }
-    if $y < 0 { $rows += $y; $y = 0 }
-
-    $cols = min $cols, $!columns - $x;
-    $rows = min $rows, $!rows    - $y;
+    my ($x1, $y1, $cols, $rows)
+        = self.clip-rect($x, $y, $grid.columns, $grid.rows);
 
     # Actually do the copy (actually a splice because immutable Cells)
     $!grid-string = '';
+    my $from =  $grid.grid;
     if $cols == $grid.columns {
-        @!grid[$_ + $y].splice($x, $cols, $from[$_]) for ^$rows;
+        @!grid[$_ + $y1].splice($x1, $cols, $from[$_]) for ^$rows;
     }
     else {
-        @!grid[$_ + $y].splice($x, $cols, $from[$_][^$cols]) for ^$rows;
+        @!grid[$_ + $y1].splice($x1, $cols, $from[$_][^$cols]) for ^$rows;
     }
+
+    # Return the clipped rectangle in case a caller (such as print-from)
+    # needs the clipped size anyway
+    ($x1, $y1, $cols, $rows)
 }
 
 #| Copy another grid into this one and print the modified area
 method print-from(Terminal::Print::Grid $grid, $x, $y) {
-    self.copy-from($grid, $x, $y);
+    # Copy grid, remembering clipped area
+    my ($x1, $y1, $cols, $rows) = self.copy-from($grid, $x, $y);
 
-    my $x2 = $x + $grid.columns - 1;
-    (^$grid.rows).map({ self.span-string($x, $x2, $_ + $y) }).join.print;
+    my $x2 = $x1 + $cols - 1;
+    (^$rows).map({ self.span-string($x1, $x2, $_ + $y1) }).join.print;
 }
 
 multi method change-cell($x, $y, %c) {
