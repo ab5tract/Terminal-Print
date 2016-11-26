@@ -15,7 +15,7 @@ use Terminal::Print;
 my @timings;
 my $timings-supplier = Supplier.new;
 my $timings-supply = $timings-supplier.Supply;
-$timings-supply.act: { @timings.push: $^timing };
+$timings-supply.act: { @timings.push: $^timing }
 
 #| Keep track of timing measurements
 sub record-time($desc, $start, $end = now) {
@@ -344,7 +344,7 @@ class ProgressBar is Widget {
         my $top = (self.h - @lines) div 2;
         for @lines.kv -> $i, $line {
             self.grid.set-span-text((self.w - $line.chars) div 2,
-				    $top + $i, $line);
+                                    $top + $i, $line);
         }
 
         # Update progress bar display whenever supply is updated
