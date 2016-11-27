@@ -499,6 +499,7 @@ class MapViewer is Widget {
                 my $mapped = $row[$!map-x + $x] // '';
                    $mapped = '' unless $seen-row[$!map-x + $x];
                    $mapped = %tiles{$mapped} unless $ascii;
+                   $mapped = %( :char($mapped), :color('246') ) if $mapped && $color-bits > 4;
                 my $marked = $marker-row && !$mapped && ($!map-x + $x) %% 10;
                 $.grid.change-cell($x, $y, $mapped) if $mapped;
                 $.grid.change-cell($x, $y, $marker) if $marked;
@@ -526,14 +527,17 @@ class MapViewer is Widget {
                 my $dist2 = $dy * $dy + $dx * $dx;
                 next if $dist2 >= $radius2;
 
-                # Calculates a sqrt dropoff, which looks better than realism
                 # Oddness of following lines brought to you by micro-optimization
-                my $brightness = 5e0 * (1e0 - $dist2.sqrt / $r_num).sqrt;
-                   $brightness = $brightness > 2e0 ?? $brightness.ceiling !! 2;
-                my $color      = 16 + 42 * $brightness;  # 16 + 36 * r + 6 * g + b
-                # $.grid.change-cell($x, $y, ~$brightness);  # DEBUG: show brightness levels
-                $.grid.set-span-color($x, $x, $y, $color-bits > 4 ?? ~$color       !!
-                                                  $brightness > 3 ?? 'bold yellow' !! 'yellow');
+                # Calculates a linear dropoff, which looks better than realism
+                my $brightness = (13e0 * (1e0 - $dist2.sqrt / $r_num)).ceiling;
+                # Ramp from black to bright yellow to white:  16 + 36 * r + 6 * g + b
+                my $color = 16 + 42 * (1 + (min 8, $brightness) div 2) + max(0, $brightness - 8);
+
+                # $.grid.change-cell($x, $y, $brightness.base(16));  # DEBUG: show brightness levels
+                $.grid.set-span-color($x, $x, $y, $color-bits >  4 ?? ~$color       !!
+                                                  $brightness > 11 ?? 'bold white'  !!
+                                                  $brightness >  7 ?? 'bold yellow' !!
+                                                                      'yellow'      );
             }
         }
 
