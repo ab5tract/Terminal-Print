@@ -168,7 +168,10 @@ multi method change-cell($x, $y, Cell $cell) {
 
 #| Print the .cell-string for a single cell
 multi method print-cell($x, $y) {
-    print self.cell-string($x, $y) if $!print-enabled;
+    print self.cell-string($x, $y)
+        if $!print-enabled
+        && 0 <= $x < $!columns
+        && 0 <= $y < $!rows;
 }
 
 #| Replace the contents of a cell with an uncolored/unstyled character, then print its .cell-string
