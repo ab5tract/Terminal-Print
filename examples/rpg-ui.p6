@@ -469,13 +469,13 @@ class MapViewer is Widget {
         my $radius2 = $radius * $radius;
         for (-$radius) .. $radius -> $dy {
             my $y = $party-y + $dy;  # ++
-            next unless 0 <= $y < $.h;
+            next unless 0 <= $y < $!map.h;
 
             my $seen-row = $!map.seen[$y];
 
             for (-$radius) .. $radius -> $dx {
                 my $x = $party-x + $dx;
-                next unless 0 <= $x < $.w;
+                next unless 0 <= $x < $!map.w;
 
                 my $dist2 = $dy * $dy + $dx * $dx;
                 $seen-row[$x] = 1 if $dist2 < $radius2;
