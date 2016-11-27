@@ -810,7 +810,7 @@ class UI is Widget {
         # Draw intersections if in full Unicode mode
         unless $.ascii {
             $.grid.set-span-text(0, $v-break, '╠');
-            $.grid.set-span-text($.w, $v-break, '╣');
+            $.grid.set-span-text($.w - 1, $v-break, '╣');
             $.grid.set-span-text($h-break, 0, '╦');
             $.grid.set-span-text($h-break, $v-break, '╩');
         }
