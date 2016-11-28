@@ -559,16 +559,27 @@ class CharacterViewer is Widget {
     has $.character;
     has $.rows;
     has $.id;
+    has $.state = '';
+    has $.injury-level = 0;
+
+    #| Set current viewer state
+    method set-state($!state) { }
 
     #| Render the character's stats sheet, health/magic bars, etc.
-    method render($state) {
+    method render() {
         my $t0 = now;
 
-        my $color = { highlight => 'bold white', lowlight => 'blue' }{$state} // '';
+        my $color-bits = $.parent.parent.color-bits;
+        my $injury = $!injury-level <= 0 ?? ''        !!
+                     $color-bits > 4     ?? ' on_' ~ 16 + 36 * (5 * $!injury-level).ceiling !!
+                     $!injury-level > .2 ?? ' on_red' !!
+                                            ''        ;
+
+        my $color = { highlight => 'bold white', lowlight => 'blue' }{$!state} // '';
+           $color = ($color ~ $injury).trim;
         my $body-row = "  %-{$.w - 2}s";
 
         # Render character stats into rows of the proper width
-        # XXXX: Nicer bars
         # XXXX: Condition icons (poisoned, low health, etc.)
         my $ascii   = $.parent.parent.ascii;
         my $hp-left = $ascii ?? '*' !! '▆';
@@ -588,7 +599,7 @@ class CharacterViewer is Widget {
 
         if $.character<spells> -> @spells {
             my $spells = 'Spells: ' ~ @spells.join(', ');
-            @rows.append: wrap-text($.w, $spells, '      ', '  ');
+            @rows.append: wrap-text($.w - 2, $spells, '    ')».fmt($body-row);
         }
 
         # Draw filled rows into the top of the widget in the proper color
@@ -597,17 +608,35 @@ class CharacterViewer is Widget {
         }
 
         # Add some color to the bar graphs
-        if $state ne 'lowlight' {
-            $.grid.set-span-color(20, 25, 0, 'red');
-            $.grid.set-span-color(27, 32, 0, 'blue');
+        if $!state ne 'lowlight' {
+            $.grid.set-span-color(20, 25, 0, "red$injury");
+            $.grid.set-span-color(27, 32, 0, "blue$injury");
         }
 
         # Clear all remaining rows
         $!rows = +@rows;
         my $blank = ' ' x $.w;
-        $.grid.set-span(0, $_, $blank, $color) for $!rows ..^ $.h;
+        # my $blank = sprintf $body-row, $.character<name>.uc x 4;  # Compositing debug
+        $.grid.set-span(0, $_, $blank, '') for $!rows ..^ $.h;
 
         record-time("Draw $.w x $.h {self.^name}", $t0);
+    }
+
+    #| Show that the character has just been injured, returning a promise to be kept when the effect fades away
+    method injured() {
+        $!injury-level = 1.0;
+
+        start {
+            react {
+                whenever Supply.interval(.1) -> $value {
+                    self.render;
+                    $.parent.request-repaint;
+
+                    $!injury-level -= .2;
+                    done if $!injury-level < 0;
+                }
+            }
+        }
     }
 }
 
@@ -616,39 +645,68 @@ class CharacterViewer is Widget {
 class PartyViewer is Widget {
     has $.party;
     has @.cvs;
+    has $!expanded;
+
+    has $!repaint-supplier = Supplier.new;
+    has $!repaint-supply = $!repaint-supplier.Supply;
+
+    #| Create a CharacterViewer for each character and prepare repaint trigger
+    submethod TWEAK() {
+        my $t0 = now;
+
+        @!cvs = do for $!party.members.kv -> $i, $pc {
+            CharacterViewer.new(:id($i + 1), :w(self.w), :h(7), :x(0), :y(0),
+                                :parent(self), :character($pc));
+        }
+
+        record-time("Create { $!party.members.elems } CVs", $t0);
+
+        # XXXX: Do an initial show-state to avoid a possible race?
+        $!repaint-supply.act: -> $print { self.repaint(:$print) }
+    }
 
     #| Draw the current party state
     method show-state(:$print = True, :$expand = -1) {
         my $t0 = now;
 
-        # Create a CharacterViewer for each character
-        my @cvs = do for $.party.members.kv -> $i, $pc {
-            CharacterViewer.new(:id($i + 1), :$.w, :h(7), :x(0), :y(0),
-                                :parent(self), :character($pc));
+        # Ask each CharacterViewer to .render itself in the appropriate state
+        $!expanded = $expand;
+        for @!cvs.kv -> $i, $cv {
+            $cv.set-state: $expand <  0  ?? 'normal'    !!
+                           $expand == $i ?? 'highlight' !!
+                                            'lowlight'  ;
+            $cv.render;
         }
-        record-time("Draw $.w x $.h {self.^name} -- create CVs", $t0);
+
+        record-time("Render { $!party.members.elems } CVs", $t0);
+
+        self.request-repaint(:$print);
+    }
+
+    #| Repaint self (without redrawing CVs, which would recurse if a CV is animating)
+    method repaint(:$print = True) {
+        my $t0 = now;
 
         # Render as a header line followed by composited CharacterViewers
         $.grid.set-span-text(0, 0, '  NAME    CLASS     HEALTH MAGIC');
         my $y = 1;
-        for @cvs.kv -> $i, $cv {
-            my $state = $expand <  0  ?? 'normal'    !!
-                        $expand == $i ?? 'highlight' !!
-                                         'lowlight'  ;
-            $cv.render($state);
-
+        for @!cvs.kv -> $i, $cv {
             $cv.move-to($cv.x, $y);
-            $y += $i == $expand ?? $cv.rows + 1 !! 1;
+            $y += $i == $!expanded ?? $cv.rows + 1 !! 1;
 
             $cv.composite;
         }
 
         # Make sure extra rows are cleared after collapsing
-        $.grid.set-span(0, $y++, ' ' x $.w, '') for ^(min 5, $.h - $y);
+        $.grid.set-span(0, $y++, ' ' x $.w, '') for ^(min 6, $.h - $y + 1);
 
-        record-time("Draw $.w x $.h {self.^name}", $t0);
+        record-time("Repaint $.w x $.h {self.^name}", $t0);
 
         self.composite(:$print);
+    }
+
+    method request-repaint(:$print = True) {
+        $!repaint-supplier.emit($print);
     }
 }
 
@@ -852,14 +910,25 @@ class UI is Widget {
 
 #| Play out the turns of the climactic red dragon battle
 sub dragon-battle(UI $ui, Game $game) {
+    #| Do damage to a character and show it in the UI
+    my sub do-damage($member) {
+        $game.party.members[$member]<hp>--;
+        $ui.pv.cvs[$member].injured;
+    }
+
+    #| Use up one of the character's magic points and show it in the UI
+    my sub use-spell($member) {
+        $game.party.members[$member]<mp>--;
+        $ui.pv.show-state(:expand($member));
+    }
+
     # Dragon turn #1
     $ui.lv.add-entry("The party encounters a red dragon.");
     $ui.lv.add-entry("The dragon is enraged by Torfin's dragon hide armor and immediately attacks.");
     $ui.lv.add-entry("The dragon breathes a great blast of fire!");
     $ui.lv.add-entry("--> Fennic performs a diving roll and dodges the fire blast.");
     $ui.lv.add-entry("--> Galtar is partially shielded but still takes minor damage.");
-    $game.party.members[1]<hp>--;
-    $ui.pv.show-state;
+    await do-damage(1);
     $ui.lv.add-entry("--> Salnax melts into the dancing shadows, avoiding the brunt of the blast.");
     $ui.lv.add-entry("--> Torfin's dragon hide armor shrugs off the fire.");
     $ui.lv.add-entry("--> Trentis hid behind Torfin and is untouched.");
@@ -872,8 +941,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'cast solar blast');
     $ui.lv.add-entry("--> Galtar calls upon the power of the sun and bathes the dragon in searing golden light.");
-    $game.party.members[1]<mp>--;
-    $ui.pv.show-state;
+    use-spell(1);
     $ui.lv.add-entry("--> The dragon is blinded!");
 
     $ui.pv.show-state(:expand(2));
@@ -895,9 +963,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.lv.add-entry("The dragon smashes through its icy shell.");
     $ui.lv.add-entry("The dragon blindly swings its mighty tail.");
     $ui.lv.add-entry("--> Galtar and Torfin are painfully knocked down!");
-    $game.party.members[1]<hp>--;
-    $game.party.members[3]<hp>--;
-    $ui.pv.show-state;
+    await do-damage(1), do-damage(3);
 
     # Party turn #2
     $ui.pv.show-state(:expand(0));
@@ -912,7 +978,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(2));
     $ui.lv.user-input('[Salnax]>', 'cast lightning bolt');
     $ui.lv.add-entry("--> Salnax ionizes the air with a white-hot bolt of electricity.");
-    $game.party.members[2]<mp>--;
+    use-spell(2);
     $ui.lv.add-entry("--> The dragon shudders as electric arcs course through it.");
 
     $ui.pv.show-state(:expand(3));
@@ -927,8 +993,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state;
     $ui.lv.add-entry("The dragon blindly casts explosive fireball.");
     $ui.lv.add-entry("--> The fiery blast knocks everyone back, singeing cloth and heating metal.");
-    $game.party.members[$_]<hp>-- for ^5;
-    $ui.pv.show-state;
+    await (^5).map: *.&do-damage;
 
     # Party turn #3
     $ui.pv.show-state(:expand(0));
@@ -943,7 +1008,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(2));
     $ui.lv.user-input('[Salnax]>', 'cast magic missile');
     $ui.lv.add-entry("--> Salnax launches a quintet of octarine missiles, scattering them across the dragon's massive frame.");
-    $game.party.members[2]<mp>--;
+    use-spell(2);
     $ui.lv.add-entry("--> The dragon howls with growing rage!");
 
     $ui.pv.show-state(:expand(3));
@@ -960,8 +1025,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.lv.add-entry("The dragon's vision clears.");
     $ui.lv.add-entry("Beaten and bleeding and realizing all party members are still fighting, the dragon decides to flee.  Shimmering symbols appear in the air around it and reality twists as the dragon teleports to safety.");
     $ui.lv.add-entry("--> Trentis falls to the floor with a thud.");
-    $game.party.members[4]<hp>--;
-    $ui.pv.show-state;
+    await do-damage(4);
 }
 
 
