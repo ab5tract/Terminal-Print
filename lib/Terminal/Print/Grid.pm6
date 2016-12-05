@@ -29,29 +29,35 @@ my class Cell {
     method Str() { $!string }
 }
 
-has $.rows;
-has $.columns;
+has $.w;
+has $.h;
 has @!indices;
 has @.grid;
 has $.grid-string = '';
 has $.move-cursor;
 has $!print-enabled = True;
 
-#| Instantiate a new (row-major) grid of size $columns x $rows
-method new($columns, $rows, :$move-cursor = move-cursor-template) {
-    my @grid = [ [ ' ' xx $columns ] xx $rows ];
+# Compatibility accessors
+method columns { $!w }
+method width   { $!w }
+method rows    { $!h }
+method height  { $!h }
 
-    self.bless(:$columns, :$rows, :@grid, :$move-cursor);
+#| Instantiate a new (row-major) grid of size $w x $h
+method new($w, $h, :$move-cursor = move-cursor-template) {
+    my @grid = [ [ ' ' xx $w ] xx $h ];
+
+    self.bless(:$w, :$h, :@grid, :$move-cursor);
 }
 
 #| Clear the grid to blanks (ASCII spaces) with no color/style overrides
 method clear() {
-    @!grid = [ [ ' ' xx $!columns ] xx $!rows ];
+    @!grid = [ [ ' ' xx $!w ] xx $!h ];
 }
 
 #| Lazily computed array of every [x, y] coordinate pair in the grid
 method indices() {
-    @!indices ||= (^$.columns X ^$.rows)>>.Array;
+    @!indices ||= (^$!w X ^$!h)>>.Array;
 }
 
 #| Return the escape string necessary to move to, color, and output a single cell
@@ -103,14 +109,14 @@ method clip-rect($x is copy, $y is copy, $w is copy, $h is copy) {
 
     # If it's entirely outside the grid or the rectangle doesn't have positive
     # extent in both dimensions, clip to zero size
-    if $x >= $!columns || $y >= $!rows || $w <= 0 || $h <= 0 {
+    if $x >= $!w || $y >= $!h || $w <= 0 || $h <= 0 {
         # Empty rect
         ($x, $y, 0, 0)
     }
     else {
         # Shrink the rectangle if it extends past the right or bottom edge
-        $w = min $w, $!columns - $x;
-        $h = min $h, $!rows    - $y;
+        $w = min $w, $!w - $x;
+        $h = min $h, $!h - $y;
 
         # Clipped but non-empty rect
         ($x, $y, $w, $h)
@@ -120,31 +126,31 @@ method clip-rect($x is copy, $y is copy, $w is copy, $h is copy) {
 #| Copy an entire other grid into this grid with upper left at ($x, $y), clipping the copy to this grid's edges
 method copy-from(Terminal::Print::Grid $grid, $x, $y) {
     # Clip to edges of this grid
-    my ($x1, $y1, $cols, $rows)
-        = self.clip-rect($x, $y, $grid.columns, $grid.rows);
+    my ($x1, $y1, $w, $h)
+        = self.clip-rect($x, $y, $grid.w, $grid.h);
 
     # Actually do the copy (actually a splice because immutable Cells)
     $!grid-string = '';
-    my $from =  $grid.grid;
-    if $cols == $grid.columns {
-        @!grid[$_ + $y1].splice($x1, $cols, $from[$_]) for ^$rows;
+    my $from = $grid.grid;
+    if $w == $grid.w {
+        @!grid[$_ + $y1].splice($x1, $w, $from[$_]) for ^$h;
     }
     else {
-        @!grid[$_ + $y1].splice($x1, $cols, $from[$_][^$cols]) for ^$rows;
+        @!grid[$_ + $y1].splice($x1, $w, $from[$_][^$w]) for ^$h;
     }
 
     # Return the clipped rectangle in case a caller (such as print-from)
     # needs the clipped size anyway
-    ($x1, $y1, $cols, $rows)
+    ($x1, $y1, $w, $h)
 }
 
 #| Copy another grid into this one as with .copy-from and print the modified area
 method print-from(Terminal::Print::Grid $grid, $x, $y) {
     # Copy grid, remembering clipped area
-    my ($x1, $y1, $cols, $rows) = self.copy-from($grid, $x, $y);
+    my ($x1, $y1, $w, $h) = self.copy-from($grid, $x, $y);
 
-    my $x2 = $x1 + $cols - 1;
-    (^$rows).map({ self.span-string($x1, $x2, $_ + $y1) }).join.print
+    my $x2 = $x1 + $w - 1;
+    (^$h).map({ self.span-string($x1, $x2, $_ + $y1) // '' }).join.print
         if $!print-enabled;
 }
 
@@ -170,8 +176,8 @@ multi method change-cell($x, $y, Cell $cell) {
 multi method print-cell($x, $y) {
     print self.cell-string($x, $y)
         if $!print-enabled
-        && 0 <= $x < $!columns
-        && 0 <= $y < $!rows;
+        && 0 <= $x < $!w
+        && 0 <= $y < $!h;
 }
 
 #| Replace the contents of a cell with an uncolored/unstyled character, then print its .cell-string
@@ -228,5 +234,5 @@ method disable() {
 
 #| Lazily computed stringification of entire grid, including color escapes and cursor movement
 method Str() {
-    $!grid-string ||= join '', ^$!rows .map({ self.span-string(0, $!columns - 1, $_) });
+    $!grid-string ||= join '', ^$!h .map({ self.span-string(0, $!w - 1, $_) });
 }
