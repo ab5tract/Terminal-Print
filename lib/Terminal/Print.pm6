@@ -59,12 +59,13 @@ we might be able to get from using Perl 6 -- easy async abstractions.
 =end pod
 
 use Terminal::Print::Grid;
+use Terminal::Print::Widget;
 
 has Terminal::Print::Grid $.current-grid handles 'indices';
-
 has Terminal::Print::Grid @.grids;
 
 has %!grid-name-map;
+has %!root-widget-map{Terminal::Print::Grid};
 
 has $.columns;
 has $.rows;
@@ -97,6 +98,11 @@ submethod BUILD( :$!current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!mov
         self.shutdown-screen;
         die "Encountered a SIGINT. Cleaning up the screen and exiting...";
     }
+}
+
+method root-widget() {
+    my $grid = self.current-grid;
+    %!root-widget-map{$grid} ||= Terminal::Print::Widget.new-from-grid($grid);
 }
 
 method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( $!columns, $!rows, :$!move-cursor ) ) {
