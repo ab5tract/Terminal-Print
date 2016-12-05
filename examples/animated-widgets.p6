@@ -145,7 +145,7 @@ sub MAIN(
 
     T.initialize-screen;
 
-    my $w = Terminal::Print::Widget.new(:x(0), :y(0), :w(w), :h(h));
+    my $root = T.root-widget;
 
     my sub create(:$x, :$y, :$w, :$h, :$parent) {
         Spinner.new(:$x, :$y, :$w, :$h, :$parent).spin(.01 * (1..10).pick);
@@ -153,7 +153,7 @@ sub MAIN(
 
     my @sizes = [3, 3], [5, 5], [7, 7], [9, 9];
     for ^$count {
-        RandomPacker.new(:x((^50).pick), :y((^5).pick), :parent($w),
+        RandomPacker.new(:x((^50).pick), :y((^5).pick), :parent($root),
                          :w((10..20).pick), :h((10..20).pick))
                     .pack(:@sizes, :&create);
     }
@@ -161,9 +161,9 @@ sub MAIN(
     my @frames;
     my $last = now;
     for ^200 {
-        $w.grid.clear;
-        $w.children.map: { .move; .composite }
-        $w.composite;
+        $root.grid.clear;
+        $root.children.map: { .move; .composite }
+        $root.composite;
 
         my $now = now;
         @frames.push: %( :delta($now - $last), :tasks($*SCHEDULER.loads) );
