@@ -12,6 +12,10 @@ class Terminal::Print::Widget {
 
     has $.grid = Terminal::Print::Grid.new($!w, $!h);  #= Widget's backing grid
 
+    #| Wrap an existing T::P::Grid into a T::P::Widget
+    method new-from-grid($grid, |c) {
+        self.new(:$grid, :w($grid.w), :h($grid.h), :x(0), :y(0), |c);
+    }
 
     #| Make sure parent widget knows about this child
     submethod TWEAK() {
@@ -40,8 +44,15 @@ class Terminal::Print::Widget {
     # Default behavior is to print iff the widget's parent is the screen grid.
     method composite(Terminal::Print::Grid :$to = self.target-grid,
                      Bool :$print = $to === $Terminal::Print::T.current-grid) {
-        # Ask the destination grid (a Monitor) to do the copy for thread safety
-        $print ?? $to.print-from($!grid, $!x, $!y)
-               !! $to .copy-from($!grid, $!x, $!y);
+
+        # Skip copy if target is own backing grid, e.g. screen's root widget
+        if $to === $!grid {
+            print $!grid if $print;
+        }
+        else {
+            # Destination grid (a Monitor) does the work for thread safety
+            $print ?? $to.print-from($!grid, $!x, $!y)
+                   !! $to .copy-from($!grid, $!x, $!y);
+        }
     }
 }
