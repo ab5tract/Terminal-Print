@@ -41,10 +41,15 @@ class Spinner is Terminal::Print::Widget {
         $!angle = ($!angle + 1) % @!angle;
     }
 
+    method set-color($color) {
+        $.grid.set-span-color(0, $.w - 1, $_, $color) for ^$.h;
+    }
+
     method spin($delay, Bool :$print) {
         start react {
             whenever Supply.interval($delay) -> $ {
                 self.rotate;
+                self.set-color('on_red');
                 self.composite(:$print);
             }
         }
