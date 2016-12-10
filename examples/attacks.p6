@@ -23,10 +23,21 @@ sub compass-segment(Real $x, Real $y, Int :$segments = 4) {
 
 #| Convert an rgb triplet (each in the 0..1 range) to a valid cell color
 sub rgb-color(Real $r, Real $g, Real $b) {
-    # Just use the 6x6x6 color cube, ignoring the hi-res grey ramp
+    # Just use the 6x6x6 color cube, ignoring the hi-res gray ramp
     my $c = 16 + 36 * (5e0 * $r + .5e0).floor
                +  6 * (5e0 * $g + .5e0).floor
                +      (5e0 * $b + .5e0).floor;
+
+    # Cell colors must be stringified
+    ~$c
+}
+
+#| Convert a grayscale value (in the 0..1 range) to a valid cell color
+sub gray-color(Real $gray) {
+    # Use the hi-res gray ramp plus true black and white
+    my $c = $gray <= .012e0 ?? 'black' !!
+            $gray >= .953e0 ?? 'white' !!
+                               232 + (24e0 * $gray).floor;
 
     # Cell colors must be stringified
     ~$c
