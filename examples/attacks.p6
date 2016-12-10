@@ -155,42 +155,29 @@ class ArrowBurst is ClearingAnimation {
     }
 }
 
+
 class ParticleEffect is FullPaintAnimation {
     has @.particles;
 
-    method generate-particles() {
-        for ^16 {
-            @!particles.push: {
-                age   => 0e0,
-                life  => 3e0,
-                color => rgb-color(1e0, 1e0, 0e0),  # Saturated yellow
-                x     => 1e0.rand,
-                y     => 1e0.rand,
-                dx    => 2e0 + 3e0.rand,
-                dy    => 2e0 + 3e0.rand,
-            }
-        }
+    #| OVERRIDE: push new particles onto @.particles based on $dt (seconds since last frame)
+    method generate-particles(Num $dt) { }
+
+    #| OVERRIDE: update all @.particles based on their new .<age> and $dt (seconds since last frame)
+    method update-particles(Num $dt) { }
+
+    #| Make existing particles older by $dt seconds
+    method age-particles(Num $dt) {
+        .<age> += $dt for @!particles;
     }
 
-    method age-particles() {
-        my $dt = $.delta.time.Num;
-
-        for @!particles {
-            .<x>     += $dt * .<dx>;
-            .<y>     += $dt * .<dy>;
-            .<age>   += $dt;
-
-            my $fade  = 1e0 - .<age> / .<life>;
-            .<color>  = rgb-color(1e0, $fade < 0e0 ?? 0e0 !! $fade, 0e0)  # Fade to red
-        }
-    }
-
+    #| Remove any particles that have outlasted their .<life>
     method gc-particles() {
         @!particles .= grep: { .<age> < .<life> }
     }
 
-    #| Composite with double Y resolution by using unicode half-height blocks
     my %cell-cache;
+
+    #| Composite with double Y resolution by using unicode half-height blocks
     method composite-particles() {
         my @colors;
         my $ratio = $*TERMINAL-HEIGHT-RATIO.Num;
@@ -214,11 +201,43 @@ class ParticleEffect is FullPaintAnimation {
         }
     }
 
+    #| Render a single frame of this particle effect and update its @.particles
     method draw-frame() {
-        self.age-particles;
+        my $dt = $.delta.time.Num;
+
+        self.age-particles($dt);
         self.gc-particles;
-        self.generate-particles;
+        self.update-particles($dt);
+        self.generate-particles($dt);
         self.composite-particles;
+
+        $.grid.set-span-text($.w - 4, 0, sprintf('%4d', @!particles.elems));
+    }
+}
+
+class DragonBreath is ParticleEffect {
+    method generate-particles(Num $dt) {
+        for ^($dt * 100) {
+            @.particles.push: {
+                age   => 0e0,
+                life  => 3e0,
+                color => rgb-color(1e0, 1e0, 0e0),  # Saturated yellow
+                x     => 1e0.rand,
+                y     => 1e0.rand,
+                dx    => 2e0 + 3e0.rand,
+                dy    => 2e0 + 3e0.rand,
+            }
+        }
+    }
+
+    method update-particles(Num $dt) {
+        for @.particles {
+            .<x> += $dt * .<dx>;
+            .<y> += $dt * .<dy>;
+
+            my $fade = 1e0 - .<age> / .<life>;
+            .<color> = rgb-color(1e0, $fade < 0e0 ?? 0e0 !! $fade, 0e0)  # Fade to red
+        }
     }
 }
 
@@ -236,7 +255,7 @@ sub MAIN(
 
     my $h = 12;
     my $w = $h * $height-ratio;
-    for (ArrowBurst, ParticleEffect).kv -> $i, $anim {
+    for (ArrowBurst, DragonBreath).kv -> $i, $anim {
         $anim.new(:parent($root), :x($i * $w), :y(1), :$w, :$h);
     }
 
