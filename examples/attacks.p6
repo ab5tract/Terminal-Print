@@ -167,7 +167,35 @@ class ArrowBurst is ClearingAnimation {
 }
 
 
-class ParticleEffect is FullPaintAnimation {
+#| Widget maintains a (color only) pixel field with double Y resolution
+role Pixelated {
+    my %cell-cache;
+
+    #| Composite pixels into grid cells by using unicode half-height blocks
+    # XXXX: What about transparency (even just of the screen door type)?
+    method composite-pixels(@pixels) {
+        my $grid = $.grid.grid;
+        for ^$.h -> $y {
+            my $row1 = @pixels[$y * 2]     // [];
+            my $row2 = @pixels[$y * 2 + 1] // [];
+            for ^$.w -> $x {
+                my $c1 = $row1[$x] // '';
+                my $c2 = $row2[$x] // '';
+
+                $grid[$y][$x] = %cell-cache{$c1}{$c2} //= do {
+                    my $cell = $c1 && $c2 ?? %( :char('▄'), :color("$c2 on_$c1") ) !!
+                               $c1        ?? %( :char('▀'), :color($c1)          ) !!
+                               $c2        ?? %( :char('▄'), :color($c2)          ) !! ' ';
+                    $.grid.change-cell($x, $y, $cell);
+                    $grid[$y][$x];
+                }
+            }
+        }
+    }
+}
+
+
+class ParticleEffect is FullPaintAnimation does Pixelated {
     has @.particles;
 
     #| OVERRIDE: push new particles onto @.particles based on $dt (seconds since last frame)
@@ -186,33 +214,16 @@ class ParticleEffect is FullPaintAnimation {
         @!particles .= grep: { .<age> < .<life> }
     }
 
-    my %cell-cache;
-
-    #| Composite with double Y resolution by using unicode half-height blocks
+    #| Composite particles into pixels, and then onto the grid
     method composite-particles() {
         my @colors;
         my $ratio = $*TERMINAL-HEIGHT-RATIO.Num;
         for @!particles {
             next if .<x> < 0e0 || .<y> < 0e0;
-            @colors[.<x> * $ratio][.<y> * 2e0] = .<color>;
+            @colors[.<y> * 2e0][.<x> * $ratio] = .<color>;
         }
 
-        my $grid = $.grid.grid;
-        for ^$.w -> $x {
-            my $col = @colors[$x] // [];
-            for ^$.h -> $y {
-                my $c1 = $col[$y * 2]     // '';
-                my $c2 = $col[$y * 2 + 1] // '';
-
-                $grid[$y][$x] = %cell-cache{$c1}{$c2} //= do {
-                    my $cell = $c1 && $c2 ?? %( :char('▄'), :color("$c2 on_$c1") ) !!
-                               $c1        ?? %( :char('▀'), :color($c1)          ) !!
-                               $c2        ?? %( :char('▄'), :color($c2)          ) !! ' ';
-                    $.grid.change-cell($x, $y, $cell);
-                    $grid[$y][$x];
-                }
-            }
-        }
+        self.composite-pixels(@colors);
     }
 
     #| Render a single frame of this particle effect and update its @.particles
