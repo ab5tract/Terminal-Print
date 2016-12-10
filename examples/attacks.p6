@@ -364,6 +364,33 @@ class WaveFront is FullPaintAnimation does Pixelated {
 }
 
 
+class LightningBolt is FullPaintAnimation does Pixelated {
+    method compute-pixels() {
+        return () if $.rel.time > 5;
+
+        my $cy = $.h;
+        my $dy = 2e0.rand - 1e0;
+
+        my @colors;
+        for ^$.w -> $x {
+            my $top  = ($cy + $dy).floor;
+            my $dist = $dy - $dy.floor;
+
+            @colors[$top    ][$x] = gray-color(       $dist  ** .1e0) if $dist < .5e0;
+            @colors[$top + 1][$x] = gray-color((1e0 - $dist) ** .1e0) if $dist > .5e0;
+
+            $dy = $dy * .9e0 + 1.0e0.rand - .5e0;
+        }
+
+        @colors;
+    }
+
+    method draw-frame() {
+        self.composite-pixels(self.compute-pixels);
+    }
+}
+
+
 #| Demo various possible rpg-ui attack animations
 sub MAIN(
     Real :$height-ratio = 2,  #= Ratio of character cell height to width
@@ -378,6 +405,9 @@ sub MAIN(
     my $w = $h * $height-ratio;
     for (ArrowBurst, SwirlBlast, DragonBreath, WaveFront).kv -> $i, $anim {
         $anim.new(:parent($root), :x($i * $w), :y(1), :$w, :$h);
+    }
+    for (LightningBolt,).kv -> $i, $anim {
+        $anim.new(:parent($root), :x($i * $w), :y(2 + $h), :$w, :$h);
     }
 
     my $fps;
