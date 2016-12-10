@@ -186,15 +186,36 @@ class ParticleEffect is ClearingAnimation {
         @!particles .= grep: { .<age> < .<life> }
     }
 
+    #| Composite with double Y resolution by using unicode half-height blocks
+    my %cell-cache;
+    method composite-particles() {
+        my @colors;
+        my $ratio = $*TERMINAL-HEIGHT-RATIO.Num;
+        @colors[.<x> * $ratio][.<y> * 2e0] = .<color> for @!particles;  # >
+
+        my $grid = $.grid.grid;
+        for ^$.w -> $x {
+            my $col = @colors[$x] // [];
+            for ^$.h -> $y {
+                my $c1 = $col[$y * 2]     // '';
+                my $c2 = $col[$y * 2 + 1] // '';
+
+                $grid[$y][$x] = %cell-cache{$c1}{$c2} //= do {
+                    my $cell = $c1 && $c2 ?? %( :char('▄'), :color("$c2 on_$c1") ) !!
+                               $c1        ?? %( :char('▀'), :color($c1)          ) !!
+                               $c2        ?? %( :char('▄'), :color($c2)          ) !! ' ';
+                    $.grid.change-cell($x, $y, $cell);
+                    $grid[$y][$x];
+                }
+            }
+        }
+    }
+
     method draw-frame() {
         self.age-particles;
         self.gc-particles;
         self.generate-particles;
-
-        for @!particles {
-            $.grid.change-cell(.<x> * $*TERMINAL-HEIGHT-RATIO, .<y>,
-                               %( :char('█'), :color(.<color>) ) );  # >
-        }
+        self.composite-particles;
     }
 }
 
