@@ -392,6 +392,6 @@ sub MAIN(
         $fps = floor $frames / (now - $start);
     }
 
-    sleep 10;
+    sleep 3;
     T.shutdown-screen;
 }
