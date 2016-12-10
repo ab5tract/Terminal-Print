@@ -21,6 +21,16 @@ sub compass-segment(Real $x, Real $y, Int :$segments = 4) {
     (atan2(-$y, $x) / τ * $segments).round % $segments
 }
 
+#| Convert an rgb triplet (each in the 0..1 range) to a valid cell color
+sub rgb-color(Real $r, Real $g, Real $b) {
+    # Just use the 6x6x6 color cube, ignoring the hi-res grey ramp
+    my $c = 16 + 36 * (5e0 * $r + .5e0).floor
+               +  6 * (5e0 * $g + .5e0).floor
+               +      (5e0 * $b + .5e0).floor;
+
+    # Cell colors must be stringified
+    ~$c
+}
 
 
 ### ANIMATION CLASSES
