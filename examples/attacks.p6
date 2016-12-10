@@ -255,6 +255,57 @@ class DragonBreath is ParticleEffect {
     }
 }
 
+class SwirlBlast is ParticleEffect {
+    has $.size = min(self.w div 2, self.h div 2);
+
+    method generate-particles(Num $dt) {
+        my $swirl-time = 1.2e0;
+        if $.rel.time == 0 {
+            my $initial = 16;
+            for ^$initial -> $i {
+                my $radians = $i / $initial * τ;
+                my $tint    = .5e0.rand;
+                @.particles.push: {
+                    age   => 0e0,
+                    life  => $swirl-time,
+                    color => rgb-color($tint, $tint, .7e0 + .3e0.rand),
+                    x     => $!size + $!size * cos($radians),
+                    y     => $!size - $!size * sin($radians),
+                }
+            }
+        }
+        elsif $swirl-time < $.rel.time < $swirl-time + 0.3e0 {
+            for ^10 {
+                my $radians = τ.rand;
+                my $speed   = .5e0 + .5e0.rand;
+                @.particles.push: {
+                    age   => 0e0,
+                    life  => 3e0,
+                    color => gray-color(.8e0 + .3e0.rand),
+                    x     => $!size,
+                    y     => $!size,
+                    dx    =>  $speed * cos($radians),
+                    dy    => -$speed * sin($radians),
+                }
+            }
+        }
+    }
+
+    method update-particles(Num $dt) {
+        my $count = @.particles.elems;
+        for @.particles.kv -> $i, $_ {
+            if .<dx>:exists {
+                .<x> += .<dx>;
+                .<y> += .<dy>;  # >
+            }
+            else {
+                my $fade = 1e0 - .<age> / .<life>;
+                .<x> = $!size + $!size * $fade * cos(($i / $count + .<age>) * τ);
+                .<y> = $!size - $!size * $fade * sin(($i / $count + .<age>) * τ);  # >
+            }
+        }
+    }
+}
 
 
 #| Demo various possible rpg-ui attack animations
@@ -269,7 +320,7 @@ sub MAIN(
 
     my $h = 12;
     my $w = $h * $height-ratio;
-    for (ArrowBurst, DragonBreath).kv -> $i, $anim {
+    for (ArrowBurst, SwirlBlast, DragonBreath).kv -> $i, $anim {
         $anim.new(:parent($root), :x($i * $w), :y(1), :$w, :$h);
     }
 
