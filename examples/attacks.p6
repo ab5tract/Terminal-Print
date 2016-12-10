@@ -395,6 +395,40 @@ class LightningBolt is FullPaintAnimation does Pixelated {
 }
 
 
+class SolarBeam is FullPaintAnimation does Pixelated {
+    method compute-pixels() {
+        my $life = 4e0;
+        my $t    = $.rel.time.Num;
+        return () if $t >= $life;
+
+        my $cy    = $.h;
+        my $left  = ($.w * max(0e0, 1e0 - 5e0 * ($life - $t))).floor;
+        my $right = ($.w * min(1e0, 5e0 * $t)).floor;
+
+        my @colors;
+        for $left..$right -> $x {
+            my $shape = sin(.1 + $x / $.w * π / 2) ** .15e0;  # Beam, narrower at left end
+            my $wave  = .1e0 * sin(.5e0 * $x - 15e0 * $t);    # Wavy pulses traveling left to right
+            my $beam  = $shape * (1.8e0 + .1e0.rand + $wave); # Small variations
+
+            for -2 .. 2 -> $dy {
+                my $bright = $beam - .5e0 * $dy.abs;
+                next if $bright < .5e0;
+
+                @colors[$cy + $dy][$x] = $bright > 1e0 ?? rgb-color(1e0, 1e0, $bright - 1e0)
+                                                       !! rgb-color($bright, $bright, 0e0);
+            }
+        }
+
+        @colors;
+    }
+
+    method draw-frame() {
+        self.composite-pixels(self.compute-pixels);
+    }
+}
+
+
 #| Demo various possible rpg-ui attack animations
 sub MAIN(
     Real :$height-ratio = 2,  #= Ratio of character cell height to width
@@ -410,7 +444,7 @@ sub MAIN(
     for (ArrowBurst, SwirlBlast, DragonBreath, WaveFront).kv -> $i, $anim {
         $anim.new(:parent($root), :x($i * $w), :y(1), :$w, :$h);
     }
-    for (LightningBolt,).kv -> $i, $anim {
+    for (LightningBolt, SolarBeam).kv -> $i, $anim {
         $anim.new(:parent($root), :x($i * $w), :y(2 + $h), :$w, :$h);
     }
 
