@@ -402,14 +402,15 @@ class SolarBeam is FullPaintAnimation does Pixelated {
         return () if $t >= $life;
 
         my $cy    = $.h;
-        my $left  = ($.w * max(0e0, 1e0 - 5e0 * ($life - $t))).floor;
-        my $right = ($.w * min(1e0, 5e0 * $t)).floor;
+        my $w     = $.w.Num;
+        my $left  = ($w * max(0e0, 1e0 - 5e0 * ($life - $t))).floor;
+        my $right = ($w * min(1e0, 5e0 * $t)).floor;
 
         my @colors;
         for $left..$right -> $x {
-            my $shape = sin(.1 + $x / $.w * π / 2) ** .15e0;  # Beam, narrower at left end
-            my $wave  = .1e0 * sin(.5e0 * $x - 15e0 * $t);    # Wavy pulses traveling left to right
-            my $beam  = $shape * (1.8e0 + .1e0.rand + $wave); # Small variations
+            my $shape = sin(.1e0 + $x / $w * π / 2e0) ** .15e0;  # Beam, narrower at left end
+            my $wave  = .1e0 * sin(.5e0 * $x - 15e0 * $t);       # Wavy pulses traveling left to right
+            my $beam  = $shape * (1.8e0 + .1e0.rand + $wave);    # Small variations
 
             for -2 .. 2 -> $dy {
                 my $bright = $beam - .5e0 * $dy.abs;
