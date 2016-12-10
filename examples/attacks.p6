@@ -234,17 +234,24 @@ sub MAIN(
     my $root = FullPaintAnimation.new-from-grid(T.current-grid, :concurrent);
 
     my $size = 12;
-    ArrowBurst.new(:parent($root), :y(0), :h($size),
+    ArrowBurst.new(:parent($root), :y(1), :h($size),
                    :x(0), :w($size * $height-ratio));
-    ParticleEffect.new(:parent($root), :y(0), :h($size),
+    ParticleEffect.new(:parent($root), :y(1), :h($size),
                        :x($size * $height-ratio), :w($size * $height-ratio));
 
-    my $start = now;
-    while 5 > (now - $start) {
-        my $frame = FrameInfo.new(:id($++), :time(now));
-        $root.do-frame($frame);
-        $root.composite;
+    my $fps;
+    for ^10 {
+        my $frames = 0;
+        my $start  = now;
+        while (now - $start) < .5 {
+            my $frame = FrameInfo.new(:id(++$frames), :time(now));
+            $root.do-frame($frame);
+            # $root.grid.print-string(0, 0, sprintf("FPS: %4d", $fps)) if $fps;
+            $root.composite;
+        }
+        $fps = floor $frames / (now - $start);
     }
 
+    sleep 10;
     T.shutdown-screen;
 }
