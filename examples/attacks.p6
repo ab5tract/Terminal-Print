@@ -319,6 +319,47 @@ class SwirlBlast is ParticleEffect {
 }
 
 
+class WaveFront is FullPaintAnimation does Pixelated {
+    method compute-pixels() {
+        my $w     = $.w;
+        my $h     = $.h * 2;
+        my $cx    = $w div 2;
+        my $cy    = $h div 2;
+        my $r     = min($cx, $cy).Num;
+        my $life  = 1.5e0;
+        my $t     = $.rel.time.Num / $life;
+        my $rt    = max(1e0, $r * $t);
+
+        my @colors;
+        for ^$h -> $y {
+            my $row = @colors[$y] //= [];
+            my $dy  = ($y - $cy).Num;
+            my $dy2 = $dy * $dy;
+
+            for ^$w -> $x {
+                my $dx  = ($x - $cx).Num;
+                my $dx2 = $dx * $dx;
+                my $d   = √($dx2 + $dy2);
+                my $rd  = $d / $rt;
+
+                if .7e0 < $rd < 1e0 {
+                    my $tint = $rd * $rd * (.9e0 + .1e0.rand);
+                    $row[$x] = rgb-color($tint, $tint, 1e0);
+                }
+            }
+        }
+
+        @colors;
+    }
+
+    method draw-frame() {
+        self.composite-pixels(self.compute-pixels);
+
+        $.grid.set-span($.w - 5, 0, sprintf('%.3f', $.rel.time), '');
+    }
+}
+
+
 #| Demo various possible rpg-ui attack animations
 sub MAIN(
     Real :$height-ratio = 2,  #= Ratio of character cell height to width
@@ -331,7 +372,7 @@ sub MAIN(
 
     my $h = 10;
     my $w = $h * $height-ratio;
-    for (ArrowBurst, SwirlBlast, DragonBreath).kv -> $i, $anim {
+    for (ArrowBurst, SwirlBlast, DragonBreath, WaveFront).kv -> $i, $anim {
         $anim.new(:parent($root), :x($i * $w), :y(1), :$w, :$h);
     }
 
