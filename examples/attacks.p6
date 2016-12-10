@@ -35,9 +35,9 @@ class FrameInfo {
 }
 
 
-class Animation is Terminal::Print::Widget {
-    has Bool      $.auto-clear;
-    has Bool      $.concurrent;
+role Animated[Bool :$auto-clear, Bool :$concurrent] {
+    has Bool      $.auto-clear = $auto-clear;
+    has Bool      $.concurrent = $concurrent;
 
     has FrameInfo $.start;
     has FrameInfo $.last;
@@ -98,7 +98,11 @@ class Animation is Terminal::Print::Widget {
 }
 
 
-class Arrow is Animation {
+class FullPaintAnimation is Terminal::Print::Widget does Animated[] {};
+class ClearingAnimation  is Terminal::Print::Widget does Animated[:auto-clear] {};
+
+
+class Arrow is FullPaintAnimation {
     has $.speed    is required;  #= cells / second
     has $.target-x is required;
     has $.target-y is required;
@@ -129,7 +133,7 @@ class Arrow is Animation {
 }
 
 
-class ArrowBurst is Animation {
+class ArrowBurst is ClearingAnimation {
     submethod TWEAK() {
         my ($x, $y) = self.w div 2, self.h div 2;
         my $size    = min $x, $y;
@@ -148,8 +152,8 @@ class ArrowBurst is Animation {
 
 sub MAIN() {
     T.initialize-screen;
-    my $root = Animation.new-from-grid(T.current-grid);  # , :auto-clear); # , :concurrent);
-    ArrowBurst.new(:x(0), :y(0), :w(12 * HEIGHT_RATIO), :h(12), :parent($root), :auto-clear);
+    my $root = FullPaintAnimation.new-from-grid(T.current-grid, :concurrent);
+    ArrowBurst.new(:x(0), :y(0), :w(12 * HEIGHT_RATIO), :h(12), :parent($root));
 
     my $start = now;
     while 5 > (now - $start) {
