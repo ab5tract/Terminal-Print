@@ -243,6 +243,8 @@ class ParticleEffect is FullPaintAnimation does Pixelated {
 
 class DragonBreath is ParticleEffect {
     method generate-particles(Num $dt) {
+        return if $.rel.time > 2;
+
         for ^($dt * 100) {
             @.particles.push: {
                 age   => 0e0,
