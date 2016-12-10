@@ -366,13 +366,17 @@ class WaveFront is FullPaintAnimation does Pixelated {
 
 class LightningBolt is FullPaintAnimation does Pixelated {
     method compute-pixels() {
-        return () if $.rel.time > 5;
+        my $life = 4e0;
+        my $t    = $.rel.time.Num;
+        return () if $t >= $life;
 
-        my $cy = $.h;
-        my $dy = 2e0.rand - 1e0;
+        my $cy    = $.h;
+        my $dy    = 2e0.rand - 1e0;
+        my $left  = ($.w * max(0e0, 1e0 - 5e0 * ($life - $t))).floor;
+        my $right = ($.w * min(1e0, 5e0 * $t)).floor;
 
         my @colors;
-        for ^$.w -> $x {
+        for $left..$right -> $x {
             my $top  = ($cy + $dy).floor;
             my $dist = $dy - $dy.floor;
 
