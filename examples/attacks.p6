@@ -240,6 +240,7 @@ class ParticleEffect is FullPaintAnimation does Pixelated {
     }
 }
 
+
 class DragonBreath is ParticleEffect {
     method generate-particles(Num $dt) {
         for ^($dt * 100) {
@@ -265,6 +266,7 @@ class DragonBreath is ParticleEffect {
         }
     }
 }
+
 
 class SwirlBlast is ParticleEffect {
     has $.size = min(self.w div 2, self.h div 2);
