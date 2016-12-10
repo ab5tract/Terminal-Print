@@ -145,6 +145,50 @@ class ArrowBurst is ClearingAnimation {
     }
 }
 
+class ParticleEffect is ClearingAnimation {
+    has @.particles;
+
+    method generate-particles() {
+        for ^1 {
+            @!particles.push: {
+                age   => 0,
+                life  => 3,
+                color => 'red',
+                x     => 0,
+                y     => 0,
+                dx    => (^5).pick,
+                dy    => (^5).pick,
+            }
+        }
+    }
+
+    method age-particles() {
+        my $dt = $.delta.time;
+
+        for @!particles {
+            .<x>   += $dt * .<dx>;
+            .<y>   += $dt * .<dy>;
+            .<age> += $dt;
+        }
+    }
+
+    method gc-particles() {
+        @!particles .= grep: { .<age> < .<life> }
+    }
+
+    method draw-frame() {
+        self.age-particles;
+        self.gc-particles;
+        self.generate-particles;
+
+        for @!particles {
+            $.grid.change-cell(.<x> * $*TERMINAL-HEIGHT-RATIO, .<y>,
+                               %( :char('█'), :color(.<color>) ) );  # >
+        }
+    }
+}
+
+
 
 #| Demo various possible rpg-ui attack animations
 sub MAIN(
@@ -155,8 +199,11 @@ sub MAIN(
     T.initialize-screen;
     my $root = FullPaintAnimation.new-from-grid(T.current-grid, :concurrent);
 
-    ArrowBurst.new(:parent($root), :x(0), :y(0), :h(12),
-                   :w(12 * $*TERMINAL-HEIGHT-RATIO));
+    my $size = 12;
+    ArrowBurst.new(:parent($root), :y(0), :h($size),
+                   :x(0), :w($size * $height-ratio));
+    ParticleEffect.new(:parent($root), :y(0), :h($size),
+                       :x($size * $height-ratio), :w($size * $height-ratio));
 
     my $start = now;
     while 5 > (now - $start) {
