@@ -227,6 +227,7 @@ class ParticleEffect is FullPaintAnimation {
 #| Demo various possible rpg-ui attack animations
 sub MAIN(
     Real :$height-ratio = 2,  #= Ratio of character cell height to width
+    Bool :$show-fps,          #= Show FPS (Frames Per Second)
 ) {
     my $*TERMINAL-HEIGHT-RATIO = $height-ratio;
 
@@ -246,7 +247,8 @@ sub MAIN(
         while (now - $start) < .5 {
             my $frame = FrameInfo.new(:id(++$frames), :time(now));
             $root.do-frame($frame);
-            # $root.grid.print-string(0, 0, sprintf("FPS: %4d", $fps)) if $fps;
+            $root.grid.print-string(0, 0, sprintf("FPS: %4d", $fps))
+                if $fps && $show-fps;
             $root.composite;
         }
         $fps = floor $frames / (now - $start);
