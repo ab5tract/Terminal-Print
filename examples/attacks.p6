@@ -234,11 +234,11 @@ sub MAIN(
     T.initialize-screen;
     my $root = FullPaintAnimation.new-from-grid(T.current-grid, :concurrent);
 
-    my $size = 12;
-    ArrowBurst.new(:parent($root), :y(1), :h($size),
-                   :x(0), :w($size * $height-ratio));
-    ParticleEffect.new(:parent($root), :y(1), :h($size),
-                       :x($size * $height-ratio), :w($size * $height-ratio));
+    my $h = 12;
+    my $w = $h * $height-ratio;
+    for (ArrowBurst, ParticleEffect).kv -> $i, $anim {
+        $anim.new(:parent($root), :x($i * $w), :y(1), :$w, :$h);
+    }
 
     my $fps;
     for ^10 {
