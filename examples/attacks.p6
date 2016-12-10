@@ -155,30 +155,33 @@ class ArrowBurst is ClearingAnimation {
     }
 }
 
-class ParticleEffect is ClearingAnimation {
+class ParticleEffect is FullPaintAnimation {
     has @.particles;
 
     method generate-particles() {
-        for ^1 {
+        for ^16 {
             @!particles.push: {
-                age   => 0,
-                life  => 3,
-                color => 'red',
-                x     => 0,
-                y     => 0,
-                dx    => (^5).pick,
-                dy    => (^5).pick,
+                age   => 0e0,
+                life  => 3e0,
+                color => rgb-color(1e0, 1e0, 0e0),  # Saturated yellow
+                x     => 1e0.rand,
+                y     => 1e0.rand,
+                dx    => 2e0 + 3e0.rand,
+                dy    => 2e0 + 3e0.rand,
             }
         }
     }
 
     method age-particles() {
-        my $dt = $.delta.time;
+        my $dt = $.delta.time.Num;
 
         for @!particles {
-            .<x>   += $dt * .<dx>;
-            .<y>   += $dt * .<dy>;
-            .<age> += $dt;
+            .<x>     += $dt * .<dx>;
+            .<y>     += $dt * .<dy>;
+            .<age>   += $dt;
+
+            my $fade  = 1e0 - .<age> / .<life>;
+            .<color>  = rgb-color(1e0, $fade < 0e0 ?? 0e0 !! $fade, 0e0)  # Fade to red
         }
     }
 
