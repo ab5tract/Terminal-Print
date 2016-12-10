@@ -316,9 +316,9 @@ sub MAIN(
     my $*TERMINAL-HEIGHT-RATIO = $height-ratio;
 
     T.initialize-screen;
-    my $root = FullPaintAnimation.new-from-grid(T.current-grid, :concurrent);
+    my $root = FullPaintAnimation.new-from-grid(T.current-grid);  # , :concurrent);
 
-    my $h = 12;
+    my $h = 10;
     my $w = $h * $height-ratio;
     for (ArrowBurst, SwirlBlast, DragonBreath).kv -> $i, $anim {
         $anim.new(:parent($root), :x($i * $w), :y(1), :$w, :$h);
