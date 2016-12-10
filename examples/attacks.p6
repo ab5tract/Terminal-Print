@@ -5,10 +5,6 @@ use Terminal::Print;
 use Terminal::Print::Widget;
 
 
-#| Ratio of character cell height to width
-constant HEIGHT_RATIO = 2;
-
-
 ### CONVENIENCE ROUTINES
 
 #| Math readability: use the actual square root operator
@@ -126,7 +122,7 @@ class Arrow is FullPaintAnimation {
     method draw-frame() {
         # Just move the arrow sprite across the background
         my $dist = $!speed * $.rel.time;
-        my $x    = $!start-x + $dist * $!dir-x * HEIGHT_RATIO;
+        my $x    = $!start-x + $dist * $!dir-x * $*TERMINAL-HEIGHT-RATIO;
         my $y    = $!start-y + $dist * $!dir-y;  # ++
         self.move-to($x.floor, $y.floor);
     }
@@ -150,10 +146,17 @@ class ArrowBurst is ClearingAnimation {
 }
 
 
-sub MAIN() {
+#| Demo various possible rpg-ui attack animations
+sub MAIN(
+    Real :$height-ratio = 2,  #= Ratio of character cell height to width
+) {
+    my $*TERMINAL-HEIGHT-RATIO = $height-ratio;
+
     T.initialize-screen;
     my $root = FullPaintAnimation.new-from-grid(T.current-grid, :concurrent);
-    ArrowBurst.new(:x(0), :y(0), :w(12 * HEIGHT_RATIO), :h(12), :parent($root));
+
+    ArrowBurst.new(:parent($root), :x(0), :y(0), :h(12),
+                   :w(12 * $*TERMINAL-HEIGHT-RATIO));
 
     my $start = now;
     while 5 > (now - $start) {
