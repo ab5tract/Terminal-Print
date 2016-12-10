@@ -192,7 +192,10 @@ class ParticleEffect is FullPaintAnimation {
     method composite-particles() {
         my @colors;
         my $ratio = $*TERMINAL-HEIGHT-RATIO.Num;
-        @colors[.<x> * $ratio][.<y> * 2e0] = .<color> for @!particles;  # >
+        for @!particles {
+            next if .<x> < 0e0 || .<y> < 0e0;
+            @colors[.<x> * $ratio][.<y> * 2e0] = .<color>;
+        }
 
         my $grid = $.grid.grid;
         for ^$.w -> $x {
