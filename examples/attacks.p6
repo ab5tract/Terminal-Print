@@ -323,7 +323,13 @@ class SwirlBlast is ParticleEffect {
 }
 
 
-class WaveFront is FullPaintAnimation does Pixelated {
+class PixelAnimation is FullPaintAnimation does Pixelated {
+    method draw-frame() {
+        self.composite-pixels(self.compute-pixels);
+    }
+}
+
+class WaveFront is PixelAnimation {
     method compute-pixels() {
         my $w     = $.w;
         my $h     = $.h * 2;
@@ -355,16 +361,10 @@ class WaveFront is FullPaintAnimation does Pixelated {
 
         @colors;
     }
-
-    method draw-frame() {
-        self.composite-pixels(self.compute-pixels);
-
-        $.grid.set-span($.w - 5, 0, sprintf('%.3f', $.rel.time), '');
-    }
 }
 
 
-class LightningBolt is FullPaintAnimation does Pixelated {
+class LightningBolt is PixelAnimation {
     method compute-pixels() {
         my $life = 4e0;
         my $t    = $.rel.time.Num;
@@ -388,14 +388,10 @@ class LightningBolt is FullPaintAnimation does Pixelated {
 
         @colors;
     }
-
-    method draw-frame() {
-        self.composite-pixels(self.compute-pixels);
-    }
 }
 
 
-class SolarBeam is FullPaintAnimation does Pixelated {
+class SolarBeam is PixelAnimation {
     method compute-pixels() {
         my $life = 4e0;
         my $t    = $.rel.time.Num;
@@ -424,9 +420,6 @@ class SolarBeam is FullPaintAnimation does Pixelated {
         @colors;
     }
 
-    method draw-frame() {
-        self.composite-pixels(self.compute-pixels);
-    }
 }
 
 
