@@ -455,6 +455,161 @@ class ColdCone is PixelAnimation {
 }
 
 
+class Teleport is ClearingAnimation does Pixelated {
+    has $.cx = self.w div 2;
+    has $.cy = self.h div 2;
+    has $.r  = min($!cx, $!cy).Num;
+
+    has @.symbols = (0x263F .. 0x2653).pick(*)».chr;
+
+    #| Figure out what phase of a multi-phase animation is active, and how far that phase has progressed
+    method phase($time, @phase-times) {
+        my $t = 0e0;
+        for @phase-times.kv -> $i, $phase {
+            return ($i, ($time - $t) / $phase) if $time < $t + $phase;
+            $t += $phase;
+        }
+        (+@phase-times, $time - $t)
+    }
+
+    #| Compute coordinates for hexagon corners, relative to its center
+    method hexagon-coords($pct) {
+        my $ratio = $*TERMINAL-HEIGHT-RATIO;
+        my $rt    = $!r * $pct;
+        my $x     = cos(π / 6);
+
+        my $xrt   = $ratio * $x * $rt;
+        my $hrt   = .5e0 * $rt;
+
+        ( $xrt, -$hrt),
+        ( 0   , -$rt ),
+        (-$xrt, -$hrt),
+        (-$xrt,  $hrt),
+        ( 0   ,  $rt ),
+        ( $xrt,  $hrt);
+    }
+
+    #| Spread the symbols into the right shape for the tessaract
+    method spread-symbols($pct) {
+        my @coords = self.hexagon-coords($pct);
+
+        for @coords.kv -> $i, ($x, $y) {
+            $.grid.set-span($!cx + ($x / 2).round, $!cy + ($y / 2).round, @.symbols[$i],     'green');
+            $.grid.set-span($!cx + $x.round,       $!cy + $y.round,       @.symbols[$i + 6], 'green');
+        }
+
+        $.grid.set-span($!cx, $!cy, @.symbols[12], 'green');
+    }
+
+    method draw-partial-line(@pixels, $color, $pct, $x1, $y1, $x2, $y2) {
+        my $dx = $x2 - $x1;
+        my $dy = $y2 - $y1;
+
+        # X-major
+        if $dx.abs > $dy.abs {
+            my $x = $x1;
+            while (my $frac = ($x - $x1) / $dx) <= $pct {
+                my $y = $y1 + $dy * $frac;
+                @pixels[$y.round][$x.round] = $color;
+
+                $x += $dx.sign;
+            }
+        }
+        # Y-major
+        elsif $dx.abs < $dy.abs {
+            my $y = $y1;
+            while (my $frac = ($y - $y1) / $dy) <= $pct {
+                my $x = $x1 + $dx * $frac;
+                @pixels[$y.round][$x.round] = $color;
+
+                $y += $dy.sign;
+            }
+        }
+        # Single point
+        else {
+            @pixels[$y1.round][$x1.round] = $color if $pct > .5e0;
+        }
+    }
+
+    method form-tesseract($pct) {
+        my @coords = self.hexagon-coords(1e0);
+        my @pixels;
+
+        my $cy = $!cy * 2 + .5e0;
+        my $p1 = min(1e0,           $pct           * 3e0);
+        my $p2 = min(1e0, max(0e0, ($pct - .333e0) * 3e0));
+        my $p3 =          max(0e0, ($pct - .666e0) * 3e0);
+
+        for 0, 2, 4 -> $i {
+            self.draw-partial-line(@pixels, 'magenta', $p1, $!cx, $cy,
+                                   $!cx + @coords[$i][0],
+                                   $cy + (@coords[$i][1] * 2e0));
+
+            self.draw-partial-line(@pixels, 'magenta', $p2,
+                                   $!cx + @coords[$i][0],
+                                   $cy + (@coords[$i][1] * 2e0),
+                                   $!cx + @coords[$i + 1][0],
+                                   $cy + (@coords[$i + 1][1] * 2e0));
+
+            self.draw-partial-line(@pixels, 'magenta', $p2,
+                                   $!cx + @coords[$i][0],
+                                   $cy + (@coords[$i][1] * 2e0),
+                                   $!cx + @coords[($i - 1) % 6][0],
+                                   $cy + (@coords[($i - 1) % 6][1] * 2e0));
+
+            self.draw-partial-line(@pixels, 'magenta', $p3,
+                                   $!cx + (@coords[$i][0] * .5e0),
+                                   $cy +   @coords[$i][1],
+                                   $!cx + (@coords[$i + 1][0] * .5e0),
+                                   $cy +   @coords[$i + 1][1]);
+
+            self.draw-partial-line(@pixels, 'magenta', $p2,
+                                   $!cx + (@coords[$i][0] * .5e0),
+                                   $cy +   @coords[$i][1],
+                                   $!cx + (@coords[($i - 1) % 6][0] * .5e0),
+                                   $cy +   @coords[($i - 1) % 6][1]);
+        }
+
+        self.composite-pixels(@pixels);
+
+        self.spread-symbols(1e0);
+    }
+
+    method flash($pct) {
+        self.form-tesseract(1e0);
+        next unless ($pct * 23).round % 2;
+
+        my $ratio = $*TERMINAL-HEIGHT-RATIO;
+        my $rtx   = ($!r * $pct * $*TERMINAL-HEIGHT-RATIO).round;
+        my $rty   = ($!r * $pct / 2e0).round;
+
+        my $color = gray-color(.75e0 + $pct / 4e0);
+
+        for -$rty .. $rty -> $dy {
+            $.grid.set-span($!cx - $rtx, $!cy + $dy, '█' x ($rtx * 2 + 1), $color);
+        }
+
+        for 1 .. $rty -> $dy {
+            my $xw = ($rtx * (1 - $dy / $rty)).ceiling;
+            $.grid.set-span($!cx - $xw, $!cy + $dy + $rty, '█' x ($xw * 2 + 1), $color);
+            $.grid.set-span($!cx - $xw, $!cy - $dy - $rty, '█' x ($xw * 2 + 1), $color);
+        }
+    }
+
+    method draw-frame() {
+        my @times = .8e0, .8e0, 1e0;
+        my ($phase, $pct) = self.phase($.rel.time, @times);
+
+        given $phase {
+            when 0  { self.spread-symbols($pct) }
+            when 1  { self.form-tesseract($pct) }
+            when 2  { self.flash($pct) }
+            default { }
+        }
+    }
+}
+
+
 #| Demo various possible rpg-ui attack animations
 sub MAIN(
     Real :$height-ratio = 2,  #= Ratio of character cell height to width
@@ -465,12 +620,12 @@ sub MAIN(
     T.initialize-screen;
     my $root = FullPaintAnimation.new-from-grid(T.current-grid);  # , :concurrent);
 
-    my $h = 10;
+    my $h = 9;
     my $w = $h * $height-ratio;
     for (ArrowBurst, SwirlBlast, DragonBreath, WaveFront).kv -> $i, $anim {
         $anim.new(:parent($root), :x($i * $w), :y(1), :$w, :$h);
     }
-    for (LightningBolt, SolarBeam, ColdCone).kv -> $i, $anim {
+    for (LightningBolt, SolarBeam, ColdCone, Teleport).kv -> $i, $anim {
         $anim.new(:parent($root), :x($i * $w), :y(2 + $h), :$w, :$h);
     }
 
