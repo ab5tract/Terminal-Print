@@ -612,6 +612,7 @@ class Teleport is ClearingAnimation does Pixelated {
 
 #| Demo various possible rpg-ui attack animations
 sub MAIN(
+    Real :$slow-mo = 1e0,     #= Slow time by a dilation factor
     Real :$height-ratio = 2,  #= Ratio of character cell height to width
     Bool :$show-fps,          #= Show FPS (Frames Per Second)
 ) {
@@ -630,19 +631,20 @@ sub MAIN(
     }
 
     my $fps;
-    for ^10 {
-        my $frames = 0;
-        my $start  = now;
-        while (now - $start) < .5 {
-            my $frame = FrameInfo.new(:id(++$frames), :time(now));
+    my $frames = 0;
+    my $anim-start = now;
+    while (now - $anim-start) < 5 * $slow-mo {
+        my $period-start = now;
+        for ^10 {
+            my $frame = FrameInfo.new(:id(++$frames), :time(now / $slow-mo));
             $root.do-frame($frame);
-            $root.grid.print-string(0, 0, sprintf("FPS: %4d", $fps))
+            $root.grid.print-string(0, 0, sprintf("Time: %5.3f", $root.rel.time));
+            $root.grid.print-string(15, 0, sprintf("FPS: %2d", $fps))
                 if $fps && $show-fps;
             $root.composite;
         }
-        $fps = floor $frames / (now - $start);
+        $fps = (10 / (now - $period-start)).floor;
     }
 
-    sleep 3;
     T.shutdown-screen;
 }
