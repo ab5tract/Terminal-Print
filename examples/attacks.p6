@@ -290,9 +290,9 @@ class SwirlBlast is ParticleEffect {
             }
         }
         elsif $swirl-time < $.rel.time < $swirl-time + 0.3e0 {
-            for ^10 {
+            for ^(max(1, 100 * $dt)) {
                 my $radians = τ.rand;
-                my $speed   = .5e0 + .5e0.rand;
+                my $speed   = 4.5e0 + .5e0.rand;
                 @.particles.push: {
                     age   => 0e0,
                     life  => 3e0,
@@ -310,8 +310,8 @@ class SwirlBlast is ParticleEffect {
         my $count = @.particles.elems;
         for @.particles.kv -> $i, $_ {
             if .<dx>:exists {
-                .<x> += .<dx>;
-                .<y> += .<dy>;  # >
+                .<x> += .<dx> * $dt;
+                .<y> += .<dy> * $dt;  # >
             }
             else {
                 my $fade = 1e0 - .<age> / .<life>;
@@ -458,7 +458,7 @@ class ColdCone is PixelAnimation {
 class Teleport is ClearingAnimation does Pixelated {
     has $.cx = self.w div 2;
     has $.cy = self.h div 2;
-    has $.r  = min($!cx, $!cy).Num;
+    has $.r  = min((self.w + 1) div 2, $!cy).Num;
 
     has @.symbols = (0x263F .. 0x2653).pick(*)».chr;
 
