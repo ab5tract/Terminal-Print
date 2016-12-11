@@ -419,7 +419,39 @@ class SolarBeam is PixelAnimation {
 
         @colors;
     }
+}
 
+
+class ColdCone is PixelAnimation {
+    method compute-pixels() {
+        my $life = 4e0;
+        my $t    = $.rel.time.Num;
+        return () if $t >= $life;
+
+        my $cy    = $.h;
+        my $w     = $.w.Num;
+        my $left  = ($w * max(0e0, 1e0 - 5e0 * ($life - $t))).floor;
+        my $right = ($w * min(1e0, 5e0 * $t)).floor;
+
+        my @colors;
+        for $left..$right -> $x {
+            my $ramp  = sin(.1e0 + $x / $w * π / 2e0) ** .15e0;  # Subtly dimmer on left
+            my $cone  = $ramp * (1.9e0 + .1e0.rand);             # Small variations
+            my $width = $x div 2;
+
+            for -$width .. $width -> $dy {
+                my $hyp = √($dy * $dy + $x * $x);
+                my $cos = $x / ($hyp || 1);
+                my $bright = $cone * $cos ** 6e0;
+                next if $bright < .5e0;
+
+                @colors[$cy + $dy][$x] = $bright > 1e0 ?? rgb-color($bright - 1e0, $bright - 1e0, 1e0)
+                                                       !! rgb-color(0e0, 0e0, $bright);
+            }
+        }
+
+        @colors;
+    }
 }
 
 
@@ -438,7 +470,7 @@ sub MAIN(
     for (ArrowBurst, SwirlBlast, DragonBreath, WaveFront).kv -> $i, $anim {
         $anim.new(:parent($root), :x($i * $w), :y(1), :$w, :$h);
     }
-    for (LightningBolt, SolarBeam).kv -> $i, $anim {
+    for (LightningBolt, SolarBeam, ColdCone).kv -> $i, $anim {
         $anim.new(:parent($root), :x($i * $w), :y(2 + $h), :$w, :$h);
     }
 
