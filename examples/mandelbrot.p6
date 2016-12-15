@@ -25,27 +25,25 @@ sub mandel-iter($c, $max-iter) {
 }
 
 
-my $min-imag = -1e0;
-my $max-imag =  1e0;
-my $min-real = -2e0;
-my $max-real = .5e0;
+# Center rendering and fill oddly-aspected screen
+sub adjust-aspect(:$w, :$h, :$real-range is copy, :$imag-range is copy) {
+    my $height-ratio = 2e0;
+    my $image-aspect = $w / ($h * $height-ratio);
+    my $range-aspect = ($real-range.max - $real-range.min)
+	             / ($imag-range.max - $imag-range.min);
 
-T.initialize-screen;
+    if    $image-aspect > $range-aspect {
+        my $width   = ($imag-range.max - $imag-range.min) * $image-aspect;
+        my $center  = ($real-range.max + $real-range.min) / 2e0;
+        $real-range = ($center - $width / 2e0)  .. ($center + $width / 2e0);
+    }
+    elsif $image-aspect < $range-aspect {
+        my $height  = ($real-range.max - $real-range.min) / $image-aspect;
+        my $center  = ($imag-range.max + $imag-range.min) / 2e0;
+        $imag-range = ($center - $height / 2e0) .. ($center + $height / 2e0);
+    }
 
-# Center rendering in oddly-aspected screen
-my $height-ratio = 2e0;
-my $aspect = w / (h * $height-ratio);
-if $aspect > ($max-real - $min-real) / ($max-imag - $min-imag) {
-    my $width  = ($max-imag - $min-imag) * $aspect;
-    my $center = ($min-real + $max-real) / 2e0;
-    $min-real  = $center - $width / 2e0;
-    $max-real  = $center + $width / 2e0;
-}
-else {
-    my $height = ($max-real - $min-real) / $aspect;
-    my $center = ($min-imag + $max-imag) / 2e0;
-    $min-imag = $center - $height / 2e0;
-    $max-imag = $center + $height / 2e0;
+    ($real-range, $imag-range)
 }
 
 
@@ -66,10 +64,13 @@ sub draw-frame(:$real-range, :$imag-range, :$max-iter) {
 
 
 # Draw one frame
+T.initialize-screen;
+my ($real-range, $imag-range) = adjust-aspect(:w(w), :h(h),
+					      :real-range(-2e0 .. .5e0),
+					      :imag-range(-1e0 ..  1e0));
+
 my $t0 = now;
-draw-frame(:real-range($min-real .. $max-real),
-           :imag-range($min-imag .. $max-imag),
-           :max-iter(@ramp.end));
+draw-frame(:$real-range, $imag-range, :max-iter(@ramp.end));
 my $t1 = now;
 
 
