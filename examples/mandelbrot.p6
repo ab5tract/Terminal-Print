@@ -14,25 +14,20 @@ my @colors =
 my @ramp = @colors.map: { ~(16 + 36 * .[0] + 6 * .[1] + .[2]) }
 
 
-# Center rendering and fill oddly-aspected screen
-sub adjust-aspect(:$w, :$h, :$real-range is copy, :$imag-range is copy) {
-    my $height-ratio = 2e0;
-    my $image-aspect = $w / ($h * $height-ratio);
-    my $range-aspect = ($real-range.max - $real-range.min)
-                     / ($imag-range.max - $imag-range.min);
+# Fix domain aspect ratio to match image ratio ($w / $h)
+sub adjust-aspect(:$w, :$h, :$size is copy) {
+    my $height-ratio  = 2e0;
+    my $image-aspect  = $w / ($h * $height-ratio);
+    my $domain-aspect = $size.re / $size.im;
 
-    if    $image-aspect > $range-aspect {
-        my $width   = ($imag-range.max - $imag-range.min) * $image-aspect;
-        my $center  = ($real-range.max + $real-range.min) / 2e0;
-        $real-range = ($center - $width / 2e0)  .. ($center + $width / 2e0);
+    if    $image-aspect > $domain-aspect {
+        $size = Complex.new($size.re * $image-aspect / $domain-aspect, $size.im);
     }
-    elsif $image-aspect < $range-aspect {
-        my $height  = ($real-range.max - $real-range.min) / $image-aspect;
-        my $center  = ($imag-range.max + $imag-range.min) / 2e0;
-        $imag-range = ($center - $height / 2e0) .. ($center + $height / 2e0);
+    elsif $image-aspect < $domain-aspect {
+        $size = Complex.new($size.re, $size.im * $domain-aspect / $image-aspect);
     }
 
-    ($real-range, $imag-range)
+    $size;
 }
 
 
@@ -72,32 +67,25 @@ sub draw-frame(:$w, :$h, :$real-range, :$imag-range, :$max-iter) {
 }
 
 
-
-sub zoom-in(:$w, :$h, :$real-range, :$imag-range, :$zooms, :$zoom-factor) {
-    my $real-center = ($real-range.max + $real-range.min) / 2e0;
-    my $imag-center = ($imag-range.max + $imag-range.min) / 2e0;
-    my $real-size   = ($real-range.max - $real-range.min) / 2e0;
-    my $imag-size   = ($imag-range.max - $imag-range.min) / 2e0;
-
+# Zoom in iteratively on a $center point
+sub zoom-in(:$w, :$h, :$center, :$size is copy, :$zooms, :$zoom-factor) {
     for ^$zooms {
-        my $reals = ($real-center - $real-size) .. ($real-center + $real-size);
-        my $imags = ($imag-center - $imag-size) .. ($imag-center + $imag-size);
+        my $reals = ($center.re - $size.re) .. ($center.re + $size.re);
+        my $imags = ($center.im - $size.im) .. ($center.im + $size.im);
 
         draw-frame(:$w, :$h, :max-iter(@ramp.end),
                    :real-range($reals), :imag-range($imags));
 
-        $real-size /= 2e0;
-        $imag-size /= 2e0;
+        $size /= 2e0;
     }
 }
 
+
 # Draw a series of zooming images
 T.initialize-screen;
-my ($real-range, $imag-range) = adjust-aspect(:w(w), :h(h),
-                                              :real-range(-2e0 .. .5e0),
-                                              :imag-range(-1e0 ..  1e0));
+my $size = adjust-aspect(:w(w), :h(h), :size(<1.25+1i>));
 my $t0 = now;
-zoom-in(:w(w), :h(h), :$real-range, :$imag-range, :zooms(3), :zoom-factor(2e0));
+zoom-in(:w(w), :h(h), :center(<-.75+0i>), :$size, :zooms(3), :zoom-factor(2e0));
 my $t1 = now;
 # sleep 10;
 T.shutdown-screen;
