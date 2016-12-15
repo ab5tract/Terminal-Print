@@ -13,17 +13,6 @@ my @colors =
 
 my @ramp = @colors.map: { ~(16 + 36 * .[0] + 6 * .[1] + .[2]) }
 
-# Mandelbrot escape iteration
-sub mandel-iter($c, $max-iter) {
-    my $iters = 0;
-    my $z = $c;
-    while $z.abs < 2e0  && $iters < $max-iter {
-        $z = $z * $z + $c;
-        $iters++;
-    }
-    $iters;
-}
-
 
 # Center rendering and fill oddly-aspected screen
 sub adjust-aspect(:$w, :$h, :$real-range is copy, :$imag-range is copy) {
@@ -49,15 +38,32 @@ sub adjust-aspect(:$w, :$h, :$real-range is copy, :$imag-range is copy) {
 
 # Main image loop
 sub draw-frame(:$w, :$h, :$real-range, :$imag-range, :$max-iter) {
+    # Distance covered by each pixel
     my $real-pixel = ($real-range.max - $real-range.min) / $w;
     my $imag-pixel = ($imag-range.min - $imag-range.max) / $h;  # inverted Y coord
 
+    # Coordinates of center of upper-left pixel
+    my $real-offset = $real-range.min + .5e0 * $real-pixel;
+    my $imag-offset = $imag-range.max - .5e0 * $imag-pixel;  # inverted Y coord
+
+    # Mandelbrot escape iteration
+    sub mandel-iter($c) {
+        my $iters = 0;
+        my $z = $c;
+        while $z.abs < 2e0  && $iters < $max-iter {
+            $z = $z * $z + $c;
+            $iters++;
+        }
+        $iters;
+    }
+
+    # Main image loop
     for ^h -> $y {
-        my $i = ($y + .5e0) * $imag-pixel + $imag-range.max;  # inverted Y coord
+        my $i = $y * $imag-pixel + $imag-offset;
         for ^w -> $x {
-            my $r = ($x + .5e0) * $real-pixel + $real-range.min;
+            my $r = $x * $real-pixel + $real-offset;
             my $c = Complex.new($r, $i);
-            my $iters = mandel-iter($c, $max-iter);
+            my $iters = mandel-iter($c);
             T.current-grid.set-span($x, $y, ' ', 'on_' ~ @ramp[$iters]);
             # T.current-grid.set-span($x, $y, $iters.base(36), @ramp[$iters]);  # Debug iteration count/color ramp
         }
