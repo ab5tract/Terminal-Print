@@ -72,17 +72,33 @@ sub draw-frame(:$w, :$h, :$real-range, :$imag-range, :$max-iter) {
 }
 
 
-# Draw one frame
+
+sub zoom-in(:$w, :$h, :$real-range, :$imag-range, :$zooms, :$zoom-factor) {
+    my $real-center = ($real-range.max + $real-range.min) / 2e0;
+    my $imag-center = ($imag-range.max + $imag-range.min) / 2e0;
+    my $real-size   = ($real-range.max - $real-range.min) / 2e0;
+    my $imag-size   = ($imag-range.max - $imag-range.min) / 2e0;
+
+    for ^$zooms {
+        my $reals = ($real-center - $real-size) .. ($real-center + $real-size);
+        my $imags = ($imag-center - $imag-size) .. ($imag-center + $imag-size);
+
+        draw-frame(:$w, :$h, :max-iter(@ramp.end),
+                   :real-range($reals), :imag-range($imags));
+
+        $real-size /= 2e0;
+        $imag-size /= 2e0;
+    }
+}
+
+# Draw a series of zooming images
 T.initialize-screen;
 my ($real-range, $imag-range) = adjust-aspect(:w(w), :h(h),
                                               :real-range(-2e0 .. .5e0),
                                               :imag-range(-1e0 ..  1e0));
-
 my $t0 = now;
-draw-frame(:w(w), :h(h), :$real-range, :$imag-range, :max-iter(@ramp.end));
+zoom-in(:w(w), :h(h), :$real-range, :$imag-range, :zooms(3), :zoom-factor(2e0));
 my $t1 = now;
-
-
 # sleep 10;
 T.shutdown-screen;
 
