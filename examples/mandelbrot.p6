@@ -1,4 +1,4 @@
-# ABSTRACT: A simple Mandelbrot set viewer
+# ABSTRACT: A simple Mandelbrot set zoomer; looks best on a large terminal
 
 use v6;
 
