@@ -70,8 +70,8 @@ sub draw-frame(:$w, :$h, :$real-range, :$imag-range, :$max-iter) {
             my $r = $x * $real-pixel + $real-offset;
             my $c = Complex.new($r, $i);
             my $iters = mandel-iter($c);
-            T.current-grid.set-span($x, $y, ' ', 'on_' ~ @ramp[$iters]);
-            # T.current-grid.set-span($x, $y, $iters.base(36), @ramp[$iters]);  # Debug iteration count/color ramp
+            T.current-grid.set-span($x, $y, ' ', 'on_' ~ @ramp[$iters % @ramp]);
+            # T.current-grid.set-span($x, $y, $iters.base(36), @ramp[$iters % @ramp]);  # Debug iteration count/color ramp
         }
         print T.current-grid.span-string(0, w - 1, $y);
     }
@@ -84,7 +84,7 @@ sub zoom-in(:$w, :$h, :$center, :$size is copy, :$zooms, :$zoom-factor) {
         my $reals = ($center.re - $size.re) .. ($center.re + $size.re);
         my $imags = ($center.im - $size.im) .. ($center.im + $size.im);
 
-        draw-frame(:$w, :$h, :max-iter(@ramp.end),
+        draw-frame(:$w, :$h, :max-iter(@ramp * 20 - 1),
                    :real-range($reals), :imag-range($imags));
 
         $size /= 2e0;
