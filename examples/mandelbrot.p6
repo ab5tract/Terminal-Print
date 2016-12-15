@@ -13,11 +13,8 @@ my @colors =
 
 my @ramp = @colors.map: { ~(16 + 36 * .[0] + 6 * .[1] + .[2]) }
 
-my $max-iter = @ramp.end;
-
-
 # Mandelbrot escape iteration
-sub mandel-iter($c) {
+sub mandel-iter($c, $max-iter) {
     my $iters = 0;
     my $z = $c;
     while $z.abs < 2e0  && $iters < $max-iter {
@@ -53,17 +50,30 @@ else {
 
 
 # Main image loop
-for ^h -> $y {
-    my $i = ($y + .5e0) / h * ($min-imag - $max-imag) + $max-imag;  # inverted Y coord
-    for ^w -> $x {
-        my $r = ($x + .5e0) / w * ($max-real - $min-real) + $min-real;
-        my $c = Complex.new($r, $i);
-        my $iters = mandel-iter($c);
-        T.current-grid.set-span($x, $y, ' ', 'on_' ~ @ramp[$iters]);
-        # T.current-grid.set-span($x, $y, $iters.base(36), @ramp[$iters]);  # Debug iteration count/color ramp
+sub draw-frame(:$real-range, :$imag-range, :$max-iter) {
+    for ^h -> $y {
+        my $i = ($y + .5e0) / h * ($min-imag - $max-imag) + $max-imag;  # inverted Y coord
+        for ^w -> $x {
+            my $r = ($x + .5e0) / w * ($max-real - $min-real) + $min-real;
+            my $c = Complex.new($r, $i);
+            my $iters = mandel-iter($c, $max-iter);
+            T.current-grid.set-span($x, $y, ' ', 'on_' ~ @ramp[$iters]);
+            # T.current-grid.set-span($x, $y, $iters.base(36), @ramp[$iters]);  # Debug iteration count/color ramp
+        }
+        print T.current-grid.span-string(0, w - 1, $y);
     }
-    print T.current-grid.span-string(0, w - 1, $y);
 }
 
-sleep 10;
+
+# Draw one frame
+my $t0 = now;
+draw-frame(:real-range($min-real .. $max-real),
+           :imag-range($min-imag .. $max-imag),
+           :max-iter(@ramp.end));
+my $t1 = now;
+
+
+# sleep 10;
 T.shutdown-screen;
+
+printf "%.3f seconds\n", $t1 - $t0;
