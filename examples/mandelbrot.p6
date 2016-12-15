@@ -59,7 +59,7 @@ for ^h -> $y {
         my $r = ($x + .5e0) / w * ($max-real - $min-real) + $min-real;
         my $c = Complex.new($r, $i);
         my $iters = mandel-iter($c);
-        T.current-grid.set-span($x, $y, '█', @ramp[$iters]);
+        T.current-grid.set-span($x, $y, ' ', 'on_' ~ @ramp[$iters]);
         # T.current-grid.set-span($x, $y, $iters.base(36), @ramp[$iters]);  # Debug iteration count/color ramp
     }
     print T.current-grid.span-string(0, w - 1, $y);
