@@ -78,6 +78,23 @@ sub draw-frame(:$w, :$h, :$real-range, :$imag-range, :$max-iter) {
 }
 
 
+# Show the area on the current image that will be zoomed into
+sub box-zoom(:$w, :$h, :$zoom-factor) {
+    my $margin    = (1 - 1 / $zoom-factor) / 2;
+    my $x-margin  = $w * $margin;
+    my $y-margin  = $h * $margin;
+    my ($x1, $x2) = $x-margin, $w - 1 - $x-margin;
+    my ($y1, $y2) = $y-margin, $h - 1 - $y-margin;
+
+    T.current-grid.print-string($x1, $y1, '█' x ($w / $zoom-factor));
+    T.current-grid.print-string($x1, $y2, '█' x ($w / $zoom-factor));
+    for ($y1 + 1) .. ($y2 - 1) -> $y {
+        T.current-grid.print-cell($x1, $y, '█');
+        T.current-grid.print-cell($x2, $y, '█');
+    }
+}
+
+
 # Zoom in iteratively on a $center point
 sub zoom-in(:$w, :$h, :$center, :$size is copy, :$zooms, :$zoom-factor) {
     for ^$zooms {
@@ -87,8 +104,8 @@ sub zoom-in(:$w, :$h, :$center, :$size is copy, :$zooms, :$zoom-factor) {
         draw-frame(:$w, :$h, :max-iter(@ramp * 20 - 1),
                    :real-range($reals), :imag-range($imags));
 
+        box-zoom(:$w, :$h, :$zoom-factor);
         $size /= $zoom-factor;
-        sleep 2;
     }
 }
 
