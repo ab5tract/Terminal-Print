@@ -30,7 +30,7 @@ sub adjust-aspect(:$w, :$h, :$real-range is copy, :$imag-range is copy) {
     my $height-ratio = 2e0;
     my $image-aspect = $w / ($h * $height-ratio);
     my $range-aspect = ($real-range.max - $real-range.min)
-	             / ($imag-range.max - $imag-range.min);
+                     / ($imag-range.max - $imag-range.min);
 
     if    $image-aspect > $range-aspect {
         my $width   = ($imag-range.max - $imag-range.min) * $image-aspect;
@@ -48,11 +48,14 @@ sub adjust-aspect(:$w, :$h, :$real-range is copy, :$imag-range is copy) {
 
 
 # Main image loop
-sub draw-frame(:$real-range, :$imag-range, :$max-iter) {
+sub draw-frame(:$w, :$h, :$real-range, :$imag-range, :$max-iter) {
+    my $real-pixel = ($real-range.max - $real-range.min) / $w;
+    my $imag-pixel = ($imag-range.min - $imag-range.max) / $h;  # inverted Y coord
+
     for ^h -> $y {
-        my $i = ($y + .5e0) / h * ($min-imag - $max-imag) + $max-imag;  # inverted Y coord
+        my $i = ($y + .5e0) * $imag-pixel + $imag-range.max;  # inverted Y coord
         for ^w -> $x {
-            my $r = ($x + .5e0) / w * ($max-real - $min-real) + $min-real;
+            my $r = ($x + .5e0) * $real-pixel + $real-range.min;
             my $c = Complex.new($r, $i);
             my $iters = mandel-iter($c, $max-iter);
             T.current-grid.set-span($x, $y, ' ', 'on_' ~ @ramp[$iters]);
@@ -66,11 +69,11 @@ sub draw-frame(:$real-range, :$imag-range, :$max-iter) {
 # Draw one frame
 T.initialize-screen;
 my ($real-range, $imag-range) = adjust-aspect(:w(w), :h(h),
-					      :real-range(-2e0 .. .5e0),
-					      :imag-range(-1e0 ..  1e0));
+                                              :real-range(-2e0 .. .5e0),
+                                              :imag-range(-1e0 ..  1e0));
 
 my $t0 = now;
-draw-frame(:$real-range, $imag-range, :max-iter(@ramp.end));
+draw-frame(:w(w), :h(h), :$real-range, :$imag-range, :max-iter(@ramp.end));
 my $t1 = now;
 
 
