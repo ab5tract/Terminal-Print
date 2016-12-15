@@ -43,6 +43,17 @@ sub draw-frame(:$w, :$h, :$real-range, :$imag-range, :$max-iter) {
 
     # Mandelbrot escape iteration
     sub mandel-iter($c) {
+        # Quick skip for main cardioid
+        my $re = $c.re - .25e0;
+        my $i2 = $c.im * $c.im;
+        my $q  = $re * $re + $i2;
+        return $max-iter if $q * ($q + $re) < $i2 / 4e0;
+
+        # Quick skip for period-2 bulb
+        my $r1 = $c.re + 1e0;
+        return $max-iter if $r1 * $r1 + $i2 < 1e0 / 16e0;
+
+        # Fall back to good old fashioned iteration
         my $iters = 0;
         my $z = $c;
         while $z.abs < 2e0  && $iters < $max-iter {
