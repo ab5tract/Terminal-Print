@@ -87,16 +87,20 @@ sub zoom-in(:$w, :$h, :$center, :$size is copy, :$zooms, :$zoom-factor) {
         draw-frame(:$w, :$h, :max-iter(@ramp * 20 - 1),
                    :real-range($reals), :imag-range($imags));
 
-        $size /= 2e0;
+        $size /= $zoom-factor;
+        sleep 2;
     }
 }
 
 
 # Draw a series of zooming images
 T.initialize-screen;
+# From https://en.wikipedia.org/wiki/Mandelbrot_set
+# my $center = <0.001643721971153-0.822467633298876i>;
+my $center = <-.7444+.204i>;
 my $size = adjust-aspect(:w(w), :h(h), :size(<1.25+1i>));
 my $t0 = now;
-zoom-in(:w(w), :h(h), :center(<-.75+0i>), :$size, :zooms(3), :zoom-factor(2e0));
+zoom-in(:w(w), :h(h), :$center, :$size, :zooms(12), :zoom-factor(4e0));
 my $t1 = now;
 # sleep 10;
 T.shutdown-screen;
