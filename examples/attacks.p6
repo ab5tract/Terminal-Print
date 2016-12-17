@@ -5,6 +5,7 @@ use Terminal::Print;
 use Terminal::Print::Widget;
 use Terminal::Print::Animated;
 use Terminal::Print::Pixelated;
+use Terminal::Print::ParticleEffect;
 
 
 ### CONVENIENCE ROUTINES
@@ -46,14 +47,24 @@ sub gray-color(Real $gray) {
 }
 
 
-### ANIMATION CLASSES
+### ANIMATION CONVENIENCE CLASSES
 
 class FullPaintAnimation is Terminal::Print::Widget
       does Terminal::Print::Animated[] {};
 
-class ClearingAnimation  is Terminal::Print::Widget
+class ClearingAnimation is Terminal::Print::Widget
       does Terminal::Print::Animated[:auto-clear] {};
 
+class ParticleEffect is Terminal::Print::ParticleEffect {
+    #| Display the particle count each frame
+    method draw-frame() {
+        callsame;
+        $.grid.set-span-text($.w - 4, 0, sprintf('%4d', @.particles.elems));
+    }
+}
+
+
+### ANIMATIONS
 
 class Arrow is FullPaintAnimation {
     has $.speed    is required;  #= cells / second
@@ -99,55 +110,6 @@ class ArrowBurst is ClearingAnimation {
                       :parent(self), :speed(5));
             # ==
         }
-    }
-}
-
-class ParticleEffect is Terminal::Print::PixelAnimation {
-    has @.particles;
-
-    #| OVERRIDE: push new particles onto @.particles based on $dt (seconds since last frame)
-    method generate-particles(Num $dt) { }
-
-    #| OVERRIDE: update all @.particles based on their new .<age> and $dt (seconds since last frame)
-    method update-particles(Num $dt) { }
-
-    #| Make existing particles older by $dt seconds
-    method age-particles(Num $dt) {
-        .<age> += $dt for @!particles;
-    }
-
-    #| Remove any particles that have outlasted their .<life>
-    method gc-particles() {
-        @!particles .= grep: { .<age> < .<life> }
-    }
-
-    #| Composite particles into pixels
-    method composite-particles() {
-        my @colors;
-        my $ratio = $*TERMINAL-HEIGHT-RATIO.Num;
-        for @!particles {
-            next if .<x> < 0e0 || .<y> < 0e0;
-            @colors[.<y> * 2e0][.<x> * $ratio] = .<color>;
-        }
-
-        @colors
-    }
-
-    #| Render a single frame of this particle effect and update its @.particles
-    method compute-pixels() {
-        my $dt = $.delta.time.Num;
-
-        self.age-particles($dt);
-        self.gc-particles;
-        self.update-particles($dt);
-        self.generate-particles($dt);
-        self.composite-particles;
-    }
-
-    method draw-frame() {
-        callsame;
-
-        $.grid.set-span-text($.w - 4, 0, sprintf('%4d', @!particles.elems));
     }
 }
 
