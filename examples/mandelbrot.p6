@@ -86,11 +86,11 @@ sub box-zoom(:$w, :$h, :$zoom-factor) {
     my ($x1, $x2) = $x-margin, $w - 1 - $x-margin;
     my ($y1, $y2) = $y-margin, $h - 1 - $y-margin;
 
-    T.current-grid.print-string($x1, $y1, '█' x ($w / $zoom-factor));
-    T.current-grid.print-string($x1, $y2, '█' x ($w / $zoom-factor));
+    T.current-grid.print-string($x1, $y1, ' ' x ($w / $zoom-factor), 'on_white');
+    T.current-grid.print-string($x1, $y2, ' ' x ($w / $zoom-factor), 'on_white');
     for ($y1 + 1) .. ($y2 - 1) -> $y {
-        T.current-grid.print-cell($x1, $y, '█');
-        T.current-grid.print-cell($x2, $y, '█');
+        T.current-grid.print-string($x1, $y, ' ', 'on_white');
+        T.current-grid.print-string($x2, $y, ' ', 'on_white');
     }
 }
 
