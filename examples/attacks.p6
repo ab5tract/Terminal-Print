@@ -3,6 +3,7 @@
 
 use Terminal::Print;
 use Terminal::Print::Widget;
+use Terminal::Print::Animated;
 
 
 ### CONVENIENCE ROUTINES
@@ -46,77 +47,11 @@ sub gray-color(Real $gray) {
 
 ### ANIMATION CLASSES
 
-class FrameInfo {
-    has $.id;
-    has $.time;
-}
+class FullPaintAnimation is Terminal::Print::Widget
+      does Terminal::Print::Animated[] {};
 
-
-role Animated[Bool :$auto-clear, Bool :$concurrent] {
-    has Bool      $.auto-clear = $auto-clear;
-    has Bool      $.concurrent = $concurrent;
-
-    has FrameInfo $.start;
-    has FrameInfo $.last;
-    has FrameInfo $.cur;
-    has FrameInfo $.rel;
-    has FrameInfo $.delta;
-
-    method prep-frame(FrameInfo $!cur) {
-        # Bootstrap history
-        $!start ||= $!cur;
-        $!last  ||= $!cur;
-
-        # Add info for clocks relative to widget start and previous frame
-        # XXXX: Is this a lot of per-widget overhead?
-        $!rel     = FrameInfo.new(:id(  $!cur.id   - $!start.id  ),
-                                  :time($!cur.time - $!start.time));
-        $!delta   = FrameInfo.new(:id(  $!cur.id   - $!last.id   ),
-                                  :time($!cur.time - $!last.time ));
-    }
-
-    method draw-children() {
-        if $!concurrent {
-            @.children.map: { start .?do-frame($!cur) }
-        }
-        else {
-            .?do-frame($!cur) for @.children;
-
-            my $p = Promise.new;
-            $p.keep;
-            $p
-        }
-    }
-
-    method clear-frame() {
-        $.grid.clear;
-    }
-
-    method draw-frame() {
-        # Default behavior is simply to compose the children in
-        .composite for @.children;
-    }
-
-    method finish-frame() {
-        $!last = $!cur;
-    }
-
-    method do-frame(FrameInfo $frame) {
-        self.prep-frame($frame);
-
-        # Maximize concurrency if requested
-        my @p = self.draw-children;
-        self.clear-frame if $.auto-clear;
-        await @p;
-
-        self.draw-frame;
-        self.finish-frame;
-    }
-}
-
-
-class FullPaintAnimation is Terminal::Print::Widget does Animated[] {};
-class ClearingAnimation  is Terminal::Print::Widget does Animated[:auto-clear] {};
+class ClearingAnimation  is Terminal::Print::Widget
+      does Terminal::Print::Animated[:auto-clear] {};
 
 
 class Arrow is FullPaintAnimation {
@@ -636,7 +571,7 @@ sub MAIN(
     while (now - $anim-start) < 5 * $slow-mo {
         my $period-start = now;
         for ^10 {
-            my $frame = FrameInfo.new(:id(++$frames), :time(now / $slow-mo));
+            my $frame = Terminal::Print::FrameInfo.new(:id(++$frames), :time(now / $slow-mo));
             $root.do-frame($frame);
             $root.grid.print-string(0, 0, sprintf("Time: %5.3f", $root.rel.time));
             $root.grid.print-string(15, 0, sprintf("FPS: %2d", $fps))
