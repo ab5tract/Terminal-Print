@@ -4,6 +4,7 @@
 use Terminal::Print;
 use Terminal::Print::Widget;
 use Terminal::Print::Animated;
+use Terminal::Print::Pixelated;
 
 
 ### CONVENIENCE ROUTINES
@@ -101,36 +102,7 @@ class ArrowBurst is ClearingAnimation {
     }
 }
 
-
-#| Widget maintains a (color only) pixel field with double Y resolution
-role Pixelated {
-    my %cell-cache;
-
-    #| Composite pixels into grid cells by using unicode half-height blocks
-    # XXXX: What about transparency (even just of the screen door type)?
-    method composite-pixels(@pixels) {
-        my $grid = $.grid.grid;
-        for ^$.h -> $y {
-            my $row1 = @pixels[$y * 2]     // [];
-            my $row2 = @pixels[$y * 2 + 1] // [];
-            for ^$.w -> $x {
-                my $c1 = $row1[$x] // '';
-                my $c2 = $row2[$x] // '';
-
-                $grid[$y][$x] = %cell-cache{$c1}{$c2} //= do {
-                    my $cell = $c1 && $c2 ?? %( :char('▄'), :color("$c2 on_$c1") ) !!
-                               $c1        ?? %( :char('▀'), :color($c1)          ) !!
-                               $c2        ?? %( :char('▄'), :color($c2)          ) !! ' ';
-                    $.grid.change-cell($x, $y, $cell);
-                    $grid[$y][$x];
-                }
-            }
-        }
-    }
-}
-
-
-class ParticleEffect is FullPaintAnimation does Pixelated {
+class ParticleEffect is Terminal::Print::PixelAnimation {
     has @.particles;
 
     #| OVERRIDE: push new particles onto @.particles based on $dt (seconds since last frame)
@@ -149,7 +121,7 @@ class ParticleEffect is FullPaintAnimation does Pixelated {
         @!particles .= grep: { .<age> < .<life> }
     }
 
-    #| Composite particles into pixels, and then onto the grid
+    #| Composite particles into pixels
     method composite-particles() {
         my @colors;
         my $ratio = $*TERMINAL-HEIGHT-RATIO.Num;
@@ -158,11 +130,11 @@ class ParticleEffect is FullPaintAnimation does Pixelated {
             @colors[.<y> * 2e0][.<x> * $ratio] = .<color>;
         }
 
-        self.composite-pixels(@colors);
+        @colors
     }
 
     #| Render a single frame of this particle effect and update its @.particles
-    method draw-frame() {
+    method compute-pixels() {
         my $dt = $.delta.time.Num;
 
         self.age-particles($dt);
@@ -170,6 +142,10 @@ class ParticleEffect is FullPaintAnimation does Pixelated {
         self.update-particles($dt);
         self.generate-particles($dt);
         self.composite-particles;
+    }
+
+    method draw-frame() {
+        callsame;
 
         $.grid.set-span-text($.w - 4, 0, sprintf('%4d', @!particles.elems));
     }
@@ -258,13 +234,7 @@ class SwirlBlast is ParticleEffect {
 }
 
 
-class PixelAnimation is FullPaintAnimation does Pixelated {
-    method draw-frame() {
-        self.composite-pixels(self.compute-pixels);
-    }
-}
-
-class WaveFront is PixelAnimation {
+class WaveFront is Terminal::Print::PixelAnimation {
     method compute-pixels() {
         my $w     = $.w;
         my $h     = $.h * 2;
@@ -299,7 +269,7 @@ class WaveFront is PixelAnimation {
 }
 
 
-class LightningBolt is PixelAnimation {
+class LightningBolt is Terminal::Print::PixelAnimation {
     method compute-pixels() {
         my $life = 4e0;
         my $t    = $.rel.time.Num;
@@ -326,7 +296,7 @@ class LightningBolt is PixelAnimation {
 }
 
 
-class SolarBeam is PixelAnimation {
+class SolarBeam is Terminal::Print::PixelAnimation {
     method compute-pixels() {
         my $life = 4e0;
         my $t    = $.rel.time.Num;
@@ -357,7 +327,7 @@ class SolarBeam is PixelAnimation {
 }
 
 
-class ColdCone is PixelAnimation {
+class ColdCone is Terminal::Print::PixelAnimation {
     method compute-pixels() {
         my $life = 4e0;
         my $t    = $.rel.time.Num;
@@ -390,7 +360,7 @@ class ColdCone is PixelAnimation {
 }
 
 
-class Teleport is ClearingAnimation does Pixelated {
+class Teleport is ClearingAnimation does Terminal::Print::Pixelated {
     has $.cx = self.w div 2;
     has $.cy = self.h div 2;
     has $.r  = min((self.w + 1) div 2, $!cy).Num;
