@@ -114,30 +114,35 @@ class ArrowBurst is ClearingAnimation {
 }
 
 
+class SimpleParticle is Terminal::Print::Particle {
+    has $.dx;
+    has $.dy;
+}
+
+
 class DragonBreath is ParticleEffect {
     method generate-particles(Num $dt) {
         return if $.rel.time > 2;
 
         for ^($dt * 100) {
-            @.particles.push: {
+            @.particles.push: SimpleParticle.new:
                 age   => 0e0,
                 life  => 3e0,
                 color => rgb-color(1e0, 1e0, 0e0),  # Saturated yellow
                 x     => 1e0.rand,
                 y     => 1e0.rand,
                 dx    => 2e0 + 3e0.rand,
-                dy    => 2e0 + 3e0.rand,
-            }
+                dy    => 2e0 + 3e0.rand;
         }
     }
 
     method update-particles(Num $dt) {
         for @.particles {
-            .<x> += $dt * .<dx>;
-            .<y> += $dt * .<dy>;
+            .x += $dt * .dx;
+            .y += $dt * .dy;  # ++
 
-            my $fade = 1e0 - .<age> / .<life>;
-            .<color> = rgb-color(1e0, $fade < 0e0 ?? 0e0 !! $fade, 0e0)  # Fade to red
+            my $fade = 1e0 - .age / .life;
+            .color = rgb-color(1e0, $fade < 0e0 ?? 0e0 !! $fade, 0e0)  # Fade to red
         }
     }
 }
@@ -153,28 +158,26 @@ class SwirlBlast is ParticleEffect {
             for ^$initial -> $i {
                 my $radians = $i / $initial * τ;
                 my $tint    = .5e0.rand;
-                @.particles.push: {
+                @.particles.push: Terminal::Print::Particle.new:
                     age   => 0e0,
                     life  => $swirl-time,
                     color => rgb-color($tint, $tint, .7e0 + .3e0.rand),
                     x     => $!size + $!size * cos($radians),
-                    y     => $!size - $!size * sin($radians),
-                }
+                    y     => $!size - $!size * sin($radians);
             }
         }
         elsif $swirl-time < $.rel.time < $swirl-time + 0.3e0 {
             for ^(max(1, 100 * $dt)) {
                 my $radians = τ.rand;
                 my $speed   = 4.5e0 + .5e0.rand;
-                @.particles.push: {
+                @.particles.push: SimpleParticle.new:
                     age   => 0e0,
                     life  => 3e0,
                     color => gray-color(.8e0 + .3e0.rand),
                     x     => $!size,
                     y     => $!size,
                     dx    =>  $speed * cos($radians),
-                    dy    => -$speed * sin($radians),
-                }
+                    dy    => -$speed * sin($radians);
             }
         }
     }
@@ -182,14 +185,14 @@ class SwirlBlast is ParticleEffect {
     method update-particles(Num $dt) {
         my $count = @.particles.elems;
         for @.particles.kv -> $i, $_ {
-            if .<dx>:exists {
-                .<x> += .<dx> * $dt;
-                .<y> += .<dy> * $dt;  # >
+            when SimpleParticle {
+                .x += .dx * $dt;
+                .y += .dy * $dt;  # ++
             }
-            else {
-                my $fade = 1e0 - .<age> / .<life>;
-                .<x> = $!size + $!size * $fade * cos(($i / $count + .<age>) * τ);
-                .<y> = $!size - $!size * $fade * sin(($i / $count + .<age>) * τ);  # >
+            default {
+                my $fade = 1e0 - .age / .life;
+                .x = $!size + $!size * $fade * cos(($i / $count + .age) * τ);
+                .y = $!size - $!size * $fade * sin(($i / $count + .age) * τ);  # ==
             }
         }
     }
