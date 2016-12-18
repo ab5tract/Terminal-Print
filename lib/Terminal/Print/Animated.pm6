@@ -2,8 +2,8 @@ unit package Terminal::Print;
 
 
 class FrameInfo {
-    has $.id;
-    has $.time;
+    has $.id   = ++$;
+    has $.time = now;
 }
 
 
