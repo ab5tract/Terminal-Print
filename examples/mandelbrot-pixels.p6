@@ -55,10 +55,9 @@ class Mandelbrot is Terminal::Print::PixelAnimation {
         my int $iters = 0;
         my num $zr = $r;
         my num $zi = $i;
-        while ($zr * $zr + $zi * $zi) < 4e0  && $iters < $max {
-            my num $t = $zr * $zr - $zi * $zi + $r;
+        while ((my num $zr2 = $zr * $zr) + (my num $zi2 = $zi * $zi)) < 4e0  && $iters < $max {
             $zi = 2e0 * $zr * $zi + $i;
-            $zr = $t;
+            $zr = $zr2 - $zi2 + $r;
             ++$iters;
         }
         $iters;
