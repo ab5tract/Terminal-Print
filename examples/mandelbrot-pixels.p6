@@ -36,20 +36,25 @@ class Mandelbrot is Terminal::Print::PixelAnimation {
 
     #| Mandelbrot escape iteration
     method mandel-iter($c) {
+        # Cache as native values
+        my num $r   = $c.re;
+        my num $i   = $c.im;
+        my int $max = $!max-iter;
+
         # Quick skip for main cardioid
-        my $re = $c.re - .25e0;
-        my $i2 = $c.im * $c.im;
-        my $q  = $re * $re + $i2;
-        return $!max-iter if $q * ($q + $re) < $i2 / 4e0;
+        my num $re = $r - .25e0;
+        my num $i2 = $i * $i;
+        my num $q  = $re * $re + $i2;
+        return $max if $q * ($q + $re) < $i2 / 4e0;
 
         # Quick skip for period-2 bulb
-        my $r1 = $c.re + 1e0;
-        return $!max-iter if $r1 * $r1 + $i2 < 1e0 / 16e0;
+        my num $r1 = $r + 1e0;
+        return $max if $r1 * $r1 + $i2 < 1e0 / 16e0;
 
         # Fall back to good old fashioned iteration
-        my $iters = 0;
+        my int $iters = 0;
         my $z = $c;
-        while $z.abs < 2e0  && $iters < $!max-iter {
+        while $z.abs < 2e0  && $iters < $max {
             $z = $z * $z + $c;
             $iters++;
         }
