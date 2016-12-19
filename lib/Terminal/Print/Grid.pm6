@@ -68,7 +68,7 @@ method cell-string($x, $y) {
 #| Return the escape string necessary to move to (x1, y) and output every cell (with color) on that row from x1..x2
 method span-string($x1, $x2, $y) {
     my $row = @!grid[$y];
-    $!move-cursor($x1, $y) ~ $row[$x1..$x2].join
+    $!move-cursor($x1, $y) ~ $row[$x1..$x2].join.subst("\e[0m\e[", "\e[0;", :g);
 }
 
 #| Set both the text and color of a span
