@@ -101,16 +101,15 @@ class Mandelbrot is Terminal::Print::PixelAnimation {
     }
 
     # Show the area on the current image that will be zoomed into
-    method box-zoom() {
-        my $zoom      = $.cur.zoom-factor;
-        my $margin    = (1 - 1 / $zoom) / 2;
+    method box-zoom($zoom-factor) {
+        my $margin    = (1 - 1 / $zoom-factor) / 2;
         my $x-margin  = $.w * $margin;
         my $y-margin  = $.h * $margin;
         my ($x1, $x2) = $x-margin, $.w - 1 - $x-margin;
         my ($y1, $y2) = $y-margin, $.h - 1 - $y-margin;
 
-        $.grid.print-string($x1, $y1, ' ' x ($.w / $zoom), 'on_white');
-        $.grid.print-string($x1, $y2, ' ' x ($.w / $zoom), 'on_white');
+        $.grid.print-string($x1, $y1, ' ' x ($.w / $zoom-factor), 'on_white');
+        $.grid.print-string($x1, $y2, ' ' x ($.w / $zoom-factor), 'on_white');
         for ($y1 + 1) .. ($y2 - 1) -> $y {
             $.grid.print-string($x1, $y, ' ', 'on_white');
             $.grid.print-string($x2, $y, ' ', 'on_white');
@@ -123,7 +122,6 @@ class Mandelbrot is Terminal::Print::PixelAnimation {
 class FrameInfo is Terminal::Print::FrameInfo {
     has Complex $.center;       #= Center of frame (and center of zoom)
     has Complex $.size;         #= Distance from center to edge along real and imaginary axes
-    has Real    $.zoom-factor;  #= Amount to divide $.size by on next zoom
 }
 
 
@@ -137,13 +135,14 @@ sub MAIN() {
 
     my $t0 = now;
     my $zooms = 16;
+    my $zoom-factor = 4e0;
     for 1..$zooms -> $i {
-        my $frame = FrameInfo.new(:$center, :$size, :zoom-factor(4e0));
+        my $frame = FrameInfo.new(:$center, :$size);
         $mandel.do-frame($frame);
         $mandel.composite;
         if $i < $zooms {
-            $mandel.box-zoom;
-            $size /= $frame.zoom-factor;
+            $mandel.box-zoom($zoom-factor);
+            $size /= $zoom-factor;
         }
     }
     my $t1 = now;
