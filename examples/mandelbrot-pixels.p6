@@ -35,10 +35,8 @@ class Mandelbrot is Terminal::Print::PixelAnimation {
     }
 
     #| Mandelbrot escape iteration
-    method mandel-iter($c) {
-        # Cache as native values
-        my num $r   = $c.re;
-        my num $i   = $c.im;
+    method mandel-iter(num $r, num $i) {
+        # Cache as native value
         my int $max = $!max-iter;
 
         # Quick skip for main cardioid
@@ -77,13 +75,14 @@ class Mandelbrot is Terminal::Print::PixelAnimation {
 
         # Main pixel loop
         my @pixels;
+        my $ramp = +@ramp;
         for ^$h -> $y {
-            my $i = $y * $imag-pixel + $imag-offset;
+            my num $i = $y * $imag-pixel + $imag-offset;
+            my num $r = $real-offset;
+            my $row = @pixels[$y] = [];
             for ^$.w -> $x {
-                my $r = $x * $real-pixel + $real-offset;
-                my $c = Complex.new($r, $i);
-                my $iters = self.mandel-iter($c);
-                @pixels[$y][$x] = @ramp[$iters % @ramp];
+                $row[$x] = @ramp[self.mandel-iter($r, $i) % $ramp];
+                $r += $real-pixel;
             }
         }
 
