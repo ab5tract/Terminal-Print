@@ -23,7 +23,9 @@ role Pixelated {
                 next if $skip-empty && !$c1 && !$c2;
 
                 $grid-row[$x] = %cell-cache{$c1}{$c2} //= do {
-                    my $cell = $c1 && $c2 ?? %( :char('▄'), :color("$c2 on_$c1") ) !!
+                    my $cell = $c1 && $c2
+                            && $c1 eq $c2 ?? %( :char(' '), :color("on_$c1")     ) !!
+                               $c1 && $c2 ?? %( :char('▄'), :color("$c2 on_$c1") ) !!
                                $c1        ?? %( :char('▀'), :color($c1)          ) !!
                                $c2        ?? %( :char('▄'), :color($c2)          ) !! ' ';
                     $.grid.change-cell($x, $y, $cell);
