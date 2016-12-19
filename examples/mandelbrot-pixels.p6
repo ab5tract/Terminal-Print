@@ -43,7 +43,7 @@ class Mandelbrot is Terminal::Print::PixelAnimation {
         my num $re = $r - .25e0;
         my num $i2 = $i * $i;
         my num $q  = $re * $re + $i2;
-        return $max if ($q * ($q + $re)) * 4e0 < $i2;
+        return $max if $q * ($q + $re) * 4e0 < $i2;
 
         # Quick skip for period-2 bulb
         my num $r1 = $r + 1e0;
