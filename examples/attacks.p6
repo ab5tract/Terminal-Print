@@ -485,6 +485,7 @@ sub MAIN(
     Real :$slow-mo = 1e0,     #= Slow time by a dilation factor
     Real :$height-ratio = 2,  #= Ratio of character cell height to width
     Bool :$show-fps,          #= Show FPS (Frames Per Second)
+    Bool :$bench,             #= Benchmark mode (fixed frame count and sim rate)
 ) {
     my $*TERMINAL-HEIGHT-RATIO = $height-ratio;
 
@@ -503,10 +504,11 @@ sub MAIN(
     my $fps;
     my $frames = 0;
     my $anim-start = now;
-    while (now - $anim-start) < 5 * $slow-mo {
+    repeat {
         my $period-start = now;
         for ^10 {
-            my $frame = Terminal::Print::FrameInfo.new(:id(++$frames), :time(now / $slow-mo));
+            my $time  = ($bench ?? .1 * $frames !! now) / $slow-mo;
+            my $frame = Terminal::Print::FrameInfo.new(:id(++$frames), :$time);
             $root.do-frame($frame);
             $root.grid.print-string(0, 0, sprintf("Time: %5.3f", $root.rel.time));
             $root.grid.print-string(15, 0, sprintf("FPS: %2d", $fps))
@@ -514,7 +516,10 @@ sub MAIN(
             $root.composite;
         }
         $fps = (10 / (now - $period-start)).floor;
-    }
+    } while $root.rel.time < 5e0;
+    my $anim-end = now;
 
     T.shutdown-screen;
+
+    printf "%.3f FPS\n", $frames / ($anim-end - $anim-start) if $show-fps;
 }
