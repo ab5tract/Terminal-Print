@@ -42,36 +42,40 @@ sub draw-frame(:$w, :$h, :$real-range, :$imag-range, :$max-iter) {
     my $imag-offset = $imag-range.max - .5e0 * $imag-pixel;  # inverted Y coord
 
     # Mandelbrot escape iteration
-    sub mandel-iter($c) {
+    sub mandel-iter(num $r, num $i) {
+        # Cache as native value
+        my int $max = $max-iter;
+
         # Quick skip for main cardioid
-        my $re = $c.re - .25e0;
-        my $i2 = $c.im * $c.im;
-        my $q  = $re * $re + $i2;
-        return $max-iter if $q * ($q + $re) < $i2 / 4e0;
+        my num $re = $r - .25e0;
+        my num $i2 = $i * $i;
+        my num $q  = $re * $re + $i2;
+        return $max if $q * ($q + $re) * 4e0 < $i2;
 
         # Quick skip for period-2 bulb
-        my $r1 = $c.re + 1e0;
-        return $max-iter if $r1 * $r1 + $i2 < 1e0 / 16e0;
+        my num $r1 = $r + 1e0;
+        return $max if $r1 * $r1 + $i2 < .0625e0;  # 1/16
 
         # Fall back to good old fashioned iteration
-        my $iters = 0;
-        my $z = $c;
-        while $z.abs < 2e0  && $iters < $max-iter {
-            $z = $z * $z + $c;
-            $iters++;
+        my int $iters = 0;
+        my num $zr = $r;
+        my num $zi = $i;
+        while ((my num $zr2 = $zr * $zr) + (my num $zi2 = $zi * $zi)) < 4e0  && $iters < $max {
+            $zi = 2e0 * $zr * $zi + $i;
+            $zr = $zr2 - $zi2 + $r;
+            ++$iters;
         }
         $iters;
     }
 
     # Main image loop
     for ^h -> $y {
-        my $i = $y * $imag-pixel + $imag-offset;
+        my num $i = $y * $imag-pixel + $imag-offset;
+        my num $r = $real-offset;
         for ^w -> $x {
-            my $r = $x * $real-pixel + $real-offset;
-            my $c = Complex.new($r, $i);
-            my $iters = mandel-iter($c);
+            my $iters = mandel-iter($r, $i);
             T.current-grid.set-span($x, $y, ' ', 'on_' ~ @ramp[$iters % @ramp]);
-            # T.current-grid.set-span($x, $y, $iters.base(36), @ramp[$iters % @ramp]);  # Debug iteration count/color ramp
+            $r += $real-pixel;
         }
         print T.current-grid.span-string(0, w - 1, $y);
     }
