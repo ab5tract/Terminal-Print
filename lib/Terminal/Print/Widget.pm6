@@ -35,7 +35,7 @@ class Terminal::Print::Widget {
         given $!parent {
             when Terminal::Print::Grid   { $_    }
             when Terminal::Print::Widget { .grid }
-            default                      { $Terminal::Print::T.current-grid }
+            default                      { $*TERMINAL.current-grid }
         }
     }
 
@@ -43,7 +43,7 @@ class Terminal::Print::Widget {
     # For now, simply copies widget contents (effects such as alpha blend NYI).
     # Default behavior is to print iff the widget's parent is the screen grid.
     method composite(Terminal::Print::Grid :$to = self.target-grid,
-                     Bool :$print = $to === $Terminal::Print::T.current-grid) {
+                     Bool :$print = $to === $*TERMINAL.current-grid) {
 
         # Skip copy if target is own backing grid, e.g. screen's root widget
         if $to === $!grid {

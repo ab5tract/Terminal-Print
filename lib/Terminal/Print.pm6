@@ -295,7 +295,7 @@ but the following features seemed to fulfill a 'necessary minimum' set of golfin
 
 =end Golfing
 
-our $T = Terminal::Print.new;
+our $T = PROCESS::<$TERMINAL> = Terminal::Print.new;
 
 sub draw(Callable $block) is export {
     my $drawn-promise = Promise.new;
