@@ -1,5 +1,6 @@
-use v6;
+# ABSTRACT: Asynchronous race across the display
 
+use v6;
 use Terminal::Print;
 
 my $t = Terminal::Print.new;

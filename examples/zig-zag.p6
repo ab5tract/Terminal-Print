@@ -1,7 +1,8 @@
-use fatal;
+# ABSTRACT: Asynchronously zigzagging worms
 
-use lib './lib';
+use v6;
 use Terminal::Print;
+
 
 #my $b = Terminal::Print.new(move-cursor-profile => 'debug');   # TODO: take named parameter for grid name of default grid
 my $b = Terminal::Print.new;   # TODO: take named parameter for grid name of default grid

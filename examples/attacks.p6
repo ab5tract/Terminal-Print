@@ -1,6 +1,6 @@
 # ABSTRACT: Render a number of different attack animations
 
-
+use v6;
 use Terminal::Print;
 use Terminal::Print::Widget;
 use Terminal::Print::Animated;

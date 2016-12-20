@@ -3,7 +3,6 @@
 #           mashup of a Roguelike and a high fantasy CRPG.
 
 use v6;
-
 use Terminal::Print;
 
 

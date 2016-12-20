@@ -1,6 +1,8 @@
-use v6;
+# ABSTRACT: Draw the green falling characters of a Matrix-like screen
 
+use v6;
 use Terminal::Print;
+
 
 my $t = Terminal::Print.new;
 

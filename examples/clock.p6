@@ -1,4 +1,6 @@
+# ABSTRACT: An animated clock
 
+use v6;
 use Terminal::Print;
 # use Terminal::Print::Animation;
 

@@ -1,6 +1,9 @@
-use lib './lib';
+# ABSTRACT: Fill the screen with hearts
 
+use v6;
 use Terminal::Print;
+
+
 my @colors = <red magenta yellow white>;
 
 my $b = Terminal::Print.new;

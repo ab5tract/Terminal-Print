@@ -1,6 +1,6 @@
-use v6;
-use lib './lib';
+# ABSTRACT: Show random pages of characters from various "alphabets"
 
+use v6;
 use Terminal::Print;
 
 my $p = Terminal::Print.new(cursor-profile => 'universal');

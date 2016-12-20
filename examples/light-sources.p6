@@ -1,4 +1,6 @@
 # ABSTRACT: Display linear and sqrt light sources of various radii in 16- and 256-color variants
+
+use v6;
 use Terminal::Print;
 
 

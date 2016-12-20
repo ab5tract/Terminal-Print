@@ -1,8 +1,8 @@
 # ABSTRACT: A simple Mandelbrot set zoomer; looks best on a large terminal
 
 use v6;
-
 use Terminal::Print;
+
 
 my @colors =
     (0, 0, 1), (0, 0, 2), (0, 0, 3), (0, 0, 4), (0, 0, 5),  # Dark to bright blue
