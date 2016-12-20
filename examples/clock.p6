@@ -7,12 +7,10 @@ use Terminal::Print;
 # my $figlet = q:x{which figlet} ?? True !! False;
 my $figlet = False;
 
-my $t = Terminal::Print.new;
-#
-my $base-x = ($t.columns / 2).floor;
-my $base-y = ($t.rows / 2).floor;
+my $base-x = (T.columns / 2).floor;
+my $base-y = (T.rows / 2).floor;
 
-$t.initialize-screen;
+T.initialize-screen;
 
 my $end-time = DateTime.now.later( :1minutes );
 my $exit = Promise.new;
@@ -28,16 +26,16 @@ $s.tap: {
         my $string = $fig-now ?? $fig-now !! $now;
         # $old-string stays unset unless $figlet is true
         if $old-string {
-            $t.print-string($base-x, $base-y, $old-string);
+            T.print-string($base-x, $base-y, $old-string);
         }
                 # width of the time string is 8, so we subtract 4 to center
-        $t.print-string($base-x - 4, $base-y, $string);
+        T.print-string($base-x - 4, $base-y, $string);
         if $figlet {
             $old-string = $string;
             $old-string ~~ s:g/\S/ /;
         }
     } else {
-        $t.shutdown-screen;
+        T.shutdown-screen;
         $exit.keep;
     }
 };
@@ -45,7 +43,6 @@ $s.tap: {
 class Clock {
     has $.c is required = 60;
     has $.r = ($!c / (2 * π)).round;
-    has $.t;
     has $.ratio;
     has @.points;
     has $!index = 0;
@@ -84,8 +81,8 @@ class Clock {
     }
 
     method set-cell($x, $y, $char) {
-        # $!t(($x * $!ratio).ceiling, ($y / $!ratio).ceiling, $char);
-        # $!t($x * $!ratio, $y / $!ratio, $char);
+        # T.(($x * $!ratio).ceiling, ($y / $!ratio).ceiling, $char);
+        # T.($x * $!ratio, $y / $!ratio, $char);
         @!points.push: [ ($x * $!ratio), ($y / $!ratio), $char ];
     }
 
@@ -95,14 +92,14 @@ class Clock {
         my $point = @!points[$!index];
         if $!index > 0 {
             my $last-point = @!points[$!index - 1];
-            $!t($last-point[0], $last-point[1], ' ');
+            T.($last-point[0], $last-point[1], ' ');
         }
-        $!t($point[0], $point[1], %( char => $point[2], color => 'black on_cyan'));
+        T.($point[0], $point[1], %( char => $point[2], color => 'black on_cyan'));
         $!index += $step-size;
     }
 }
 
-my $c = Clock.new: c => 80, ratio => 1.4, :$t;
+my $c = Clock.new: c => 80, ratio => 1.4;
 $c.fill($base-x, $base-y, '*');
 
 $s.tap: {
@@ -111,4 +108,4 @@ $s.tap: {
 
 await $exit;
 
-$t.shutdown-screen;
+T.shutdown-screen;

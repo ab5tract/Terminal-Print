@@ -4,8 +4,5 @@ use v6;
 use Terminal::Print;
 
 
-my $t = Terminal::Print.new;
-
-$t.initialize-screen;
-
-$t.shutdown-screen;
+T.initialize-screen;
+T.shutdown-screen;
