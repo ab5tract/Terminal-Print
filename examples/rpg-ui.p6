@@ -4,51 +4,11 @@
 
 use v6;
 use Terminal::Print;
+use Terminal::Print::Widget;
+use Terminal::Print::BoxDrawing;
+use Terminal::Print::Util::Text;
+use Terminal::Print::Util::Timing;
 
-
-#
-# WHITE-BOX PERFORMANCE MEASUREMENT
-#
-
-#| Multi-thread timing measurements
-my @timings;
-my $timings-supplier = Supplier.new;
-my $timings-supply = $timings-supplier.Supply;
-$timings-supply.act: { @timings.push: $^timing }
-
-#| Keep track of timing measurements
-sub record-time($desc, $start, $end = now) {
-    $timings-supplier.emit: %( :$start, :$end, :delta($end - $start), :$desc,
-                               :thread($*THREAD.id) );
-}
-
-#| Show all timings so far
-sub show-timings($verbosity) {
-    return unless $verbosity >= 1;
-
-    # Gather summary info
-    my %count;
-    my %total;
-    for @timings {
-        %count{.<desc>}++;
-        %total{.<desc>} += .<delta>;
-    }
-
-    # Details of every timing
-    if $verbosity >= 2 {
-        my $raw-format = "%7.3f %7.3f %6d  %s\n";
-        say '  START SECONDS THREAD  DESCRIPTION';
-        printf $raw-format, .<start> - $*INITTIME, .<delta>, .<thread>, .<desc> for @timings;
-        say '';
-    }
-
-    # Summary of timings by description, sorted by total time taken
-    my $summary-format = "%6d %7.3f %7.3f  %s\n";
-    say " COUNT   TOTAL AVERAGE  DESCRIPTION";
-    for %total.sort(-*.value) -> (:$key, :$value) {
-        printf $summary-format, %count{$key}, $value, $value / %count{$key}, $key;
-    }
-}
 
 
 #
@@ -104,6 +64,7 @@ sub make-terrain($map-w, $map-h) {
     @map
 }
 
+
 #| Create the initial map seen ("fog of war") state
 sub make-seen($map-w, $map-h) {
     my $t0 = now;
@@ -115,6 +76,7 @@ sub make-seen($map-w, $map-h) {
 
     @seen
 }
+
 
 #| Create the initial character party
 sub make-party-members() {
@@ -205,120 +167,18 @@ class Game {
 }
 
 
-#
-# UI HELPER FUNCTIONS
-#
-
-#| Unicode horizontal lines in different patterns, with ASCII fallback
-my %hline = ascii  => '-', double => '═',
-            light1 => '─', light2 => '╌', light3 => '┄', light4 => '┈',
-            heavy1 => '━', heavy2 => '╍', heavy3 => '┅', heavy4 => '┉';
-
-#| Unicode vertical lines in different patterns, with ASCII fallback
-my %vline = ascii  => '|', double => '║',
-            light1 => '│', light2 => '╎', light3 => '┆', light4 => '┊',
-            heavy1 => '┃', heavy2 => '╏', heavy3 => '┇', heavy4 => '┋';
-
-#| Overall weight for each line pattern, with ASCII fallback
-my %weight = ascii  => 'ascii', double => 'double',
-             light1 => 'light', light2 => 'light',
-             light3 => 'light', light4 => 'light',
-             heavy1 => 'heavy', heavy2 => 'heavy',
-             heavy3 => 'heavy', heavy4 => 'heavy';
-
-#| Box corner characters for each line weight, with ASCII fallback
-my %corners = ascii  => < + + + + >,
-              double => < ╔ ╗ ╚ ╝ >,
-              light  => < ┌ ┐ └ ┘ >,
-              heavy  => < ┏ ┓ ┗ ┛ >;
-
-#| Draw a horizontal line
-sub draw-hline($grid, $y, $x1, $x2, $style = 'double') {
-    $grid.set-span-text($x1, $y, %hline{$style} x ($x2 - $x1 + 1));
-}
-
-#| Draw a vertical line
-sub draw-vline($grid, $x, $y1, $y2, $style = 'double') {
-    $grid.set-span-text($x, $_, %vline{$style}) for $y1..$y2;
-}
-
-#| Draw a box
-sub draw-box($grid, $x1, $y1, $x2, $y2, $style = Empty) {
-    # Draw sides in order: left, right, top, bottom
-    draw-vline($grid, $x1, $y1 + 1, $y2 - 1, |$style);
-    draw-vline($grid, $x2, $y1 + 1, $y2 - 1, |$style);
-    draw-hline($grid, $y1, $x1 + 1, $x2 - 1, |$style);
-    draw-hline($grid, $y2, $x1 + 1, $x2 - 1, |$style);
-
-    # Draw corners
-    my @corners = |%corners{%weight{$style}};
-    $grid.set-span-text($x1, $y1, @corners[0]);
-    $grid.set-span-text($x2, $y1, @corners[1]);
-    $grid.set-span-text($x1, $y2, @corners[2]);
-    $grid.set-span-text($x2, $y2, @corners[3]);
-}
-
-#| Wrap $text to width $w, adding $prefix at the start of each line after the first and $first-prefix to the first line
-sub wrap-text($w, $text, $prefix = '', $first-prefix = '') {
-    my @words = $text.words;
-    return [] unless @words;
-
-    # Invariants:
-    #  * Latest line in @lines always contains at least a prefix and one word
-    #  * No line is wider than $w unless it contains only one very long word
-    #    (no attempt is made to split single words across multiple lines)
-    my @lines = $first-prefix ~ @words.shift;
-
-    for @words -> $word {
-        # If next word won't fit, use it to start a new line
-        if $w < @lines[*-1].chars + 1 + $word.chars {
-            push @lines, "$prefix$word";
-        }
-        # ... otherwise just extend the last line
-        else {
-            @lines[*-1] ~= " $word";
-        }
-    }
-
-    @lines
-}
-
 
 #
 # UI WIDGETS
 #
 
-#| A basic rectangular widget that can work in relative coordinates
-class Widget {
-    has Int $.x is required;
-    has Int $.y is required;
-    has Int $.w is required;
-    has Int $.h is required;
 
-    has $.grid = Terminal::Print::Grid.new($!w, $!h);
-    has $.parent;
-
-    #| Move upper left corner to (x, y) on the parent widget/grid
-    method move-to($!x, $!y) { }  # ))
-
-    #| Return T::P::Grid object that this Widget will draw on
-    method target-grid() {
-        given $!parent {
-            when Terminal::Print::Grid  { $!parent       }
-            when Widget                 { $!parent.grid  }
-            default                     { T.current-grid }
-        }
-    }
-
-    #| Composite this widget onto a target grid, optionally printing to screen
-    # For now, simply copies widget contents (effects such as alpha blend NYI)
-    method composite(Bool :$print, :$to = self.target-grid) {
+#| Local extension to T::P::Widget
+class Widget is Terminal::Print::Widget {
+    #| Record compositing times
+    method composite(|c) {
         my $t0 = now;
-
-        # Ask the destination grid (a Monitor) to do the copy for thread safety
-        $print ?? $to.print-from($!grid, $!x, $!y)
-               !! $to .copy-from($!grid, $!x, $!y);  # )
-
+        callsame;
         record-time("Composite $.w x $.h {self.^name}", $t0);
     }
 }
@@ -834,7 +694,8 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
 
 
 #| The main user interface composed of map, party, and log panels
-class UI is Widget {
+class UI is Widget
+ does Terminal::Print::BoxDrawing {
     has Int         $.color-bits;
     has Bool        $.ascii;
     has Game        $.game;
@@ -860,9 +721,9 @@ class UI is Widget {
         # Draw viewport borders
         my $t0 = now;
         my $style = $.ascii ?? 'ascii' !! 'double';
-        draw-box($.grid, 0, 0, $.w - 1, $.h - 1, $style);
-        draw-hline($.grid, $v-break, 1, $.w - 2, $style);
-        draw-vline($.grid, $h-break, 1, $v-break - 1, $style);
+        self.draw-box(0, 0, $.w - 1, $.h - 1, :$style);
+        self.draw-hline(1, $.w - 2, $v-break, :$style);
+        self.draw-vline($h-break, 1, $v-break - 1, :$style);
 
         # Draw intersections if in full Unicode mode
         unless $.ascii {
