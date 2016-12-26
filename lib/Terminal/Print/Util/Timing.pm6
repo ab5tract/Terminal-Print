@@ -20,17 +20,22 @@ sub record-time($desc, $start, $end = now) is export {
 }
 
 
+#| Summarize all timings so far
+sub summarize-timings() is export {
+    my %by-desc;
+
+    for @timings {
+        %by-desc{.<desc>}<count>++;
+        %by-desc{.<desc>}<total> += .<delta>;
+    }
+
+    %by-desc;
+}
+
+
 #| Show all timings so far
 sub show-timings($verbosity) is export {
     return unless $verbosity >= 1;
-
-    # Gather summary info
-    my %count;
-    my %total;
-    for @timings {
-        %count{.<desc>}++;
-        %total{.<desc>} += .<delta>;
-    }
 
     # Details of every timing
     if $verbosity >= 2 {
@@ -43,7 +48,8 @@ sub show-timings($verbosity) is export {
     # Summary of timings by description, sorted by total time taken
     my $summary-format = "%6d %7.3f %7.3f  %s\n";
     say " COUNT   TOTAL AVERAGE  DESCRIPTION";
-    for %total.sort(-*.value) -> (:$key, :$value) {
-        printf $summary-format, %count{$key}, $value, $value / %count{$key}, $key;
+    for summarize-timings().sort(-*.value<total>) -> (:$key, :$value) {
+        printf $summary-format, $value<count>, $value<total>,
+                                $value<total> / $value<count>, $key;
     }
 }
