@@ -34,7 +34,7 @@ sub summarize-timings() is export {
 
 
 #| Show all timings so far
-sub show-timings($verbosity) is export {
+sub show-timings(:$verbosity = 1) is export {
     return unless $verbosity >= 1;
 
     # Details of every timing
