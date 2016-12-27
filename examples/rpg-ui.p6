@@ -450,7 +450,7 @@ class CharacterViewer is Widget {
         $hp-bar = $hp-left x $.character<hp> ~ substr($hp-bar, $.character<hp>);
         $mp-bar = $mp-left x $.character<mp> ~ substr($mp-bar, $.character<mp>);
 
-        my @rows = sprintf('%d %-7s %-9s %s %s ', $.id,
+        my @rows = sprintf('%d %-7s %-9s %s %s', $.id,
                            $.character<name>, $.character<class>,
                            $hp-bar, $mp-bar),
                    sprintf($body-row, "Armor:  $.character<armor>, AC $.character<ac>"),
@@ -547,7 +547,7 @@ class PartyViewer is Widget {
         my $t0 = now;
 
         # Render as a header line followed by composited CharacterViewers
-        $.grid.set-span-text(0, 0, '  NAME    CLASS     HEALTH MAGIC');
+        $.grid.set-span-text(0, 0, '  NAME    CLASS     HEALTH MAGIC ');
         my $y = 1;
         for @!cvs.kv -> $i, $cv {
             $cv.move-to($cv.x, $y);
@@ -697,6 +697,7 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
 class UI is Widget
  does Terminal::Print::BoxDrawing {
     has Int         $.color-bits;
+    has Bool        $.edge-border = False;
     has Bool        $.ascii;
     has Game        $.game;
     has ProgressBar $.bar;
@@ -707,10 +708,10 @@ class UI is Widget
     #| Lay out main UI subwidgets and dividing lines, updating the progress bar
     method build-layout() {
         # Basic 3-viewport layout (map, party stats, log/input)
-        my $party-width = 34;
+        my $party-width = 33;
         my $log-height  = $.h div 6;
-        my $h-break     = $.w - $party-width - 2;
-        my $v-break     = $.h - $log-height  - 2;
+        my $h-break     = $.w - $party-width - 1 - $.edge-border;
+        my $v-break     = $.h - $log-height  - 1 - $.edge-border;
 
         # Let Terminal::Print know this will be a new screen
         my $t-ui = now;
@@ -721,15 +722,15 @@ class UI is Widget
         # Draw viewport borders
         my $t0 = now;
         my $style = $.ascii ?? 'ascii' !! 'double';
-        self.draw-box(0, 0, $.w - 1, $.h - 1, :$style);
-        self.draw-hline(1, $.w - 2, $v-break, :$style);
-        self.draw-vline($h-break, 1, $v-break - 1, :$style);
+        self.draw-box(0, 0, $.w - 1, $.h - 1, :$style) if $.edge-border;
+        self.draw-hline(+$.edge-border, $.w - 1 - $.edge-border, $v-break, :$style);
+        self.draw-vline($h-break, +$.edge-border, $v-break - 1, :$style);
 
         # Draw intersections if in full Unicode mode
         unless $.ascii {
-            $.grid.set-span-text(0, $v-break, '╠');
-            $.grid.set-span-text($.w - 1, $v-break, '╣');
-            $.grid.set-span-text($h-break, 0, '╦');
+            $.grid.set-span-text(0, $v-break,        '╠') if $.edge-border;
+            $.grid.set-span-text($.w - 1, $v-break,  '╣') if $.edge-border;
+            $.grid.set-span-text($h-break, 0,        '╦') if $.edge-border;
             $.grid.set-span-text($h-break, $v-break, '╩');
         }
         record-time("Lay out $.w x $.h main UI sections", $t0);
@@ -738,7 +739,9 @@ class UI is Widget
         # Add map, party, and log viewers, compositing them to the new UI grid
         # but not printing them yet (just updating the progress bar)
         $t0 = now;
-        $!mv = MapViewer.new(:x(1), :y(1), :w($h-break - 1), :h($v-break - 1),
+        $!mv = MapViewer.new(:x(+$.edge-border), :y(+$.edge-border),
+                             :w($h-break - $.edge-border),
+                             :h($v-break - $.edge-border),
                              :map($.game.map), :map-x(3), :map-y(3),
                              :party($.game.party), :parent(self));
         record-time("Create {$!mv.w} x {$!mv.h} MapViewer", $t0);
@@ -746,16 +749,18 @@ class UI is Widget
         $.bar.add-progress(5);
 
         $t0 = now;
-        $!pv = PartyViewer.new(:x($h-break + 1), :y(1), :w($party-width),
-                               :h($v-break - 2), :party($.game.party),
-                               :parent(self));
+        $!pv = PartyViewer.new(:x($h-break + 1), :y(+$.edge-border),
+                               :w($party-width),
+                               :h($v-break - 1 - $.edge-border),
+                               :party($.game.party), :parent(self));
         record-time("Create {$!pv.w} x {$!pv.h} PartyViewer", $t0);
         $!pv.show-state(:!print);
         $.bar.add-progress(5);
 
         # Log/input
         $t0 = now;
-        $!lv = LogViewer.new(:x(1), :y($v-break + 1), :w(w - 2),
+        $!lv = LogViewer.new(:x(+$.edge-border), :y($v-break + 1),
+                             :w(w - 2 * $.edge-border),
                              :h($log-height), :parent(self));
         record-time("Create {$!lv.w} x {$!lv.h} LogViewer", $t0);
         $!lv.add-entry('Game state loaded.', :!print);
