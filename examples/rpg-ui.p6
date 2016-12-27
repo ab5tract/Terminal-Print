@@ -301,9 +301,32 @@ class KeyframeAnimation is Widget {
 
 
 #| Map terrain types from pure ASCII to full Unicode
-my %tiles = '' => '',  '.' => '⋅', '#' => '█',   # Layout: empty, floor, wall
-           '-' => '─', '|' => '│', '/' => '╱',   # Doors: closed, closed, open
-           '@' => '@';                           # Where party is 'at'
+my %tiles =
+    ascii => {
+         '' => '',  '.' => '.', '#' => '#',      # Layout: empty, floor, wall
+        '-' => '-', '|' => '|', '/' => '/',      # Doors: closed, closed, open
+        '@' => '@',                              # Where party is 'at'
+        '+' => '+',                              # Uncharted map area
+    },
+    ascii-full => {
+         '' => '',   '.' => '．', '#' => '##',   # Layout: empty, floor, wall
+        '-' => '－', '|' => '｜', '/' => '／',   # Doors: closed, closed, open
+        '@' => '＠',                             # Where party is 'at'
+        '+' => '＋',                             # Uncharted map area
+    },
+    tiles => {
+         '' => '',  '.' => '⋅', '#' => '█',      # Layout: empty, floor, wall
+        '-' => '─', '|' => '│', '/' => '╱',      # Doors: closed, closed, open
+        '@' => '@',                              # Where party is 'at'
+        '+' => '+',                              # Uncharted map area
+    },
+    tiles-full => {
+         '' => '',   '.' => '・', '#' => '██',   # Layout: empty, floor, wall
+        '-' => '──', '|' => '│ ', '/' => '╱ ',   # Doors: closed, closed, open
+        '@' => '＠',                             # Where party is 'at'
+        '+' => '＋',                             # Uncharted map area
+    };
+
 
 #| A map viewer widget, providing a panning viewport into the game map
 class MapViewer is Widget {
@@ -317,10 +340,13 @@ class MapViewer is Widget {
         my $t0 = now;
 
         # Make sure party (plus a comfortable radius around them) is still visible
-        my $radius  = 4;
+        my $radius     = 4;
+        my $full-width = True;
+        my $map-width  = $full-width ?? $.w div 2 !! $.w;
+
         my $party-x = $.party.map-x;
         my $party-y = $.party.map-y;
-        $!map-x = max(min($.map-x, $party-x - $radius), $party-x + $radius + 1 - $.w);
+        $!map-x = max(min($.map-x, $party-x - $radius), $party-x + $radius + 1 - $map-width);
         $!map-y = max(min($.map-y, $party-y - $radius), $party-y + $radius + 1 - $.h);  # ,
 
         # Update party's seen area
@@ -344,8 +370,12 @@ class MapViewer is Widget {
         # Main map, panned to correct location
         my $ascii      = $.parent.ascii;
         my $color-bits = $.parent.color-bits;
+        my $tile-mode  = ($ascii      ?? 'ascii' !! 'tiles')
+                       ~ ($full-width ?? '-full' !! ''     );
+        my $tiles      = %tiles{$tile-mode};
 
-        my $marker = $color-bits > 4 ?? %( :char('+'), :color('242')) !! '+';
+        my $marker = $color-bits > 4 ?? %( :char($tiles<+>), :color('242'))
+                                     !!          $tiles<+>;
 
         my $t1 = now;
         $.grid.clear;
@@ -354,14 +384,21 @@ class MapViewer is Widget {
             my $seen-row = $!map.seen[$!map-y + $y];  # ++
             my $marker-row = ($!map-y + $y) %% 10;  # ++
 
-            for ^$.w -> $x {
+            for ^$map-width -> $x {
                 my $mapped = $row[$!map-x + $x] // '';
                    $mapped = '' unless $seen-row[$!map-x + $x];
-                   $mapped = %tiles{$mapped} unless $ascii;
+                   $mapped = $tiles{$mapped};
                    $mapped = %( :char($mapped), :color('246') ) if $mapped && $color-bits > 4;
                 my $marked = $marker-row && !$mapped && ($!map-x + $x) %% 10;
-                $.grid.change-cell($x, $y, $mapped) if $mapped;
-                $.grid.change-cell($x, $y, $marker) if $marked;
+
+                if $full-width {
+                    $.grid.change-cell($x * 2, $y, $mapped || ($marked ?? $marker !! '  '));
+                    $.grid.change-cell($x * 2 + 1, $y, '');
+                }
+                else {
+                    $.grid.change-cell($x, $y, $mapped) if $mapped;
+                    $.grid.change-cell($x, $y, $marker) if $marked;
+                }
             }
         }
 
@@ -369,14 +406,21 @@ class MapViewer is Widget {
         my $t2 = now;
         my $px = $party-x - $.map-x;
         my $py = $party-y - $.map-y;  # ;;
-        if 0 <= $px < $.w && 0 <= $py < $.h {
-            $.grid.change-cell($px, $py, '@');
+        if 0 <= $px < $map-width && 0 <= $py < $.h {
+            if $full-width {
+                $.grid.change-cell($px * 2,     $py, $tiles<@>);
+                $.grid.change-cell($px * 2 + 1, $py, '');
+            }
+            else {
+                $.grid.change-cell($px, $py, $tiles<@>);
+            }
         }
 
         # Party's light source glow
         # XXXX: This naively lights up areas the glow couldn't actually reach
         my $t3      = now;
         my $r_num   = $radius.Num;
+        my $wide    = 1 + $full-width;
         for (-$radius) .. $radius -> $dy {
             my $y = $py + $dy;
 
@@ -393,10 +437,11 @@ class MapViewer is Widget {
                 my $color = 16 + 42 * (1 + (min 8, $brightness) div 2) + max(0, $brightness - 8);
 
                 # $.grid.change-cell($x, $y, $brightness.base(16));  # DEBUG: show brightness levels
-                $.grid.set-span-color($x, $x, $y, $color-bits >  4 ?? ~$color       !!
-                                                  $brightness > 11 ?? 'bold white'  !!
-                                                  $brightness >  7 ?? 'bold yellow' !!
-                                                                      'yellow'      );
+                $.grid.set-span-color($x * $wide, $x * $wide, $y,
+                                      $color-bits >  4 ?? ~$color       !!
+                                      $brightness > 11 ?? 'bold white'  !!
+                                      $brightness >  7 ?? 'bold yellow' !!
+                                                          'yellow'      );
             }
         }
 
