@@ -389,7 +389,8 @@ class MapViewer is Widget {
                    $mapped = '' unless $seen-row[$!map-x + $x];
                    $mapped = $tiles{$mapped};
                    $mapped = %( :char($mapped), :color('246') ) if $mapped && $color-bits > 4;
-                my $marked = $marker-row && !$mapped && ($!map-x + $x) %% 10;
+                # my $marked = $marker-row && !$mapped && ($!map-x + $x) %% 10;
+                my $marked = !$mapped && ($marker-row || ($!map-x + $x) %% 10);
 
                 if $full-width {
                     $.grid.change-cell($x * 2, $y, $mapped || ($marked ?? $marker !! '  '));
@@ -1008,7 +1009,8 @@ sub MAIN(
     sub move-party($dir) {
         $game.party.move($dir);
         $ui.mv.draw;
-        sleep $short-sleep;
+        # sleep $short-sleep;
+        sleep $long-sleep;
     }
 
     # Simulate searching for the dragon
