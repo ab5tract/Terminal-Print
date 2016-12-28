@@ -378,7 +378,8 @@ class MapViewer is Widget {
                                      !!          $tiles<+>;
 
         my $t1 = now;
-        $.grid.clear;
+        # $.grid.clear;
+        $.grid.grid = [ [ 'Q' xx $.w ] xx $.h ];
         for ^$.h -> $y {
             my $row = $!map.terrain[$!map-y + $y];  # ++
             my $seen-row = $!map.seen[$!map-y + $y];  # ++
@@ -390,10 +391,12 @@ class MapViewer is Widget {
                    $mapped = $tiles{$mapped};
                    $mapped = %( :char($mapped), :color('246') ) if $mapped && $color-bits > 4;
                 # my $marked = $marker-row && !$mapped && ($!map-x + $x) %% 10;
-                my $marked = !$mapped && ($marker-row || ($!map-x + $x) %% 10);
+                # my $marked = !$mapped && ($marker-row || ($!map-x + $x) %% 10);
+                my $marked = !$mapped;
 
                 if $full-width {
-                    $.grid.change-cell($x * 2, $y, $mapped || ($marked ?? $marker !! '  '));
+                    # grid.change-cell($x * 2, $y, $mapped || ($marked ?? $marker !! '  '));
+                    $.grid.change-cell($x * 2, $y, $mapped || ($marked ?? %( :char(sprintf("%2d", $x % 10)), :color('242')) !! '  '));
                     $.grid.change-cell($x * 2 + 1, $y, '');
                 }
                 else {
