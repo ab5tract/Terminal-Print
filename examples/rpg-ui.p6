@@ -379,25 +379,69 @@ class MapViewer is Widget {
 
         my $t1 = now;
         $.grid.clear;
-        for ^$.h -> $y {
-            my $row = $!map.terrain[$!map-y + $y];  # ++
-            my $seen-row = $!map.seen[$!map-y + $y];  # ++
-            my $marker-row = ($!map-y + $y) %% 10;  # ++
+        if $full-width && $color-bits > 4 {
+            for ^$.h -> $y {
+                my $my       = $!map-y + $y;  # ++
+                my $row      = $!map.terrain[$my] || [];
+                my $seen-row = $!map.seen[$my]    || [];
 
-            for ^$map-width -> $x {
-                my $mapped = $row[$!map-x + $x] // '';
-                   $mapped = '' unless $seen-row[$!map-x + $x];
-                   $mapped = $tiles{$mapped};
-                   $mapped = %( :char($mapped), :color('246') ) if $mapped && $color-bits > 4;
-                my $marked = $marker-row && !$mapped && ($!map-x + $x) %% 10;
+                if $my %% 10 {
+                    for ^$map-width -> $x {
+                        my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] // '' };
+                           $mapped = %( :char($mapped), :color('246') ) if $mapped;
 
-                if $full-width {
-                    $.grid.change-cell($x * 2, $y, $mapped || ($marked ?? $marker !! '  '));
-                    $.grid.change-cell($x * 2 + 1, $y, '');
+                        $.grid.change-cell($x * 2, $y, $mapped || (($!map-x + $x) %% 10 ?? $marker !! '  '));
+                        $.grid.change-cell($x * 2 + 1, $y, '');
+                    }
                 }
                 else {
-                    $.grid.change-cell($x, $y, $mapped) if $mapped;
-                    $.grid.change-cell($x, $y, $marker) if $marked;
+                    for ^$map-width -> $x {
+                        my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] or next };
+
+                        $.grid.change-cell($x * 2,     $y, %( :char($mapped), :color('246') ));
+                        $.grid.change-cell($x * 2 + 1, $y, '');
+                    }
+                }
+            }
+        }
+        else {
+            for ^$.h -> $y {
+                my $row = $!map.terrain[$!map-y + $y] // [];  # ++
+                my $seen-row = $!map.seen[$!map-y + $y] // [];  # ++
+                my $marker-row = ($!map-y + $y) %% 10;  # ++
+
+                if $marker-row {
+                    for ^$map-width -> $x {
+                        my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] // '' };
+
+                        if $full-width {
+                            $.grid.change-cell($x * 2, $y, $mapped || (($!map-x + $x) %% 10 ?? $marker !! '  '));
+                            $.grid.change-cell($x * 2 + 1, $y, '');
+                        }
+                        elsif $mapped {
+                            $mapped = %( :char($mapped), :color('246') ) if $color-bits > 4;
+                            $.grid.change-cell($x, $y, $mapped);
+                        }
+                        elsif ($!map-x + $x) %% 10 {
+                            $.grid.change-cell($x, $y, $marker);
+                        }
+                    }
+                }
+                elsif $full-width {
+                    for ^$map-width -> $x {
+                        my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] or next };
+
+                        $.grid.change-cell($x * 2,     $y, $mapped);
+                        $.grid.change-cell($x * 2 + 1, $y, '');
+                    }
+                }
+                else {
+                    for ^$map-width -> $x {
+                        my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] or next };
+                           $mapped = %( :char($mapped), :color('246') ) if $color-bits > 4;
+
+                        $.grid.change-cell($x, $y, $mapped);
+                    }
                 }
             }
         }
