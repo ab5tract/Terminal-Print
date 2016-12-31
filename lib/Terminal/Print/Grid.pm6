@@ -77,14 +77,12 @@ method set-span($x, $y, Str $text, $color) {
     my $row = @!grid[$y];
 
     if $color {
-        for $text.comb.kv -> $i, $char {
-            $row[$x + $i] = Cell.new(:$char, :$color);
-        }
+        my @cells = $text.comb.map: { Cell.new(:char($_), :$color) };
+        $row.splice($x, +@cells, @cells);
     }
     else {
-        for $text.comb.kv -> $i, $char {
-            $row[$x + $i] = $char;
-        }
+        my @chars = $text.comb;
+        $row.splice($x, +@chars, @chars);
     }
 }
 
