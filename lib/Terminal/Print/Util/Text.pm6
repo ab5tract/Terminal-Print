@@ -11,6 +11,10 @@ sub wrap-text($w, $text, $prefix = '', $first-prefix = '') is export {
     my @words = $text.words;
     return [] unless @words;
 
+    # Quick out for short text; still joins @words to maintain uniform spacing
+    return [ $first-prefix ~ @words.join(' ') ]
+        if $w > $first-prefix.chars + $text.chars;
+
     # Invariants:
     #  * Latest line in @lines always contains at least a prefix and one word
     #  * No line is wider than $w unless it contains only one very long word
