@@ -947,7 +947,7 @@ sub dragon-battle(UI $ui, Game $game) {
 sub MAIN(
     Bool :$ascii, #= Use only ASCII characters, no >127 codepoints
     Bool :$bench, #= Benchmark mode (run as fast as possible, with no sleeps or rate limiting)
-    Int  :$color-bits = 4 #= Enable extended colors (8 = 256-color, 24 = 24-bit RGB)
+    Int  :$color-bits = 8 #= Set color support (4 = 16-color, 8 = 256-color, 24 = 24-bit RGB)
     ) {
 
     my $short-sleep  = .1 * !$bench;
