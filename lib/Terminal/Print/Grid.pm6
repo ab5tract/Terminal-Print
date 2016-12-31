@@ -75,8 +75,16 @@ method span-string($x1, $x2, $y) {
 method set-span($x, $y, Str $text, $color) {
     $!grid-string = '';
     my $row = @!grid[$y];
-    for $text.comb.kv -> $i, $char {
-        $row[$x + $i] = Cell.new(:$char, :$color);
+
+    if $color {
+        for $text.comb.kv -> $i, $char {
+            $row[$x + $i] = Cell.new(:$char, :$color);
+        }
+    }
+    else {
+        for $text.comb.kv -> $i, $char {
+            $row[$x + $i] = $char;
+        }
     }
 }
 
