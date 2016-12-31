@@ -643,7 +643,7 @@ class LogViewer is Widget {
         record-time("Draw $.w x $.h {self.^name}", $t0);
 
         self.composite(:$print);
-        sleep .5 * @lines if $print;
+        sleep .5 * @lines if $print && !$*BENCHMARK-MODE;
     }
 
     #| Simulate a user entering commands at a prompt
@@ -661,7 +661,7 @@ class LogViewer is Widget {
 
 
 #| Create title animation
-sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
+sub make-title-animation(ProgressBar :$bar, Bool :$ascii) {
     my $t0 = now;
 
     my $standard = q:to/STANDARD/;
@@ -729,9 +729,9 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii, Bool :$bench) {
 
     # Make total animation time relatively constant, despite different number
     # of keyframes and different size for ASCII and full Unicode versions
-    # Note: interval supplies are unstable and may stop progressing below 1 ms
-    # per tick!  (Rakudobug submitted as RT #130168)
-    my $promise = $anim.speckle($bench ?? .001 !! 6 / ($grids * $title-w * $title-h));
+    # Note: interval supplies need an interval >= 1 ms
+    my $seconds-per-frame = 6 / ($grids * $title-w * $title-h);
+    my $promise = $anim.speckle($*BENCHMARK-MODE ?? .001 !! $seconds-per-frame);
     record-time("Setup animation for $title-w x $title-h title screen", $t0);
 
     $promise;
@@ -950,6 +950,8 @@ sub MAIN(
     Int  :$color-bits = 8 #= Set color support (4 = 16-color, 8 = 256-color, 24 = 24-bit RGB)
     ) {
 
+    PROCESS::<$BENCHMARK-MODE> = $bench;
+
     my $short-sleep  = .1 * !$bench;
     my $medium-sleep =  1 * !$bench;
     my $long-sleep   = 10 * !$bench;
@@ -967,7 +969,7 @@ sub MAIN(
     $bar.set-progress(0);
 
     # Animated title
-    @loading-promises.push: make-title-animation(:$bar, :$ascii, :$bench);
+    @loading-promises.push: make-title-animation(:$bar, :$ascii);
 
     # We'll need these later, but will initialize them in a different thread
     my ($game, $ui);
