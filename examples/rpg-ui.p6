@@ -378,7 +378,8 @@ class MapViewer is Widget {
                                      !!          $tiles<+>;
 
         my $t1 = now;
-        $.grid.clear;
+        my $g = $.grid;
+        $g.clear;
         if $full-width && $color-bits > 4 {
             for ^$.h -> $y {
                 my $my       = $!map-y + $y;  # ++
@@ -390,16 +391,16 @@ class MapViewer is Widget {
                         my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] // '' };
                            $mapped = %( :char($mapped), :color('246') ) if $mapped;
 
-                        $.grid.change-cell($x * 2, $y, $mapped || (($!map-x + $x) %% 10 ?? $marker !! '  '));
-                        $.grid.change-cell($x * 2 + 1, $y, '');
+                        $g.change-cell($x * 2, $y, $mapped || (($!map-x + $x) %% 10 ?? $marker !! '  '));
+                        $g.change-cell($x * 2 + 1, $y, '');
                     }
                 }
                 else {
                     for ^$map-width -> $x {
                         my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] or next };
 
-                        $.grid.change-cell($x * 2,     $y, %( :char($mapped), :color('246') ));
-                        $.grid.change-cell($x * 2 + 1, $y, '');
+                        $g.change-cell($x * 2,     $y, %( :char($mapped), :color('246') ));
+                        $g.change-cell($x * 2 + 1, $y, '');
                     }
                 }
             }
@@ -415,15 +416,15 @@ class MapViewer is Widget {
                         my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] // '' };
 
                         if $full-width {
-                            $.grid.change-cell($x * 2, $y, $mapped || (($!map-x + $x) %% 10 ?? $marker !! '  '));
-                            $.grid.change-cell($x * 2 + 1, $y, '');
+                            $g.change-cell($x * 2, $y, $mapped || (($!map-x + $x) %% 10 ?? $marker !! '  '));
+                            $g.change-cell($x * 2 + 1, $y, '');
                         }
                         elsif $mapped {
                             $mapped = %( :char($mapped), :color('246') ) if $color-bits > 4;
-                            $.grid.change-cell($x, $y, $mapped);
+                            $g.change-cell($x, $y, $mapped);
                         }
                         elsif ($!map-x + $x) %% 10 {
-                            $.grid.change-cell($x, $y, $marker);
+                            $g.change-cell($x, $y, $marker);
                         }
                     }
                 }
@@ -431,8 +432,8 @@ class MapViewer is Widget {
                     for ^$map-width -> $x {
                         my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] or next };
 
-                        $.grid.change-cell($x * 2,     $y, $mapped);
-                        $.grid.change-cell($x * 2 + 1, $y, '');
+                        $g.change-cell($x * 2,     $y, $mapped);
+                        $g.change-cell($x * 2 + 1, $y, '');
                     }
                 }
                 else {
@@ -440,7 +441,7 @@ class MapViewer is Widget {
                         my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] or next };
                            $mapped = %( :char($mapped), :color('246') ) if $color-bits > 4;
 
-                        $.grid.change-cell($x, $y, $mapped);
+                        $g.change-cell($x, $y, $mapped);
                     }
                 }
             }
@@ -452,11 +453,11 @@ class MapViewer is Widget {
         my $py = $party-y - $.map-y;  # ;;
         if 0 <= $px < $map-width && 0 <= $py < $.h {
             if $full-width {
-                $.grid.change-cell($px * 2,     $py, $tiles<@>);
-                $.grid.change-cell($px * 2 + 1, $py, '');
+                $g.change-cell($px * 2,     $py, $tiles<@>);
+                $g.change-cell($px * 2 + 1, $py, '');
             }
             else {
-                $.grid.change-cell($px, $py, $tiles<@>);
+                $g.change-cell($px, $py, $tiles<@>);
             }
         }
 
@@ -480,12 +481,12 @@ class MapViewer is Widget {
                 # Ramp from black to bright yellow to white:  16 + 36 * r + 6 * g + b
                 my $color = 16 + 42 * (1 + (min 8, $brightness) div 2) + max(0, $brightness - 8);
 
-                # $.grid.change-cell($x, $y, $brightness.base(16));  # DEBUG: show brightness levels
-                $.grid.set-span-color($x * $wide, $x * $wide, $y,
-                                      $color-bits >  4 ?? ~$color       !!
-                                      $brightness > 11 ?? 'bold white'  !!
-                                      $brightness >  7 ?? 'bold yellow' !!
-                                                          'yellow'      );
+                # $g.change-cell($x, $y, $brightness.base(16));  # DEBUG: show brightness levels
+                $g.set-span-color($x * $wide, $x * $wide, $y,
+                                  $color-bits >  4 ?? ~$color       !!
+                                  $brightness > 11 ?? 'bold white'  !!
+                                  $brightness >  7 ?? 'bold yellow' !!
+                                                      'yellow'      );
             }
         }
 
