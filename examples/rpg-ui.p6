@@ -5,6 +5,7 @@
 use v6;
 use Terminal::Print;
 use Terminal::Print::Widget;
+use Terminal::Print::Animated;
 use Terminal::Print::BoxDrawing;
 use Terminal::Print::Util::Text;
 use Terminal::Print::Util::Timing;
@@ -183,6 +184,9 @@ class Widget is Terminal::Print::Widget {
     }
 }
 
+#| An animated Widget (with local extensions)
+class Animation is Widget does Terminal::Print::Animated[:auto-clear] { }
+
 
 #| A left-to-right colored progress bar
 class ProgressBar is Widget {
@@ -329,14 +333,14 @@ my %tiles =
 
 
 #| A map viewer widget, providing a panning viewport into the game map
-class MapViewer is Widget {
+class MapViewer is Animation {
     has $.map-x is required;
     has $.map-y is required;  # i
     has $.map   is required;
     has $.party is required;
 
     #| Draw the current map viewport, respecting seen state, party glow, etc.
-    method draw(:$print = True) {
+    method draw-frame(|) {
         my $t0 = now;
 
         # Make sure party (plus a comfortable radius around them) is still visible
@@ -379,7 +383,8 @@ class MapViewer is Widget {
 
         my $t1 = now;
         my $g = $.grid;
-        $g.clear;
+
+        # Fast path the common case
         if $full-width && $color-bits > 4 {
             for ^$.h -> $y {
                 my $my       = $!map-y + $y;  # ++
@@ -497,14 +502,13 @@ class MapViewer is Widget {
         record-time("Draw $.w x $.h {self.^name} -- glow",  $t3, $t4);
         record-time("Draw $.w x $.h {self.^name}", $t0, $t4);
 
-        # Update screen
-        self.composite(:$print);
+        callsame;
     }
 }
 
 
 #| Render an individual character's current stats
-class CharacterViewer is Widget {
+class CharacterViewer is Animation {
     has $.character;
     has $.rows;
     has $.id;
@@ -515,7 +519,7 @@ class CharacterViewer is Widget {
     method set-state($!state) { }
 
     #| Render the character's stats sheet, health/magic bars, etc.
-    method render() {
+    method draw-frame(|) {
         my $t0 = now;
 
         my $color-bits = $.parent.parent.color-bits;
@@ -578,7 +582,7 @@ class CharacterViewer is Widget {
         start {
             react {
                 whenever Supply.interval(.1) -> $value {
-                    self.render;
+                    self.do-frame(Terminal::Print::FrameInfo.new);
                     $.parent.request-repaint;
 
                     $!injury-level -= .2;
@@ -618,13 +622,13 @@ class PartyViewer is Widget {
     method show-state(:$print = True, :$expand = -1) {
         my $t0 = now;
 
-        # Ask each CharacterViewer to .render itself in the appropriate state
+        # Ask each CharacterViewer to render itself in the appropriate state
         $!expanded = $expand;
         for @!cvs.kv -> $i, $cv {
             $cv.set-state: $expand <  0  ?? 'normal'    !!
                            $expand == $i ?? 'highlight' !!
                                             'lowlight'  ;
-            $cv.render;
+            $cv.do-frame(Terminal::Print::FrameInfo.new);
         }
 
         record-time("Render { $!party.members.elems } CVs", $t0);
@@ -661,32 +665,45 @@ class PartyViewer is Widget {
 
 
 #| Keep/display a log of events and inputs, scrolling as needed
-class LogViewer is Widget {
+class LogViewer is Animation {
     has @.log;
     has @.wrapped;
     has $.scroll-pos = 0;
+    has $.last-entry-lines = 0;
 
-    #| Add a single text entry to the log and optionally print it
-    method add-entry($text, :$print = True) {
+    #| Draw the currently visible section of the log
+    method draw-frame(|) {
         my $t0 = now;
-
-        @.log.push($text);
-        my @lines = wrap-text($.w, $text, '    ');
-
-        # Autoscroll if already at end
-        $!scroll-pos += @lines if $.scroll-pos == @.wrapped;
-        @.wrapped.append(@lines);
 
         # Print most recent $.h wrapped lines, highlighting most recent entry
         my $top = max 0, $.scroll-pos - $.h;
         for ^$.h {
             my $line  = @.wrapped[$top + $_] // '';
-            my $color = @.wrapped - $top - $_ <= @lines ?? 'bold white' !! '';
+            my $color = @.wrapped - $top - $_ <= $.last-entry-lines
+                        ?? 'bold white' !! '';
             $.grid.set-span(0, $_, $line ~ ' ' x ($.w - $line.chars), $color);
         }
 
         record-time("Draw $.w x $.h {self.^name}", $t0);
+    }
 
+    #| Add a single text entry to the log and optionally print it
+    method add-entry($text, :$print = True) {
+        my $t0 = now;
+
+        # Update log and wrap lines
+        @.log.push($text);
+        my @lines = wrap-text($.w, $text, '    ');
+        $!last-entry-lines = +@lines;
+
+        # Autoscroll if already at end
+        $!scroll-pos += $.last-entry-lines if $.scroll-pos == @.wrapped;
+        @.wrapped.append(@lines);
+
+        record-time("Update $.w x $.h {self.^name}", $t0);
+
+        # Render and optionally print and sleep afterwards
+        self.do-frame(Terminal::Print::FrameInfo.new);
         self.composite(:$print);
         sleep .5 * @lines if $print && !$*BENCHMARK-MODE;
     }
@@ -835,7 +852,7 @@ class UI is Widget
                              :map($.game.map), :map-x(3), :map-y(3),
                              :party($.game.party), :parent(self));
         record-time("Create {$!mv.w} x {$!mv.h} MapViewer", $t0);
-        $!mv.draw(:!print);
+        $!mv.do-frame(Terminal::Print::FrameInfo.new);
         $.bar.add-progress(5);
 
         $t0 = now;
@@ -1054,7 +1071,8 @@ sub MAIN(
     #| Move the party, update the map viewer, and don't go excessively fast
     sub move-party($dir) {
         $game.party.move($dir);
-        $ui.mv.draw;
+        $ui.mv.do-frame(Terminal::Print::FrameInfo.new);
+        $ui.mv.composite(:print);
         sleep $short-sleep;
     }
 
