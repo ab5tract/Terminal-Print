@@ -185,7 +185,8 @@ class Widget is Terminal::Print::Widget {
 }
 
 #| An animated Widget (with local extensions)
-class Animation is Widget does Terminal::Print::Animated[:auto-clear] { }
+class Animation  is Widget does Terminal::Print::Animated[:auto-clear] { }
+class Overdrawer is Widget does Terminal::Print::Animated[] { }
 
 
 #| A left-to-right colored progress bar
@@ -508,7 +509,7 @@ class MapViewer is Animation {
 
 
 #| Render an individual character's current stats
-class CharacterViewer is Animation {
+class CharacterViewer is Overdrawer {
     has $.character;
     has $.rows;
     has $.id;
@@ -582,7 +583,6 @@ class CharacterViewer is Animation {
         start {
             react {
                 whenever Supply.interval(.1) -> $value {
-                    self.do-frame(Terminal::Print::FrameInfo.new);
                     $.parent.request-repaint;
 
                     $!injury-level -= .2;
@@ -595,10 +595,9 @@ class CharacterViewer is Animation {
 
 
 #| Compose a number of CharacterViewers into an overall party widget
-class PartyViewer is Widget {
+class PartyViewer is Overdrawer {
     has $.party;
-    has @.cvs;
-    has $!expanded;
+    has $!expanded = -1;
 
     has $!repaint-supplier = Supplier.new;
     has $!repaint-supply = $!repaint-supplier.Supply;
@@ -607,7 +606,7 @@ class PartyViewer is Widget {
     submethod TWEAK() {
         my $t0 = now;
 
-        @!cvs = do for $!party.members.kv -> $i, $pc {
+        for $!party.members.kv -> $i, $pc {
             CharacterViewer.new(:id($i + 1), :w(self.w), :h(7), :x(0), :y(0),
                                 :parent(self), :character($pc));
         }
@@ -615,35 +614,28 @@ class PartyViewer is Widget {
         record-time("Create { $!party.members.elems } CVs", $t0);
 
         # XXXX: Do an initial show-state to avoid a possible race?
-        $!repaint-supply.act: -> $print { self.repaint(:$print) }
+        $!repaint-supply.stable(.05).act: -> $print { self.repaint(:$print) }
     }
 
-    #| Draw the current party state
-    method show-state(:$print = True, :$expand = -1) {
-        my $t0 = now;
-
-        # Ask each CharacterViewer to render itself in the appropriate state
-        $!expanded = $expand;
-        for @!cvs.kv -> $i, $cv {
-            $cv.set-state: $expand <  0  ?? 'normal'    !!
-                           $expand == $i ?? 'highlight' !!
-                                            'lowlight'  ;
-            $cv.do-frame(Terminal::Print::FrameInfo.new);
+    #| Tell the CharacterViewers to draw themselves in the correct states
+    method draw-children(|) {
+        # Set CV states
+        for @.children.kv -> $i, $cv {
+            $cv.set-state: $!expanded <  0  ?? 'normal'    !!
+                           $!expanded == $i ?? 'highlight' !!
+                                               'lowlight'  ;
         }
 
-        record-time("Render { $!party.members.elems } CVs", $t0);
-
-        self.request-repaint(:$print);
+        # Actually draw the CVs
+        callsame;
     }
 
-    #| Repaint self (without redrawing CVs, which would recurse if a CV is animating)
-    method repaint(:$print = True) {
-        my $t0 = now;
-
+    #| Composite updated CVs
+    method draw-frame(|) {
         # Render as a header line followed by composited CharacterViewers
         $.grid.set-span-text(0, 0, '  NAME    CLASS     HEALTH MAGIC ');
         my $y = 1;
-        for @!cvs.kv -> $i, $cv {
+        for @.children.kv -> $i, $cv {
             $cv.move-to($cv.x, $y);
             $y += $i == $!expanded ?? $cv.rows + 1 !! 1;
 
@@ -652,14 +644,23 @@ class PartyViewer is Widget {
 
         # Make sure extra rows are cleared after collapsing
         $.grid.set-span(0, $y++, ' ' x $.w, '') for ^(min 6, $.h - $y + 1);
+    }
 
-        record-time("Repaint $.w x $.h {self.^name}", $t0);
-
+    #| Repaint self, optionally printing result
+    method repaint(:$print = True) {
+        self.do-frame: Terminal::Print::FrameInfo.new;
         self.composite(:$print);
     }
 
+    #| Request a repaint "soon"
     method request-repaint(:$print = True) {
         $!repaint-supplier.emit($print);
+    }
+
+    #| Draw the current party state
+    method show-state(:$print = True, :$expand = -1) {
+        $!expanded = $expand;
+        self.request-repaint(:$print);
     }
 }
 
@@ -885,7 +886,7 @@ sub dragon-battle(UI $ui, Game $game) {
     #| Do damage to a character and show it in the UI
     my sub do-damage($member) {
         $game.party.members[$member]<hp>--;
-        $ui.pv.cvs[$member].injured;
+        $ui.pv.children[$member].injured;
     }
 
     #| Use up one of the character's magic points and show it in the UI
