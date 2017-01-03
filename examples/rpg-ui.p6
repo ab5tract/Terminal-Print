@@ -18,8 +18,6 @@ use Terminal::Print::Util::Timing;
 
 #| Create the initial map terrain state
 sub make-terrain($map-w, $map-h) {
-    my $t0 = now;
-
     # Start with a map of the right shape but empty of actual terrain
     my @map = [ '' xx $map-w ] xx $map-h;
 
@@ -60,29 +58,19 @@ sub make-terrain($map-w, $map-h) {
     @map[19][6] = '|';
     @map[5][26] = '-';
 
-    record-time("Create $map-w x $map-h map terrain", $t0);
-
     @map
 }
 
 
 #| Create the initial map seen ("fog of war") state
 sub make-seen($map-w, $map-h) {
-    my $t0 = now;
-
     # Map is initially entirely hidden and must be exposed by walking around
     my @seen = [ 0 xx $map-w ] xx $map-h;
-
-    record-time("Create $map-w x $map-h map seen state", $t0);
-
-    @seen
 }
 
 
 #| Create the initial character party
 sub make-party-members() {
-    my $t0 = now;
-
     # Use a plain old hash for each character; no need for a bespoke class yet
     my @party =
         { :name<Fennic>,  :class<Ranger>,
@@ -119,10 +107,6 @@ sub make-party-members() {
           :weapon('Throwing Dagger +1'),
           :spells(()),
         };
-
-    record-time("Create {+@party} party members", $t0);
-
-    @party;
 }
 
 
@@ -604,14 +588,10 @@ class PartyViewer is Overdrawer {
 
     #| Create a CharacterViewer for each character and prepare repaint trigger
     submethod TWEAK() {
-        my $t0 = now;
-
         for $!party.members.kv -> $i, $pc {
             CharacterViewer.new(:id($i + 1), :w(self.w), :h(7), :x(0), :y(0),
                                 :parent(self), :character($pc));
         }
-
-        record-time("Create { $!party.members.elems } CVs", $t0);
 
         # XXXX: Do an initial show-state to avoid a possible race?
         $!repaint-supply.stable(.05).act: -> $print { self.repaint(:$print) }
@@ -822,13 +802,10 @@ class UI is Widget
         my $v-break     = $.h - $log-height  - 1 - $.edge-border;
 
         # Let Terminal::Print know this will be a new screen
-        my $t-ui = now;
         T.add-grid('main', :new-grid($.grid));
-        record-time("Add new {$.w} x {$.h} grid 'main'", $t-ui);
         $.bar.add-progress(5);
 
         # Draw viewport borders
-        my $t0 = now;
         my $style = $.ascii ?? 'ascii' !! 'double';
         self.draw-box(0, 0, $.w - 1, $.h - 1, :$style) if $.edge-border;
         self.draw-hline(+$.edge-border, $.w - 1 - $.edge-border, $v-break, :$style);
@@ -841,36 +818,29 @@ class UI is Widget
             $.grid.set-span-text($h-break, 0,        '╦') if $.edge-border;
             $.grid.set-span-text($h-break, $v-break, '╩');
         }
-        record-time("Lay out $.w x $.h main UI sections", $t0);
         $.bar.add-progress(5);
 
         # Add map, party, and log viewers, compositing them to the new UI grid
         # but not printing them yet (just updating the progress bar)
-        $t0 = now;
         $!mv = MapViewer.new(:x(+$.edge-border), :y(+$.edge-border),
                              :w($h-break - $.edge-border),
                              :h($v-break - $.edge-border),
                              :map($.game.map), :map-x(3), :map-y(3),
                              :party($.game.party), :parent(self));
-        record-time("Create {$!mv.w} x {$!mv.h} MapViewer", $t0);
         $!mv.do-frame(Terminal::Print::FrameInfo.new);
         $.bar.add-progress(5);
 
-        $t0 = now;
         $!pv = PartyViewer.new(:x($h-break + 1), :y(+$.edge-border),
                                :w($party-width),
                                :h($v-break - 1 - $.edge-border),
                                :party($.game.party), :parent(self));
-        record-time("Create {$!pv.w} x {$!pv.h} PartyViewer", $t0);
         $!pv.show-state(:!print);
         $.bar.add-progress(5);
 
         # Log/input
-        $t0 = now;
         $!lv = LogViewer.new(:x(+$.edge-border), :y($v-break + 1),
                              :w(w - 2 * $.edge-border),
                              :h($log-height), :parent(self));
-        record-time("Create {$!lv.w} x {$!lv.h} LogViewer", $t0);
         $!lv.add-entry('Game state loaded.', :!print);
         $.bar.add-progress(5);
     }
@@ -1022,9 +992,7 @@ sub MAIN(
     my @loading-promises;
 
     # Start up the fun!
-    my $t0 = now;
     T.initialize-screen;
-    record-time("Initialize {w} x {h} screen", $t0);
 
     # Loading bar
     my $bar = ProgressBar.new(:x((w - 50) div 2), :y(h * 2 div 3), :w(50), :h(3),
@@ -1096,9 +1064,7 @@ sub MAIN(
     sleep $long-sleep;
 
     # Return to our regularly scheduled not-gaming
-    $t0 = now;
     T.shutdown-screen;
-    record-time("Shut down {w} x {h} screen", $t0);
 
     # Show timing results
     record-time('TOTAL TIME', $*INITTIME);
