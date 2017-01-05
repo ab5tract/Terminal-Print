@@ -1061,7 +1061,7 @@ sub MAIN(
     $ui.lv.add-entry("YOU ARE VICTORIOUS!");
 
     # Final sleep
-    sleep $long-sleep;
+    sleep $long-sleep || .1;
 
     # Return to our regularly scheduled not-gaming
     T.shutdown-screen;
