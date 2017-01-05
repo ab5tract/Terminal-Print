@@ -274,7 +274,8 @@ class KeyframeAnimation is Widget {
                 my ($x, $y) = @indices[$frame % @indices][0,1];
 
                 $.grid.grid[$y][$x] = @!keyframes[$keyframe].grid[$y][$x];
-                self.composite(:print);
+                # self.composite(:print);
+                print &($.grid.move-cursor)($x + $.x, $y + $.y) ~ $.grid.grid[$y][$x];  # ))
             }
             else {
                 $!on-keyframe.done;
