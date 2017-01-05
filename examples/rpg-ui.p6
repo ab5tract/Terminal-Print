@@ -515,7 +515,6 @@ class CharacterViewer is Overdrawer {
                                             ''        ;
 
         my $color = { highlight => 'bold white', lowlight => 'blue' }{$!state} // '';
-           $color = ($color ~ $injury).trim;
         my $body-row = "  %-{$.w - 2}s";
 
         # Render character stats into rows of the proper width
@@ -543,7 +542,7 @@ class CharacterViewer is Overdrawer {
 
         # Draw filled rows into the top of the widget in the proper color
         for @rows.kv -> $y, $row {
-            $.grid.set-span(0, $y, $row, $color);
+            $.grid.set-span(0, $y, $row, $y ?? $color !! ($color ~ $injury).trim);
         }
 
         # Add some color to the bar graphs
