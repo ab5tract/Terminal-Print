@@ -7,6 +7,7 @@ use Terminal::Print;
 use Terminal::Print::Widget;
 use Terminal::Print::Animated;
 use Terminal::Print::BoxDrawing;
+use Terminal::Print::ParticleEffect;
 use Terminal::Print::Util::Text;
 use Terminal::Print::Util::Timing;
 
@@ -44,9 +45,9 @@ sub make-terrain($map-w, $map-h) {
     }
 
     # Rooms
-    map-room(0, 0, 16, 7);
-    map-room(20, 2, 8, 4);
-    map-room(0, 10, 7, 12);
+    map-room( 0, 0, 16, 7);
+    map-room(20, 1, 15, 7);
+    map-room( 0, 10, 7, 12);
 
     # Corridors
     @map[4][$_] = '.' for 16..20;
@@ -848,6 +849,96 @@ class UI is Widget
 
 
 #
+# ATTACK ANIMATIONS
+#
+
+
+#| Convert an rgb triplet (each in the 0..1 range) to a valid cell color
+sub rgb-color(Real $r, Real $g, Real $b) {
+    # Just use the 6x6x6 color cube, ignoring the hi-res gray ramp
+    my $c = 16 + 36 * (5e0 * $r + .5e0).floor
+               +  6 * (5e0 * $g + .5e0).floor
+               +      (5e0 * $b + .5e0).floor;
+
+    # Cell colors must be stringified
+    ~$c
+}
+
+
+class SimpleParticle is Terminal::Print::Particle {
+    has $.dx;
+    has $.dy;
+}
+
+
+class DragonBreath is Terminal::Print::ParticleEffect {
+    has $.life;
+
+    method composite(:$to = self.target-grid, :$print) {
+        return unless $print;
+
+        for ^$.h -> $y {
+            print $to.span-string($.x, $.x + $.w - 1, $y + $.y);  # ))
+            my $row = $.grid.grid[$y];
+            for ^$.w -> $x {
+                if $row[$x] ne ' ' {
+                    print &($.grid.move-cursor)($x + $.x, $y + $.y) ~ $row[$x];  # ))
+                }
+            }
+        }
+    }
+
+    method generate-particles(Num $dt) {
+        my $gen-frac = .4e0;             #= fraction of life that generation occurs
+        my $fly-frac = 1e0 - $gen-frac;  #= fraction of life that last particle lives
+        my $w-scale  = $.w / ($.life * $fly-frac);
+        my $h-scale  = $.h / ($.life * $fly-frac);
+
+        return if $.rel.time > $.life * $gen-frac;
+
+        my multi sub myrand($n)     {      ($n * 2e0).rand - $n }
+        my multi sub myrand($c, $n) { $c + ($n * 2e0).rand - $n }
+
+        for ^($dt * 100) {
+            @.particles.push: SimpleParticle.new:
+                age   => 0e0,
+                life  => $.life,
+                color => rgb-color(1e0, 1e0, 0e0),  # Saturated yellow
+                x     => myrand($.w - 1e0, .3e0),
+                y     => $.h / 2e0,
+                dx    => myrand(-1.1e0, .1e0) * $w-scale,
+                dy    => myrand(.25e0)        * $h-scale;
+        }
+    }
+
+    method update-particles(Num $dt) {
+        for @.particles {
+            .x += $dt * .dx;
+            .y += $dt * .dy;  # ++
+
+            my $fade = 1e0 - .age / .life;
+            .color = rgb-color(1e0, $fade < 0e0 ?? 0e0 !! $fade, 0e0)  # Fade to red
+        }
+    }
+}
+
+
+class Arrow is Animation {
+    has $.life;
+
+    method composite(:$to = self.target-grid, :$print) {
+        return unless $print;
+
+        my $x = round $.w * $.rel.time / $.life;
+        my $y = $.y + $.h div 2;  # ++
+        print $to.span-string($.x, $.x + $x - 1 - $x % 2, $y) if $x >= 2;
+        print ' ' if $x % 2;
+        print &($.grid.move-cursor)($x + $.x, $y) ~ '→' if $x < $.w;
+    }
+}
+
+
+#
 # DEMO EVENTS
 #
 
@@ -865,10 +956,25 @@ sub dragon-battle(UI $ui, Game $game) {
         $ui.pv.show-state(:expand($member));
     }
 
+    #| Add an attack animation
+    my sub show-attack($attack, $life, |c) {
+        my $animation = $attack.new(:x(46), :y(3), :w(10), :h(5),
+                                    :$life, :parent($ui.mv), |c);
+
+        my $start = now;
+        repeat {
+            $animation.do-frame(Terminal::Print::FrameInfo.new);
+            $animation.composite(:print);
+        } while now - $start < $life;
+
+        $ui.mv.remove-child($animation);
+    }
+
     # Dragon turn #1
     $ui.lv.add-entry("The party encounters a red dragon.");
     $ui.lv.add-entry("The dragon is enraged by Torfin's dragon hide armor and immediately attacks.");
     $ui.lv.add-entry("The dragon breathes a great blast of fire!");
+    show-attack(DragonBreath, 1e0);
     $ui.lv.add-entry("--> Fennic performs a diving roll and dodges the fire blast.");
     $ui.lv.add-entry("--> Galtar is partially shielded but still takes minor damage.");
     await do-damage(1);
@@ -880,6 +986,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(0));
     $ui.lv.user-input('[Fennic]>', 'fire bow');
     $ui.lv.add-entry("--> Fennic fires a glowing arrow from the longbow and pierces the dragon's hide.");
+    show-attack(Arrow, .5e0, :x(50), :y(5), :w(6), :h(1));
 
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'cast solar blast');
