@@ -30,6 +30,11 @@ class Terminal::Print::Widget {
         @!children.push($child);
     }
 
+    #| Remove a child widget from this one
+    method remove-child(Terminal::Print::Widget $child) {
+        @!children .= grep(* !=:= $child);
+    }
+
     #| Return T::P::Grid object that this Widget will draw on
     method target-grid() {
         given $!parent {
