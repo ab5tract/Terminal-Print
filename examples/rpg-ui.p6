@@ -968,6 +968,35 @@ class DragonBreath is Terminal::Print::ParticleEffect
 }
 
 
+class Missiles is Terminal::Print::ParticleEffect
+ does TempCompositing {
+    has $.life;
+    has $.count;
+
+    method generate-particles(Num $dt) {
+        return if @.particles;
+
+        for ^$.count {
+            @.particles.push: SimpleParticle.new:
+                age   => 0e0,
+                life  => $.life,
+                color => rgb-color(.6e0, 0e0, 1e0),  # Blueish purple
+                x     => 0,
+                y     => $.h / 2e0,
+                dx    => myrand(1.1e0, .1e0) * $.w / $.life,
+                dy    => myrand(.75e0)       * $.h / $.life;
+        }
+    }
+
+    method update-particles(Num $dt) {
+        for @.particles {
+            .x += $dt * .dx;
+            .y += $dt * .dy;  # ++
+        }
+    }
+}
+
+
 class Projectile is Animation
  does TempCompositing {
     has $.life;
@@ -1231,6 +1260,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(2));
     $ui.lv.user-input('[Salnax]>', 'cast magic missile');
     $ui.lv.add-entry("--> Salnax launches a quintet of octarine missiles, scattering them across the dragon's massive frame.");
+    show-attack(Missiles, 1e0, :dx(+1), :dy(-2), :w(3), :h(5), :count(5));
     use-spell(2);
     $ui.lv.add-entry("--> The dragon howls with growing rage!");
 
