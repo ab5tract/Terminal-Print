@@ -914,22 +914,9 @@ class SimpleParticle is Terminal::Print::Particle {
 }
 
 
-class DragonBreath is Terminal::Print::ParticleEffect {
+class DragonBreath is Terminal::Print::ParticleEffect
+ does TempCompositing {
     has $.life;
-
-    method composite(:$to = self.target-grid, :$print) {
-        return unless $print;
-
-        for ^$.h -> $y {
-            print $to.span-string($.x, $.x + $.w - 1, $y + $.y);  # ))
-            my $row = $.grid.grid[$y];
-            for ^$.w -> $x {
-                if $row[$x] ne ' ' {
-                    print &($.grid.move-cursor)($x + $.x, $y + $.y) ~ $row[$x];  # ))
-                }
-            }
-        }
-    }
 
     method generate-particles(Num $dt) {
         my $gen-frac = .4e0;             #= fraction of life that generation occurs
