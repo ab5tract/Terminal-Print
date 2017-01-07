@@ -878,6 +878,10 @@ sub gray-color(Real $gray) {
     ~$c
 }
 
+#| Uniform random numbers centered on $c (or 0) and up to $n distant
+multi sub myrand($n)     {      ($n * 2e0).rand - $n }
+multi sub myrand($c, $n) { $c + ($n * 2e0).rand - $n }
+
 
 role TempCompositing {
     has $.temp = Terminal::Print::Grid.new(self.grid.w, self.grid.h);
@@ -939,9 +943,6 @@ class DragonBreath is Terminal::Print::ParticleEffect
         my $h-scale  = $.h / ($.life * $.fly-frac);
 
         return if $.rel.time > $.life * $.gen-frac;
-
-        my multi sub myrand($n)     {      ($n * 2e0).rand - $n }
-        my multi sub myrand($c, $n) { $c + ($n * 2e0).rand - $n }
 
         for ^($dt * 100) {
             @.particles.push: SimpleParticle.new:
