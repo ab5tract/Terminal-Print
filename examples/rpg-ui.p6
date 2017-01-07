@@ -953,7 +953,8 @@ class DragonBreath is Terminal::Print::ParticleEffect
 }
 
 
-class Arrow is Animation {
+class Projectile is Animation
+ does TempCompositing {
     has $.life;
 
     method composite(:$to = self.target-grid, :$print) {
@@ -961,10 +962,22 @@ class Arrow is Animation {
 
         my $x = round $.w * $.rel.time / $.life;
         my $y = $.y + $.h div 2;  # ++
+        my $glyph = @.frames[$x % @.frames];
+
         print $to.span-string($.x, $.x + $x - 1 - $x % 2, $y) if $x >= 2;
         print ' ' if $x % 2;
-        print &($.grid.move-cursor)($x + $.x, $y) ~ '→' if $x < $.w;
+        print &($.grid.move-cursor)($x + $.x, $y) ~ $glyph if $x < $.w;
     }
+}
+
+
+class Arrow is Projectile {
+    has @.frames = < → >;
+}
+
+
+class Dagger is Projectile {
+    has @.frames = < ↑ ↗ → ↘ ↓ ↙ ← ↖ >;
 }
 
 
@@ -997,6 +1010,7 @@ sub dragon-battle(UI $ui, Game $game) {
             $animation.composite(:print);
         } while now - $start < $life;
 
+        $animation.uncomposite;
         $ui.mv.remove-child($animation);
     }
 
@@ -1037,6 +1051,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(4));
     $ui.lv.user-input('[Trentis]>', 'throw dagger');
     $ui.lv.add-entry("--> Trentis throws a dagger towards the dragon's underbelly but misses.");
+    show-attack(Dagger, .75e0, :x(50), :y(5), :w(6), :h(1));
 
     # Dragon turn #2
     $ui.pv.show-state;
@@ -1049,6 +1064,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(0));
     $ui.lv.user-input('[Fennic]>', 'fire bow');
     $ui.lv.add-entry("--> Fennic fires the longbow again, embedding a second arrow in the dragon's neck.");
+    show-attack(Arrow, .5e0, :x(50), :y(5), :w(6), :h(1));
 
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'swing mace');
@@ -1068,6 +1084,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(4));
     $ui.lv.user-input('[Trentis]>', 'throw dagger');
     $ui.lv.add-entry("--> Trentis throws a dagger and impales the dragon's throat.");
+    show-attack(Dagger, .5e0, :x(50), :y(5), :w(6), :h(1));
 
     # Dragon turn #3
     $ui.pv.show-state;
@@ -1079,6 +1096,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(0));
     $ui.lv.user-input('[Fennic]>', 'fire bow');
     $ui.lv.add-entry("--> Fennic fires a third arrow into the dragon.");
+    show-attack(Arrow, .5e0, :x(50), :y(5), :w(6), :h(1));
 
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'swing mace');
