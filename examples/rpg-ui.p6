@@ -1114,9 +1114,14 @@ sub dragon-battle(UI $ui, Game $game) {
     }
 
     #| Add an attack animation
-    my sub show-attack($attack, $life, |c) {
+    my sub show-attack($attack, $life, :$dx!, :$dy!, :$w! is copy, :$h!, |c) {
         my $t0 = now;
-        my $animation = $attack.new(:x(46), :y(3), :w(10), :h(5),
+        my $fw = 1 + $ui.mv.full-width;
+        my $x  = ($game.party.map-x - $ui.mv.map-x + $dx) * $fw;
+        my $y  =  $game.party.map-y - $ui.mv.map-y + $dy;  # ++
+        $w    *= $fw;
+
+        my $animation = $attack.new(:$x, :$y, :$w, :$h,
                                     :$life, :parent($ui.mv), |c);
 
         my $start = now;
@@ -1134,7 +1139,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.lv.add-entry("The party encounters a red dragon.");
     $ui.lv.add-entry("The dragon is enraged by Torfin's dragon hide armor and immediately attacks.");
     $ui.lv.add-entry("The dragon breathes a great blast of fire!");
-    show-attack(DragonBreath, 1e0);
+    show-attack(DragonBreath, 1e0, :dx(-1), :dy(-2), :w(5), :h(5));
     $ui.lv.add-entry("--> Fennic performs a diving roll and dodges the fire blast.");
     $ui.lv.add-entry("--> Galtar is partially shielded but still takes minor damage.");
     await do-damage(1);
@@ -1146,19 +1151,19 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(0));
     $ui.lv.user-input('[Fennic]>', 'fire bow');
     $ui.lv.add-entry("--> Fennic fires a glowing arrow from the longbow and pierces the dragon's hide.");
-    show-attack(Arrow, .5e0, :x(50), :y(5), :w(6), :h(1));
+    show-attack(Arrow, .5e0, :dx(+1), :dy(0), :w(3), :h(1));
 
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'cast solar blast');
     $ui.lv.add-entry("--> Galtar calls upon the power of the sun and bathes the dragon in searing golden light.");
-    show-attack(SolarBeam, 1e0, :x(50), :w(6));
+    show-attack(SolarBeam, 1e0, :dx(+1), :dy(-2), :w(3), :h(5));
     use-spell(1);
     $ui.lv.add-entry("--> The dragon is blinded!");
 
     $ui.pv.show-state(:expand(2));
     $ui.lv.user-input('[Salnax]>', 'trigger ice cone');
     $ui.lv.add-entry("--> Salnax calls a cone of ice from the staff.");
-    show-attack(ColdCone, 1e0, :x(50), :w(6));
+    show-attack(ColdCone, 1e0, :dx(+1), :dy(-2), :w(3), :h(5));
     $ui.lv.add-entry("--> The dragon is encased in ice!");
 
     $ui.pv.show-state(:expand(3));
@@ -1169,7 +1174,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(4));
     $ui.lv.user-input('[Trentis]>', 'throw dagger');
     $ui.lv.add-entry("--> Trentis throws a dagger towards the dragon's underbelly but misses.");
-    show-attack(Dagger, .75e0, :x(50), :y(5), :w(6), :h(1));
+    show-attack(Dagger, .75e0, :dx(+1), :dy(0), :w(3), :h(1));
 
     # Dragon turn #2
     $ui.pv.show-state;
@@ -1182,7 +1187,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(0));
     $ui.lv.user-input('[Fennic]>', 'fire bow');
     $ui.lv.add-entry("--> Fennic fires the longbow again, embedding a second arrow in the dragon's neck.");
-    show-attack(Arrow, .5e0, :x(50), :y(5), :w(6), :h(1));
+    show-attack(Arrow, .5e0, :dx(+1), :dy(0), :w(3), :h(1));
 
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'swing mace');
@@ -1192,7 +1197,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(2));
     $ui.lv.user-input('[Salnax]>', 'cast lightning bolt');
     $ui.lv.add-entry("--> Salnax ionizes the air with a white-hot bolt of electricity.");
-    show-attack(LightningBolt, 1e0, :x(50), :w(6));
+    show-attack(LightningBolt, 1e0, :dx(+1), :dy(-2), :w(3), :h(5));
     use-spell(2);
     $ui.lv.add-entry("--> The dragon shudders as electric arcs course through it.");
 
@@ -1203,7 +1208,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(4));
     $ui.lv.user-input('[Trentis]>', 'throw dagger');
     $ui.lv.add-entry("--> Trentis throws a dagger and impales the dragon's throat.");
-    show-attack(Dagger, .5e0, :x(50), :y(5), :w(6), :h(1));
+    show-attack(Dagger, .5e0, :dx(+1), :dy(0), :w(3), :h(1));
 
     # Dragon turn #3
     $ui.pv.show-state;
@@ -1215,7 +1220,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(0));
     $ui.lv.user-input('[Fennic]>', 'fire bow');
     $ui.lv.add-entry("--> Fennic fires a third arrow into the dragon.");
-    show-attack(Arrow, .5e0, :x(50), :y(5), :w(6), :h(1));
+    show-attack(Arrow, .5e0, :dx(+1), :dy(0), :w(3), :h(1));
 
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'swing mace');
