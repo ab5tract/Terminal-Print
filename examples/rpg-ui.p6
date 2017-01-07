@@ -1014,6 +1014,43 @@ class SolarBeam is Terminal::Print::PixelAnimation
 }
 
 
+class ColdCone is Terminal::Print::PixelAnimation
+ does TempCompositing {
+    has $.life;
+
+    method compute-pixels() {
+        my $t = $.rel.time.Num;
+        return () if $t >= $.life;
+
+        my $cy    = $.h - 1;
+        my $w     = $.w.Num;
+        my $left  = ($w * max(0e0, 1e0 - 5e0 * ($.life - $t))).floor;
+        my $right = ($w * min(1e0, 5e0 * $t)).floor;
+
+        my @colors;
+        for $left..$right -> $x {
+            my $ramp  = sin(.1e0 + $x / $w * π / 2e0) ** .15e0;  # Subtly dimmer on left
+            my $cone  = $ramp * (1.9e0 + .1e0.rand);             # Small variations
+            my $width = $x div 2;
+
+            for -$width .. $width -> $dy {
+                my $hyp = ($dy * $dy + $x * $x).sqrt;
+                my $cos = $x / ($hyp || 1);
+                my $bright = $cone * $cos ** 6e0;
+                next if $bright < .5e0;
+
+                @colors[$cy + $dy][$x - 1]
+                    = $bright > 1e0
+                      ?? rgb-color($bright - 1e0, $bright - 1e0, 1e0)
+                      !! rgb-color(0e0, 0e0, $bright);
+            }
+        }
+
+        @colors;
+    }
+}
+
+
 
 #
 # DEMO EVENTS
@@ -1076,6 +1113,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(2));
     $ui.lv.user-input('[Salnax]>', 'trigger ice cone');
     $ui.lv.add-entry("--> Salnax calls a cone of ice from the staff.");
+    show-attack(ColdCone, 1e0, :x(50), :w(6));
     $ui.lv.add-entry("--> The dragon is encased in ice!");
 
     $ui.pv.show-state(:expand(3));
