@@ -981,6 +981,40 @@ class Dagger is Projectile {
 }
 
 
+class SolarBeam is Terminal::Print::PixelAnimation
+ does TempCompositing {
+    has $.life;
+
+    method compute-pixels() {
+        my $t = $.rel.time.Num;
+        return () if $t >= $.life;
+
+        my $cy    = $.h - 1;
+        my $w     = $.w.Num;
+        my $left  = ($w * max(0e0, 1e0 - 5e0 * ($.life - $t))).floor;
+        my $right = ($w * min(1e0, 5e0 * $t)).floor;
+
+        my @colors;
+        for $left..$right -> $x {
+            my $shape = sin(.1e0 + $x / $w * π / 2e0) ** .15e0;  # Beam, narrower at left end
+            my $wave  = .1e0 * sin(.5e0 * $x - 15e0 * $t);       # Wavy pulses traveling left to right
+            my $beam  = $shape * (1.8e0 + .1e0.rand + $wave);    # Small variations
+
+            for -2 .. 2 -> $dy {
+                my $bright = $beam - .5e0 * $dy.abs;
+                next if $bright < .5e0;
+
+                @colors[$cy + $dy][$x] = $bright > 1e0 ?? rgb-color(1e0, 1e0, $bright - 1e0)
+                                                       !! rgb-color($bright, $bright, 0e0);
+            }
+        }
+
+        @colors;
+    }
+}
+
+
+
 #
 # DEMO EVENTS
 #
@@ -1035,6 +1069,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'cast solar blast');
     $ui.lv.add-entry("--> Galtar calls upon the power of the sun and bathes the dragon in searing golden light.");
+    show-attack(SolarBeam, 1e0, :x(50), :w(6));
     use-spell(1);
     $ui.lv.add-entry("--> The dragon is blinded!");
 
