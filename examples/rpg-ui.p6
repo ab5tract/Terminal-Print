@@ -882,13 +882,13 @@ sub gray-color(Real $gray) {
 role TempCompositing {
     has $.temp = Terminal::Print::Grid.new(self.grid.w, self.grid.h);
 
-    method debug-string(|) {
-        my sub grid-string($grid, :$framed) {
-              ('╔' ~ '═' x $.w ~ "╗\n║" if $framed)
-            ~ $grid.grid.map(*.join).join( $framed ?? "║\n║" !! "\n")
-            ~ ("║\n╚" ~ '═' x $.w ~ '╝' if $framed)
-        }
+    my sub grid-string($grid, :$framed) {
+        ('╔' ~ '═' x $grid.w ~ "╗\n║" if $framed)
+        ~ $grid.grid.map(*.map({$_ // '?'}).join).join( $framed ?? "║\n║" !! "\n")
+        ~ ("║\n╚" ~ '═' x $grid.w ~ '╝' if $framed)
+    }
 
+    method debug-string(|) {
         self.^name ~ ":\n"
             ~ "TEMP\n" ~ grid-string($.temp, :framed).indent(4) ~ "\n"
             ~ "GRID\n" ~ grid-string($.grid, :framed).indent(4) ~ "\n"
