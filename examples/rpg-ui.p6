@@ -917,14 +917,14 @@ class SimpleParticle is Terminal::Print::Particle {
 class DragonBreath is Terminal::Print::ParticleEffect
  does TempCompositing {
     has $.life;
+    has $.gen-frac = .4e0;                 #= fraction of life that generation occurs
+    has $.fly-frac = 1e0 - self.gen-frac;  #= fraction of life that last particle lives
 
     method generate-particles(Num $dt) {
-        my $gen-frac = .4e0;             #= fraction of life that generation occurs
-        my $fly-frac = 1e0 - $gen-frac;  #= fraction of life that last particle lives
-        my $w-scale  = $.w / ($.life * $fly-frac);
-        my $h-scale  = $.h / ($.life * $fly-frac);
+        my $w-scale  = $.w / ($.life * $.fly-frac);
+        my $h-scale  = $.h / ($.life * $.fly-frac);
 
-        return if $.rel.time > $.life * $gen-frac;
+        return if $.rel.time > $.life * $.gen-frac;
 
         my multi sub myrand($n)     {      ($n * 2e0).rand - $n }
         my multi sub myrand($c, $n) { $c + ($n * 2e0).rand - $n }
@@ -946,7 +946,7 @@ class DragonBreath is Terminal::Print::ParticleEffect
             .x += $dt * .dx;
             .y += $dt * .dy;  # ++
 
-            my $fade = 1e0 - .age / .life;
+            my $fade = 1e0 - .age / (.life * .8e0);
             .color = rgb-color(1e0, $fade < 0e0 ?? 0e0 !! $fade, 0e0)  # Fade to red
         }
     }
