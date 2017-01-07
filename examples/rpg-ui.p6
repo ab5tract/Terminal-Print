@@ -1063,6 +1063,35 @@ class ColdCone is Terminal::Print::PixelAnimation
 }
 
 
+class LightningBolt is Terminal::Print::PixelAnimation
+ does TempCompositing {
+    has $.life;
+
+    method compute-pixels() {
+        my $t = $.rel.time.Num;
+        return () if $t >= $.life;
+
+        my $cy    = $.h - 1;
+        my $dy    = 2e0.rand - 1e0;
+        my $left  = ($.w * max(0e0, 1e0 - 5e0 * ($.life - $t))).floor;
+        my $right = ($.w * min(1e0, 5e0 * $t)).floor;
+
+        my @colors;
+        for $left..$right -> $x {
+            my $top  = ($cy + $dy).floor;
+            my $dist = $dy - $dy.floor;
+
+            @colors[$top    ][$x] = gray-color(       $dist  ** .1e0) if $dist < .5e0;
+            @colors[$top + 1][$x] = gray-color((1e0 - $dist) ** .1e0) if $dist > .5e0;
+
+            $dy = $dy * .9e0 + 1.0e0.rand - .5e0;
+        }
+
+        @colors;
+    }
+}
+
+
 
 #
 # DEMO EVENTS
@@ -1159,6 +1188,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(2));
     $ui.lv.user-input('[Salnax]>', 'cast lightning bolt');
     $ui.lv.add-entry("--> Salnax ionizes the air with a white-hot bolt of electricity.");
+    show-attack(LightningBolt, 1e0, :x(50), :w(6));
     use-spell(2);
     $ui.lv.add-entry("--> The dragon shudders as electric arcs course through it.");
 
