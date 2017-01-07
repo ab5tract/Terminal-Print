@@ -326,13 +326,15 @@ class MapViewer is Animation {
     has $.map   is required;
     has $.party is required;
 
+    has $.full-width = True;
+
     #| Draw the current map viewport, respecting seen state, party glow, etc.
     method draw-frame(|) {
         my $t0 = now;
 
         # Make sure party (plus a comfortable radius around them) is still visible
         my $radius     = 4;
-        my $full-width = True;
+        my $full-width = $.full-width;
         my $map-width  = $full-width ?? $.w div 2 !! $.w;
 
         my $party-x = $.party.map-x;
