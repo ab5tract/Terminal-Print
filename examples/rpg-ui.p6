@@ -865,6 +865,49 @@ sub rgb-color(Real $r, Real $g, Real $b) {
 }
 
 
+role TempCompositing {
+    has $.temp = Terminal::Print::Grid.new(self.grid.w, self.grid.h);
+
+    method debug-string(|) {
+        my sub grid-string($grid, :$framed) {
+              ('╔' ~ '═' x $.w ~ "╗\n║" if $framed)
+            ~ $grid.grid.map(*.join).join( $framed ?? "║\n║" !! "\n")
+            ~ ("║\n╚" ~ '═' x $.w ~ '╝' if $framed)
+        }
+
+        self.^name ~ ":\n"
+            ~ "TEMP\n" ~ grid-string($.temp, :framed).indent(4) ~ "\n"
+            ~ "GRID\n" ~ grid-string($.grid, :framed).indent(4) ~ "\n"
+    }
+
+    method refresh-background(:$from = self.target-grid, |) {
+        my $fg = $!temp.grid;
+        my $bg = $from.grid;
+        my $x1 = $.x;
+        my $x2 = $.x + $.w - 1;
+
+        $fg[$_] = [ $bg[$.y + $_][$x1 .. $x2] ] for ^$.h;  # ++
+    }
+
+    method composite(:$to = self.target-grid, :$print, |) {
+        self.refresh-background(:from($to));
+        for ^$.h -> $y {
+            my $grid-row = $.grid.grid[$y];
+            my $temp-row = $.temp.grid[$y];
+            for ^$.w -> $x {
+                $temp-row[$x] = $grid-row[$x] if $grid-row[$x] ne ' ';
+            }
+            print ^$.w .map({ &($.grid.move-cursor)($_ + $.x, $y + $.y) ~ $temp-row[$_] }) if $print;  # )
+        }
+    }
+
+    method uncomposite(:$to = self.target-grid, |) {
+        self.refresh-background(:from($to));
+        print &($.grid.move-cursor)($.x, $_ + $.y) ~ $.temp.grid[$_].join for ^$.h;  # ))
+    }
+}
+
+
 class SimpleParticle is Terminal::Print::Particle {
     has $.dx;
     has $.dy;
