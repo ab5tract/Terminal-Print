@@ -1113,6 +1113,7 @@ sub dragon-battle(UI $ui, Game $game) {
 
     #| Add an attack animation
     my sub show-attack($attack, $life, |c) {
+        my $t0 = now;
         my $animation = $attack.new(:x(46), :y(3), :w(10), :h(5),
                                     :$life, :parent($ui.mv), |c);
 
@@ -1124,6 +1125,7 @@ sub dragon-battle(UI $ui, Game $game) {
 
         $animation.uncomposite;
         $ui.mv.remove-child($animation);
+        record-time("Render $animation.w() x $animation.h() {$animation.^name}", $t0);
     }
 
     # Dragon turn #1
