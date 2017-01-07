@@ -865,6 +865,18 @@ sub rgb-color(Real $r, Real $g, Real $b) {
 }
 
 
+#| Convert a grayscale value (in the 0..1 range) to a valid cell color
+sub gray-color(Real $gray) {
+    # Use the hi-res gray ramp plus true black and white
+    my $c = $gray <= .012e0 ?? 'black' !!
+            $gray >= .953e0 ?? 'white' !!
+                               232 + (24e0 * $gray).floor;
+
+    # Cell colors must be stringified
+    ~$c
+}
+
+
 role TempCompositing {
     has $.temp = Terminal::Print::Grid.new(self.grid.w, self.grid.h);
 
