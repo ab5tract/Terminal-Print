@@ -328,6 +328,14 @@ class MapViewer is Animation {
 
     has $.full-width = True;
 
+    #| Make sure a rectangle of map area is fully visible (not cut off by screen edges)
+    method ensure-visible(:$x!, :$y!, :$w!, :$h!) {
+        my $map-width = $.full-width ?? $.w div 2 !! $.w;
+
+        $!map-x = max(min($!map-x, $x), $x + $w - 1 - $map-width);
+        $!map-y = max(min($!map-y, $y), $y + $h - 1 - $.h);  # ==
+    }
+
     #| Draw the current map viewport, respecting seen state, party glow, etc.
     method draw-frame(|) {
         my $t0 = now;
@@ -338,9 +346,9 @@ class MapViewer is Animation {
         my $map-width  = $full-width ?? $.w div 2 !! $.w;
 
         my $party-x = $.party.map-x;
-        my $party-y = $.party.map-y;
-        $!map-x = max(min($.map-x, $party-x - $radius), $party-x + $radius + 1 - $map-width);
-        $!map-y = max(min($.map-y, $party-y - $radius), $party-y + $radius + 1 - $.h);  # ,
+        my $party-y = $.party.map-y;  # ==
+        self.ensure-visible(:x($party-x - $radius), :y($party-y - $radius),  # ,
+                            :w(2 * $radius + 1), :h(2 * $radius + 1));
 
         # Update party's seen area
         # XXXX: This naively marks as seen places that aren't actually in line of sight
