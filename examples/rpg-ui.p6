@@ -1173,8 +1173,14 @@ sub dragon-battle(UI $ui, Game $game) {
         record-time("Render $animation.w() x $animation.h() {$animation.^name}", $t0);
     }
 
-    # Dragon turn #1
+    # Make sure the battle area is completely visible
     $ui.lv.add-entry("The party encounters a red dragon.");
+    $ui.mv.ensure-visible(:x($game.party.map-x - 1), :y($game.party.map-y - 2),  # ,
+                          :w(10), :h(5));
+    $ui.mv.do-frame(Terminal::Print::FrameInfo.new);
+    $ui.mv.composite(:print);
+
+    # Dragon turn #1
     $ui.lv.add-entry("The dragon is enraged by Torfin's dragon hide armor and immediately attacks.");
     $ui.lv.add-entry("The dragon breathes a great blast of fire!");
     show-attack(DragonBreath, 1e0, :dx(-1), :dy(-2), :w(5), :h(5));
