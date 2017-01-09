@@ -1345,13 +1345,19 @@ sub dragon-battle(UI $ui, Game $game) {
         $ui.pv.show-state(:expand($member));
     }
 
-    #| Add an attack animation
-    my sub show-attack($attack, $life, :$dx!, :$dy!, :$w! is copy, :$h!, |c) {
-        my $t0 = now;
+    #| Convert a rect in party-relative map coords to absolute viewer coords
+    my sub maprel-to-viewer(:$dx!, :$dy!, :$w!, :$h!) {
         my $fw = 1 + $ui.mv.full-width;
         my $x  = ($game.party.map-x - $ui.mv.map-x + $dx) * $fw;
-        my $y  =  $game.party.map-y - $ui.mv.map-y + $dy;  # ++
-        $w    *= $fw;
+        my $y  =  $game.party.map-y - $ui.mv.map-y + $dy;  # -
+
+        ($x, $y, $w * $fw, $h)
+    }
+
+    #| Add an attack animation
+    my sub show-attack($attack, $life, :$dx!, :$dy!, :$w! is copy, :$h! is copy, |c) {
+        my $t0 = now;
+        (my $x, my $y, $w, $h) = maprel-to-viewer(:$dx, :$dy, :$w, :$h);
 
         my $animation = $attack.new(:$x, :$y, :$w, :$h,
                                     :$life, :parent($ui.mv), |c);
