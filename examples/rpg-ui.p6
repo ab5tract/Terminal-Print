@@ -1541,7 +1541,7 @@ sub MAIN(
 
     my $short-sleep  = .1 * !$bench;
     my $medium-sleep =  1 * !$bench;
-    my $long-sleep   = 10 * !$bench;
+    my $long-sleep   =  5 * !$bench;
 
     my @loading-promises;
 
