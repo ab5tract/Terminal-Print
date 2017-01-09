@@ -332,8 +332,8 @@ class MapViewer is Animation {
     method ensure-visible(:$x!, :$y!, :$w!, :$h!) {
         my $map-width = $.full-width ?? $.w div 2 !! $.w;
 
-        $!map-x = max(min($!map-x, $x), $x + $w - 1 - $map-width);
-        $!map-y = max(min($!map-y, $y), $y + $h - 1 - $.h);  # ==
+        $!map-x = max(min($!map-x, $x), $x + $w - $map-width);
+        $!map-y = max(min($!map-y, $y), $y + $h - $.h);  # ==
     }
 
     #| Draw the current map viewport, respecting seen state, party glow, etc.
