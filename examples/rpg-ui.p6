@@ -959,9 +959,9 @@ class DragonBreath is Terminal::Print::ParticleEffect
                 life  => $.life,
                 color => rgb-color(1e0, 1e0, 0e0),  # Saturated yellow
                 x     => myrand($.w - 1e0, .3e0),
-                y     => $.h / 2e0,
+                y     => 1e0,
                 dx    => myrand(-1.1e0, .1e0) * $w-scale,
-                dy    => myrand(.25e0)        * $h-scale;
+                dy    => myrand(.5e0,  .25e0) * $h-scale;
         }
     }
 
@@ -992,8 +992,8 @@ class Missiles is Terminal::Print::ParticleEffect
                 color => rgb-color(.6e0, 0e0, 1e0),  # Blueish purple
                 x     => 0,
                 y     => $.h / 2e0,
-                dx    => myrand(1.1e0, .1e0) * $.w / $.life,
-                dy    => myrand(.75e0)       * $.h / $.life;
+                dx    => myrand(1e0, .15e0) * $.w / $.life,
+                dy    => myrand(($_ + .5e0) / $.count - .6e0, .05e0) * 1.5e0 * $.h / $.life;
         }
     }
 
@@ -1084,7 +1084,7 @@ class ColdCone is Terminal::Print::PixelAnimation
         for $left..$right -> $x {
             my $ramp  = sin(.1e0 + $x / $w * π / 2e0) ** .15e0;  # Subtly dimmer on left
             my $cone  = $ramp * (1.9e0 + .1e0.rand);             # Small variations
-            my $width = $x div 2;
+            my $width = $x div 3;
 
             for -$width .. $width -> $dy {
                 my $hyp = ($dy * $dy + $x * $x).sqrt;
@@ -1314,7 +1314,7 @@ class Teleport is Animation
 
     method draw-frame() {
         my @times = .8e0, .8e0, 1e0;
-        my ($phase, $pct) = self.phase($.rel.time, @times);
+        my ($phase, $pct) = self.phase($.rel.time + .5e0, @times);
 
         given $phase {
             when 0  { self.spread-symbols($pct) }
@@ -1421,19 +1421,19 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(0));
     $ui.lv.user-input('[Fennic]>', 'fire bow');
     $ui.lv.add-entry("--> Fennic fires a glowing arrow from the longbow and pierces the dragon's hide.");
-    show-attack(Arrow, .5e0, :dx(+1), :dy(0), :w(3), :h(1));
+    show-attack(Arrow, .5e0, :dx(+1), :dy(0), :w(5), :h(1));
 
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'cast solar blast');
     $ui.lv.add-entry("--> Galtar calls upon the power of the sun and bathes the dragon in searing golden light.");
-    show-attack(SolarBeam, 1e0, :dx(+1), :dy(-2), :w(3), :h(5));
+    show-attack(SolarBeam, 1e0, :dx(+1), :dy(-2), :w(7), :h(5));
     use-spell(1);
     $ui.lv.add-entry("--> The dragon is blinded!");
 
     $ui.pv.show-state(:expand(2));
     $ui.lv.user-input('[Salnax]>', 'trigger ice cone');
     $ui.lv.add-entry("--> Salnax calls a cone of ice from the staff.");
-    show-attack(ColdCone, 1e0, :dx(+1), :dy(-2), :w(3), :h(5));
+    show-attack(ColdCone, 1e0, :dx(+1), :dy(-2), :w(7), :h(5));
     $ui.lv.add-entry("--> The dragon is encased in ice!");
 
     $ui.pv.show-state(:expand(3));
@@ -1444,7 +1444,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(4));
     $ui.lv.user-input('[Trentis]>', 'throw dagger');
     $ui.lv.add-entry("--> Trentis throws a dagger towards the dragon's underbelly but misses.");
-    show-attack(Dagger, .75e0, :dx(+1), :dy(0), :w(3), :h(1));
+    show-attack(Dagger, .75e0, :dx(+1), :dy(0), :w(5), :h(1));
 
     # Dragon turn #2
     $ui.pv.show-state;
@@ -1457,7 +1457,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(0));
     $ui.lv.user-input('[Fennic]>', 'fire bow');
     $ui.lv.add-entry("--> Fennic fires the longbow again, embedding a second arrow in the dragon's neck.");
-    show-attack(Arrow, .5e0, :dx(+1), :dy(0), :w(3), :h(1));
+    show-attack(Arrow, .5e0, :dx(+1), :dy(0), :w(5), :h(1));
 
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'swing mace');
@@ -1467,7 +1467,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(2));
     $ui.lv.user-input('[Salnax]>', 'cast lightning bolt');
     $ui.lv.add-entry("--> Salnax ionizes the air with a white-hot bolt of electricity.");
-    show-attack(LightningBolt, 1e0, :dx(+1), :dy(-2), :w(3), :h(5));
+    show-attack(LightningBolt, 1e0, :dx(+1), :dy(-2), :w(7), :h(5));
     use-spell(2);
     $ui.lv.add-entry("--> The dragon shudders as electric arcs course through it.");
 
@@ -1478,7 +1478,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(4));
     $ui.lv.user-input('[Trentis]>', 'throw dagger');
     $ui.lv.add-entry("--> Trentis throws a dagger and impales the dragon's throat.");
-    show-attack(Dagger, .5e0, :dx(+1), :dy(0), :w(3), :h(1));
+    show-attack(Dagger, .5e0, :dx(+1), :dy(0), :w(5), :h(1));
 
     # Dragon turn #3
     $ui.pv.show-state;
@@ -1491,7 +1491,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(0));
     $ui.lv.user-input('[Fennic]>', 'fire bow');
     $ui.lv.add-entry("--> Fennic fires a third arrow into the dragon.");
-    show-attack(Arrow, .5e0, :dx(+1), :dy(0), :w(3), :h(1));
+    show-attack(Arrow, .5e0, :dx(+1), :dy(0), :w(5), :h(1));
 
     $ui.pv.show-state(:expand(1));
     $ui.lv.user-input('[Galtar]>', 'swing mace');
@@ -1501,7 +1501,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(2));
     $ui.lv.user-input('[Salnax]>', 'cast magic missile');
     $ui.lv.add-entry("--> Salnax launches a quintet of octarine missiles, scattering them across the dragon's massive frame.");
-    show-attack(Missiles, 1e0, :dx(+1), :dy(-2), :w(3), :h(5), :count(5));
+    show-attack(Missiles, 1e0, :dx(+1), :dy(-2), :w(6), :h(5), :count(5));
     use-spell(2);
     $ui.lv.add-entry("--> The dragon howls with growing rage!");
 
@@ -1520,7 +1520,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.lv.add-entry("Beaten and bleeding and realizing all party members are still fighting, the dragon decides to flee.  Shimmering symbols appear in the air around it and reality twists as the dragon teleports to safety.");
     $ui.mv.remove-child($dragon);
     refresh-mv();
-    show-attack(Teleport, 5e0, :dx(+3), :dy(-2), :w(5), :h(5));
+    show-attack(Teleport, 2.1e0, :dx(+3), :dy(-3), :w(7), :h(7));
     $ui.lv.add-entry("--> Trentis falls to the floor with a thud.");
     await do-damage(4);
 }
