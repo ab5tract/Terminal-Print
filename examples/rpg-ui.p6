@@ -1373,12 +1373,38 @@ sub dragon-battle(UI $ui, Game $game) {
         record-time("Render $animation.w() x $animation.h() {$animation.^name}", $t0);
     }
 
-    # Make sure the battle area is completely visible
+    #| Add the dragon to the screen
+    my sub add-dragon(:$dx, :$dy) {
+        my $dragon = q:to/DRAGON/;
+                 __     
+            <,  /\      
+             `=<###>.   
+               ]   ] `~+
+            DRAGON
+
+        # :
+        my $grid = make-text-grid($dragon);
+        $grid.set-span-color(0, $grid.w - 1, $_, 'red') for ^$grid.h;
+
+        my $fw   = 1 + $ui.mv.full-width;
+        my ($x, $y, $w, $h)
+                 = maprel-to-viewer(:$dx, :$dy, :w($grid.w / $fw), :h($grid.h));
+
+        Widget.new-from-grid($grid, :$x, :$y, :parent($ui.mv));
+    }
+
+    #| Refresh MapViewer
+    my sub refresh-mv() {
+        $ui.mv.do-frame(Terminal::Print::FrameInfo.new);
+        $ui.mv.composite(:print);
+    }
+
+    # Add dragon and make sure the battle area is completely visible
     $ui.lv.add-entry("The party encounters a red dragon.");
     $ui.mv.ensure-visible(:x($game.party.map-x - 1), :y($game.party.map-y - 2),  # ,
-                          :w(10), :h(5));
-    $ui.mv.do-frame(Terminal::Print::FrameInfo.new);
-    $ui.mv.composite(:print);
+                          :w(11), :h(5));
+    my $dragon = add-dragon(:dx(+4), :dy(-2));
+    refresh-mv();
 
     # Dragon turn #1
     $ui.lv.add-entry("The dragon is enraged by Torfin's dragon hide armor and immediately attacks.");
@@ -1492,6 +1518,8 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state;
     $ui.lv.add-entry("The dragon's vision clears.");
     $ui.lv.add-entry("Beaten and bleeding and realizing all party members are still fighting, the dragon decides to flee.  Shimmering symbols appear in the air around it and reality twists as the dragon teleports to safety.");
+    $ui.mv.remove-child($dragon);
+    refresh-mv();
     show-attack(Teleport, 5e0, :dx(+3), :dy(-2), :w(5), :h(5));
     $ui.lv.add-entry("--> Trentis falls to the floor with a thud.");
     await do-damage(4);
