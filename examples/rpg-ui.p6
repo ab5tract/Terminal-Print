@@ -917,13 +917,14 @@ role TempCompositing {
 
     method composite(:$to = self.target-grid, :$print, |) {
         self.refresh-background(:from($to));
+        my &move := &($.grid.move-cursor);
         for ^$.h -> $y {
             my $grid-row = $.grid.grid[$y];
             my $temp-row = $.temp.grid[$y];
             for ^$.w -> $x {
                 $temp-row[$x] = $grid-row[$x] if $grid-row[$x] ne ' ';
             }
-            print ^$.w .map({ &($.grid.move-cursor)($_ + $.x, $y + $.y) ~ $temp-row[$_] }) if $print;  # )
+            print (^$.w .map: { $temp-row[$_] ?? move($_ + $.x, $y + $.y) ~ $temp-row[$_] !! '' }).join if $print;  # )
         }
     }
 
