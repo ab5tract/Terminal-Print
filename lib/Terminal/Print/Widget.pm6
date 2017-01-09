@@ -32,7 +32,9 @@ class Terminal::Print::Widget {
 
     #| Remove a child widget from this one
     method remove-child(Terminal::Print::Widget $child) {
-        @!children .= grep(* !=:= $child);
+        # <> performs decont (decontainerizing) magic so that =:= can compare
+        # the identity of the underlying objects, not their containers
+        @!children .= grep(*<> !=:= $child<>);
     }
 
     #| Return T::P::Grid object that this Widget will draw on
