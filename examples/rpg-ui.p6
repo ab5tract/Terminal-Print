@@ -714,6 +714,19 @@ class LogViewer is Animation {
 }
 
 
+#| Convert a text block (a single multiline string) into a T::P::Grid
+sub make-text-grid($text) {
+    my @lines = $text.lines;
+    my $w     = @lines».chars.max;
+    my $h     = @lines.elems;
+    my $grid  = Terminal::Print::Grid.new($w, $h);
+
+    $grid.set-span-text(0, $_, @lines[$_]) for ^$h;
+
+    $grid
+}
+
+
 #| Create title animation
 sub make-title-animation(ProgressBar :$bar, Bool :$ascii) {
     my $t0 = now;
@@ -748,20 +761,7 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii) {
 
     #| Turn several multiline text blocks into an array of T::P::Grid objects
     sub make-text-grids(*@texts) {
-        my $w = @texts[0].lines[0].chars;
-        my $h = @texts[0].lines.elems;
-
-        my @grids = Terminal::Print::Grid.new($w, $h) xx @texts;
-        for ^@texts {
-            my $grid = @grids[$_];
-            my @text = @texts[$_].lines;
-
-            for @text.kv -> $y, $line {
-                $grid.set-span-text(0, $y, $line);
-            }
-        }
-
-        @grids
+        my @grids = @texts.map(&make-text-grid);
     }
 
     # Matching keyframes make it appear as if the animation paused, even though
