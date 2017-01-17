@@ -797,6 +797,7 @@ class UI is Widget
  does Terminal::Print::BoxDrawing {
     has Int         $.color-bits;
     has Bool        $.edge-border = False;
+    has Bool        $.narrow = False;
     has Bool        $.ascii;
     has Game        $.game;
     has ProgressBar $.bar;
@@ -837,6 +838,7 @@ class UI is Widget
                              :w($h-break - $.edge-border),
                              :h($v-break - $.edge-border),
                              :map($.game.map), :map-x(3), :map-y(3),
+                             :full-width(!$.narrow),
                              :party($.game.party), :parent(self));
         $!mv.do-frame(Terminal::Print::FrameInfo.new);
         $.bar.add-progress(5);
@@ -1543,7 +1545,8 @@ sub dragon-battle(UI $ui, Game $game) {
 sub MAIN(
     Bool :$ascii, #= Use only ASCII characters, no >127 codepoints
     Bool :$bench, #= Benchmark mode (run as fast as possible, with no sleeps or rate limiting)
-    Int  :$color-bits = 8 #= Set color support (4 = 16-color, 8 = 256-color, 24 = 24-bit RGB)
+    Int  :$color-bits = 8, #= Set color support (4 = 16-color, 8 = 256-color, 24 = 24-bit RGB)
+    Bool :$narrow, #= Use narrow map viewer mode
     ) {
 
     PROCESS::<$BENCHMARK-MODE> = $bench;
@@ -1583,7 +1586,7 @@ sub MAIN(
         $game = Game.new(:$map, :$party);
 
         # Global main UI object
-        $ui = UI.new(:w(w), :h(h), :x(0), :y(0),  # ,
+        $ui = UI.new(:w(w), :h(h), :x(0), :y(0), :$narrow,
                      :$game, :$bar, :$ascii, :$color-bits);
         $ui.build-layout;
     }
