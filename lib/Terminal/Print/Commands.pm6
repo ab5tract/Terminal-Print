@@ -93,8 +93,8 @@ INIT {
     %attributes<rows>     = %*ENV<ROWS>    //= rows();
 }
 
-sub columns is export   { q:x{ tput cols  } .chomp }
-sub rows is export      { q:x{ tput lines } .chomp }
+our sub columns { q:x{ tput cols  } .chomp.Int }
+our sub rows    { q:x{ tput lines } .chomp.Int }
 
 sub move-cursor-template( Terminal::Print::CursorProfile $profile = 'ansi' ) returns Code is export {
     %human-commands{'move-cursor'}{$profile};
