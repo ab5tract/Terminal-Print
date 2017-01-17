@@ -39,14 +39,11 @@ BEGIN {
     }
 }
 
-INIT {
     my $term = %*ENV<TERM> || 'xterm';
     my %cached := %tput-cache{$term};
 
     die "Please update @valid-terminals with your desired TERM ('$term', is it?) and submit a PR if it works"
         unless %cached;
-
-    my sub build-cursor-to-template {
 
         my Str sub ansi( Int() $x,  Int() $y ) {
             "\e[{$y+1};{$x+1}H";
@@ -61,9 +58,6 @@ INIT {
         my Str sub universal( Int() $x, Int() $y ) {
             $pre ~ ($y + 1) ~ $mid ~ ($x + 1) ~ $post;
         }
-
-        return %( :&ansi, :&universal );
-    }
 
     %human-command-names = %(
         'clear'              => 'clear',
@@ -80,7 +74,7 @@ INIT {
     for %human-command-names.kv -> $human,$command {
         given $human {
             when 'move-cursor'  {
-                %tput-commands{$command} = build-cursor-to-template;
+                %tput-commands{$command} = %( :&ansi, :&universal );
             }
             default             {
                 %tput-commands{$command} = %cached{$command};
@@ -91,17 +85,16 @@ INIT {
 
     %attributes<columns>  = %*ENV<COLUMNS> //= columns();
     %attributes<rows>     = %*ENV<ROWS>    //= rows();
-}
 
 our sub columns { q:x{ tput cols  } .chomp.Int }
 our sub rows    { q:x{ tput lines } .chomp.Int }
 
 sub move-cursor-template( Terminal::Print::CursorProfile $profile = 'ansi' ) returns Code is export {
-    %human-commands{'move-cursor'}{$profile};
+    $profile eq 'ansi' ?? &ansi !! &universal
 }
 
 sub move-cursor( Int $x, Int $y, Terminal::Print::CursorProfile $profile = 'ansi' ) is export {
-    %human-commands{'move-cursor'}{$profile}( $x, $y );
+    ($profile eq 'ansi' ?? &ansi !! &universal)( $x, $y )
 }
 
 sub tput( Str $command ) is export {
