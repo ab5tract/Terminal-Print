@@ -1195,7 +1195,7 @@ class Teleport is Animation
         my $rt    = $!r * $pct;
         my $x     = cos(π / 6);
 
-        my $xrt   = 2 * $x * $rt;
+        my $xrt   = (1e0 + $.parent.full-width) * $x * $rt;
         my $hrt   = .5e0 * $rt;
 
         ( $xrt, -$hrt),
@@ -1296,7 +1296,8 @@ class Teleport is Animation
         self.form-tesseract(1e0);
         next unless ($pct * 23).round % 2;
 
-        my $rtx   = ($!r * $pct * 2e0).round;
+        my $ratio = $.parent.full-width + 1e0;
+        my $rtx   = ($!r * $pct * $ratio).round;
         my $rty   = ($!r * $pct / 2e0).round;
 
         my $color = gray-color(.75e0 + $pct / 4e0);
@@ -1375,15 +1376,23 @@ sub dragon-battle(UI $ui, Game $game) {
 
     #| Add the dragon to the screen
     my sub add-dragon(:$dx, :$dy) {
-        my $dragon = q:to/DRAGON/;
+        my $dragon-wide = q:to/DRAGON/;
                  __     
             <,  /\      
              `=<###>.   
                ]   ] `~+
             DRAGON
 
-        # :
-        my $grid = make-text-grid($dragon);
+        my $dragon-narrow = q:to/DRAGON/;
+                _   
+            <, /\   
+             `<##>. 
+              ]  ]`+
+            DRAGON
+
+        # /
+        my $dragon = $ui.mv.full-width ?? $dragon-wide !! $dragon-narrow;
+        my $grid   = make-text-grid($dragon);
         $grid.set-span-color(0, $grid.w - 1, $_, 'red') for ^$grid.h;
 
         my $fw   = 1 + $ui.mv.full-width;
@@ -1484,7 +1493,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state;
     $ui.lv.add-entry("The dragon blindly casts explosive fireball.");
     $ui.lv.add-entry("--> The fiery blast knocks everyone back, singeing cloth and heating metal.");
-    show-attack(WaveFront, .5e0, :dx(-1), :dy(-2), :w(5), :h(5));
+    show-attack(WaveFront, .5e0, :dx(-1), :dy(-2), :w(6), :h(5));
     await (^5).map: *.&do-damage;
 
     # Party turn #3
@@ -1501,7 +1510,7 @@ sub dragon-battle(UI $ui, Game $game) {
     $ui.pv.show-state(:expand(2));
     $ui.lv.user-input('[Salnax]>', 'cast magic missile');
     $ui.lv.add-entry("--> Salnax launches a quintet of octarine missiles, scattering them across the dragon's massive frame.");
-    show-attack(Missiles, 1e0, :dx(+1), :dy(-2), :w(6), :h(5), :count(5));
+    show-attack(Missiles, 1e0, :dx(+1), :dy(-2), :w(7), :h(5), :count(5));
     use-spell(2);
     $ui.lv.add-entry("--> The dragon howls with growing rage!");
 
