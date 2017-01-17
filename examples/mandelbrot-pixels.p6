@@ -105,8 +105,8 @@ class Mandelbrot is Terminal::Print::PixelAnimation {
         my $margin    = (1 - 1 / $zoom-factor) / 2;
         my $x-margin  = $.w * $margin;
         my $y-margin  = $.h * $margin;
-        my ($x1, $x2) = $x-margin, $.w - 1 - $x-margin;
-        my ($y1, $y2) = $y-margin, $.h - 1 - $y-margin;
+        my ($x1, $x2) = $x-margin.floor, ($.w - 1 - $x-margin).floor;
+        my ($y1, $y2) = $y-margin.floor, ($.h - 1 - $y-margin).floor;
 
         $.grid.print-string($x1, $y1, ' ' x ($.w / $zoom-factor), 'on_white');
         $.grid.print-string($x1, $y2, ' ' x ($.w / $zoom-factor), 'on_white');
