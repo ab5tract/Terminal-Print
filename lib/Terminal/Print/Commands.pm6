@@ -39,52 +39,52 @@ BEGIN {
     }
 }
 
-    my $term = %*ENV<TERM> || 'xterm';
-    my %cached := %tput-cache{$term};
+my $term = %*ENV<TERM> || 'xterm';
+my %cached := %tput-cache{$term};
 
-    die "Please update @valid-terminals with your desired TERM ('$term', is it?) and submit a PR if it works"
-        unless %cached;
+die "Please update @valid-terminals with your desired TERM ('$term', is it?) and submit a PR if it works"
+    unless %cached;
 
-        my Str sub ansi( Int() $x,  Int() $y ) {
-            "\e[{$y+1};{$x+1}H";
+my Str sub ansi( Int() $x,  Int() $y ) {
+    "\e[{$y+1};{$x+1}H";
+}
+
+my $raw = %cached<cup>;
+$raw ~~ /^ (.*?) (\d+) (\D+) (\d+) (\D+) $/
+    or warn "universal mode must have access to tput";
+
+my ($pre, $mid, $post) = $0, $2, $4;
+
+my Str sub universal( Int() $x, Int() $y ) {
+    $pre ~ ($y + 1) ~ $mid ~ ($x + 1) ~ $post;
+}
+
+%human-command-names = %(
+    'clear'              => 'clear',
+    'save-screen'        => 'smcup',
+    'restore-screen'     => 'rmcup',
+    'pos-cursor-save'    => 'sc',
+    'pos-cursor-restore' => 'rc',
+    'hide-cursor'        => 'civis',
+    'show-cursor'        => 'cnorm',
+    'move-cursor'        => 'cup',
+    'erase-char'         => 'ech',
+);
+
+for %human-command-names.kv -> $human,$command {
+    given $human {
+        when 'move-cursor'  {
+            %tput-commands{$command} = %( :&ansi, :&universal );
         }
-
-        my $raw = %cached<cup>;
-        $raw ~~ /^ (.*?) (\d+) (\D+) (\d+) (\D+) $/
-            or warn "universal mode must have access to tput";
-
-        my ($pre, $mid, $post) = $0, $2, $4;
-
-        my Str sub universal( Int() $x, Int() $y ) {
-            $pre ~ ($y + 1) ~ $mid ~ ($x + 1) ~ $post;
+        default             {
+            %tput-commands{$command} = %cached{$command};
         }
-
-    %human-command-names = %(
-        'clear'              => 'clear',
-        'save-screen'        => 'smcup',
-        'restore-screen'     => 'rmcup',
-        'pos-cursor-save'    => 'sc',
-        'pos-cursor-restore' => 'rc',
-        'hide-cursor'        => 'civis',
-        'show-cursor'        => 'cnorm',
-        'move-cursor'        => 'cup',
-        'erase-char'         => 'ech',
-    );
-
-    for %human-command-names.kv -> $human,$command {
-        given $human {
-            when 'move-cursor'  {
-                %tput-commands{$command} = %( :&ansi, :&universal );
-            }
-            default             {
-                %tput-commands{$command} = %cached{$command};
-            }
-        }
-        %human-commands{$human} = %tput-commands{$command};
     }
+    %human-commands{$human} = %tput-commands{$command};
+}
 
-    %attributes<columns>  = %*ENV<COLUMNS> //= columns();
-    %attributes<rows>     = %*ENV<ROWS>    //= rows();
+%attributes<columns>  = %*ENV<COLUMNS> //= columns();
+%attributes<rows>     = %*ENV<ROWS>    //= rows();
 
 our sub columns { q:x{ tput cols  } .chomp.Int }
 our sub rows    { q:x{ tput lines } .chomp.Int }
