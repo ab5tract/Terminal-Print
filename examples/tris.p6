@@ -183,6 +183,7 @@ sub MAIN() {
     # Main game loop
     my $in-supply = raw-input-supply;
     $in-supply.act: -> $_ {
+        try-drop;
         when 'q' { $in-supply.done  }  # Quit
         when ' ' { ++$score while try-drop }  # Hard drop
         when 'z' { $orientation = ($orientation - 1) % %minos{$mino}.elems;
