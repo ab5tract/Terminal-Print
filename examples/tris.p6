@@ -137,33 +137,50 @@ sub MAIN() {
         min(max($x, 0, -@xs.min), $w - 1 - @xs.max)
     }
 
-    #| Determine if the mino can drop any further by checking for collisions
-    sub can-drop() {
-        # Make sure the mino doesn't collide with itself
-        my @blocks := %minos{$mino}[$orientation];
-        set-blocks(@blocks, $x + $x-off, $y, '');
-        sleep .1;
+    #| Check for collisions before making a move or rotation
+    sub would-collide($mx, $my, $mo) {
+        my @orientations := %minos{$mino};
 
-        my $can-drop = True;
-        for @blocks -> ($dx, $dy) {
-            my $bx = ($x + $dx + $x-off) * 2;
-            my $by =  $y + $dy + 1;
+        # First make sure the mino doesn't detect a false collision with itself
+        my @current-blocks := @orientations[$orientation];
+        set-blocks(@current-blocks, $x + $x-off, $y, '');
+
+        # Assume no collision, then look for trouble
+        my  $would-collide    = False;
+        my  @proposed-blocks := @orientations[($orientation + $mo) % @orientations];
+        for @proposed-blocks -> $block ($dx, $dy) {
+            my $bx = ($x + $dx + $mx + $x-off) * 2;
+            my $by =  $y + $dy + $my;
             next if $by < 0;
-            $can-drop = False if $grid.grid[$by][$bx].?color;
+            $would-collide = True if $bx < 0 || $grid.grid[$by][$bx].?color;
         }
 
-        set-blocks(@blocks, $x + $x-off, $y, %colors{$mino});
-        $can-drop
+        # Restore the original mino before returning the collision result
+        set-blocks(@current-blocks, $x + $x-off, $y, %colors{$mino});
+        $would-collide
     }
 
-    #| Drop or evaluate stuckness
-    sub try-drop() {
-        if can-drop() {
-            ++$y;
-            redraw;
-            True;
+    #| Attempt to move to the side
+    sub try-move($mx) {
+        $x += $mx unless would-collide($mx, 0, 0);
+    }
+
+    #| Attempt to rotate, possibly resolving collisions by kicking right or left
+    sub try-rotate($mo) {
+        for 0, 1, -1 -> $mx {
+            next if would-collide($mx, 0, $mo);
+
+            $x += $mx;
+            $orientation = ($orientation + $mo) % %minos{$mino};
+            last;
         }
-        else {
+    }
+
+    #| Drop or lock in
+    sub try-drop() {
+        sleep .1;
+
+        if would-collide(0, 1, 0) {
             redraw;
             # XXXX: Check for cleared lines
             ($mino, $next-mino) = $next-mino, %minos.keys.pick;
@@ -175,6 +192,11 @@ sub MAIN() {
             redraw;
             False;
         }
+        else {
+            ++$y;
+            redraw;
+            True;
+        }
     }
 
     # Draw the initial playing area
@@ -184,14 +206,12 @@ sub MAIN() {
     my $in-supply = raw-input-supply;
     $in-supply.act: -> $_ {
         try-drop;
-        when 'q' { $in-supply.done  }  # Quit
+        when 'q' { $in-supply.done         }  # Quit
         when ' ' { ++$score while try-drop }  # Hard drop
-        when 'z' { $orientation = ($orientation - 1) % %minos{$mino}.elems;
-                   $x = wall-bump($x, $mino, $orientation); redraw }  # Rotate left
-        when 'x' { $orientation = ($orientation + 1) % %minos{$mino}.elems;
-                   $x = wall-bump($x, $mino, $orientation); redraw }  # Rotate right
-        when ',' { $x = wall-bump($x - 1, $mino, $orientation); redraw }  # Move left
-        when '.' { $x = wall-bump($x + 1, $mino, $orientation); redraw }  # Move right
+        when 'z' { try-rotate(-1); redraw  }  # Rotate left
+        when 'x' { try-rotate(+1); redraw  }  # Rotate right
+        when ',' { try-move(-1);   redraw  }  # Move left
+        when '.' { try-move(+1);   redraw  }  # Move right
     }
 
     T.shutdown-screen;
