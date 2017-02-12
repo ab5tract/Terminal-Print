@@ -45,25 +45,26 @@ sub MAIN() {
     my ($mino, $next-mino) = %minos.keys.pick xx 2;
     my $orientation = 0;
 
+    # Remember previous frame's values so we can erase moved blocks
+    state ($old-x, $old-y, $old-m, $old-o);  # ,
+    sub set-old-state() {
+        $old-x = $x;
+        $old-y = $y;
+        $old-m = $mino;
+        $old-o = $orientation;
+    }
+
+    #| Set blocks relative to (x, y) to a given color; x is in fullwidth cells
+    sub set-blocks(@blocks, $x, $y, $color) {
+        for @blocks -> ($dx, $dy) {
+            next unless 0 <= $y + $dy < $h;
+            $grid.set-span(($x + $dx) * 2, $y + $dy, '  ', $color);
+        }
+    }
+
     #| Erase and redraw mino after state changes
     sub redraw() {
-        # Remember previous frame's values so we can erase moved blocks
-        state $old-x = $x;
-        state $old-y = $y;
-        state $old-m = $mino;
-        state $old-o = $orientation;
-
-        # XXXX: HACK, just drop one line per frame
-        $y++;
-
         # Erase the old, draw the new
-        sub set-blocks(@blocks, $x, $y, $color) {
-            for @blocks -> ($dx, $dy) {
-                next unless 0 <= $y + $dy < $h;
-                $grid.set-span(($x + $dx) * 2, $y + $dy, '  ', $color);
-            }
-        }
-
         my $old-blocks = %minos{$old-m}[$old-o];
         my $new-blocks = %minos{$mino}[$orientation];
         set-blocks($old-blocks, $x-off + $old-x, $old-y, '');
@@ -73,18 +74,15 @@ sub MAIN() {
         my $min-x = max 0,      min $old-x - 1, $x - 1;
         my $max-x = min $w - 1, max $old-x + 2, $x + 2;
         my $min-y = max 0,      min $old-y - 1, $y - 1;
-        my $max-y = min $h - 1, max $old-y + 2, $y + 2;
+        my $max-y = min $h - 1, max $old-y + 2, $y + 2;  # =
 
         # Reprint entire area within damage bounds
         print $grid.span-string(($x-off + $min-x) * 2,
                                 ($x-off + $max-x) * 2 + 1, $_)
-            for $min-y .. $max-y;
+            for $min-y .. $max-y;  # ;;
 
         # Everything new is old again
-        $old-x = $x;
-        $old-y = $y;
-        $old-m = $mino;
-        $old-o = $orientation;
+        set-old-state;
     }
 
     #| Draw the next mino that will come after the current one is locked in
@@ -97,9 +95,7 @@ sub MAIN() {
 
         $grid.set-span($x * 2, $y + $_, '  ' x +@blocks, '') for ^(+@blocks);
 
-        for @blocks -> ($dx, $dy) {
-            $grid.set-span(($x + $dx + 1) * 2, $y + $dy + 1, '  ', $color);
-        }
+        set-blocks(@blocks, $x + 1, $y + 1, $color);
 
         print $grid.span-string($x * 2, ($x + @blocks - 1) * 2, $y + $_)
             for ^(+@blocks);
@@ -129,14 +125,51 @@ sub MAIN() {
         }
 
         # Initial and next mino
-        redraw;
+        set-old-state;
         draw-next-mino;
+        redraw;
     }
 
-    #| Push away from walls as needed to fit current orientation
+    #| Push away from side walls as needed to fit current orientation
     sub wall-bump($x, $mino, $orientation) {
         my @xs = %minos{$mino}[$orientation]».[0];
         min(max($x, 0, -@xs.min), $w - 1 - @xs.max)
+    }
+
+    #| Determine if the mino can drop any further
+    sub can-drop() {
+        my @blocks := %minos{$mino}[$orientation];
+        set-blocks(@blocks, $x + $x-off, $y, 'underline');
+        sleep 1;
+        for @blocks -> ($dx, $dy) {
+            my $bx = ($x + $dx + $x-off) * 2;
+            my $by =  $y + $dy + 1;
+            next if $by < 0;
+            # return False if $grid.grid[$by][$bx].?color;
+            return False if $y > 20;
+        }
+        True
+    }
+
+    #| Drop or evaluate stuckness
+    sub try-drop() {
+        if can-drop() {
+            redraw;
+            $y++;
+            redraw;
+            True;
+        }
+        else {
+            # XXXX: Check for cleared lines
+            ($mino, $next-mino) = $next-mino, %minos.keys.pick;
+            $x = $w div 2;
+            $y = -1;
+            $orientation = 0;
+            set-old-state;
+            draw-next-mino;
+            redraw;
+            False;
+        }
     }
 
     # Draw the initial playing area
@@ -145,9 +178,8 @@ sub MAIN() {
     # Main game loop
     my $in-supply = raw-input-supply;
     $in-supply.act: -> $_ {
-        when 'q' { $in-supply.done }  # Quit
-        when ' ' { ($mino, $next-mino) = $next-mino, %minos.keys.pick;
-                   $x = $w div 2; $y = -1; $orientation = 0; redraw; draw-next-mino }  # XXXX: Hard drop
+        when 'q' { $in-supply.done  }  # Quit
+        when ' ' { {} while try-drop }  # Hard drop
         when 'z' { $orientation = ($orientation - 1) % %minos{$mino}.elems;
                    $x = wall-bump($x, $mino, $orientation); redraw }  # Rotate left
         when 'x' { $orientation = ($orientation + 1) % %minos{$mino}.elems;
