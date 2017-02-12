@@ -44,6 +44,7 @@ sub MAIN() {
 
     my ($mino, $next-mino) = %minos.keys.pick xx 2;
     my $orientation = 0;
+    my $score = 0;
 
     # Remember previous frame's values so we can erase moved blocks
     state ($old-x, $old-y, $old-m, $old-o);  # ,
@@ -136,30 +137,34 @@ sub MAIN() {
         min(max($x, 0, -@xs.min), $w - 1 - @xs.max)
     }
 
-    #| Determine if the mino can drop any further
+    #| Determine if the mino can drop any further by checking for collisions
     sub can-drop() {
+        # Make sure the mino doesn't collide with itself
         my @blocks := %minos{$mino}[$orientation];
-        set-blocks(@blocks, $x + $x-off, $y, 'underline');
-        sleep 1;
+        set-blocks(@blocks, $x + $x-off, $y, '');
+        sleep .1;
+
+        my $can-drop = True;
         for @blocks -> ($dx, $dy) {
             my $bx = ($x + $dx + $x-off) * 2;
             my $by =  $y + $dy + 1;
             next if $by < 0;
-            # return False if $grid.grid[$by][$bx].?color;
-            return False if $y > 20;
+            $can-drop = False if $grid.grid[$by][$bx].?color;
         }
-        True
+
+        set-blocks(@blocks, $x + $x-off, $y, %colors{$mino});
+        $can-drop
     }
 
     #| Drop or evaluate stuckness
     sub try-drop() {
         if can-drop() {
-            redraw;
-            $y++;
+            ++$y;
             redraw;
             True;
         }
         else {
+            redraw;
             # XXXX: Check for cleared lines
             ($mino, $next-mino) = $next-mino, %minos.keys.pick;
             $x = $w div 2;
@@ -179,7 +184,7 @@ sub MAIN() {
     my $in-supply = raw-input-supply;
     $in-supply.act: -> $_ {
         when 'q' { $in-supply.done  }  # Quit
-        when ' ' { {} while try-drop }  # Hard drop
+        when ' ' { ++$score while try-drop }  # Hard drop
         when 'z' { $orientation = ($orientation - 1) % %minos{$mino}.elems;
                    $x = wall-bump($x, $mino, $orientation); redraw }  # Rotate left
         when 'x' { $orientation = ($orientation + 1) % %minos{$mino}.elems;
