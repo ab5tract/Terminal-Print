@@ -178,8 +178,6 @@ sub MAIN() {
 
     #| Drop or lock in
     sub try-drop() {
-        sleep .1;
-
         if would-collide(0, 1, 0) {
             redraw;
             # XXXX: Check for cleared lines
@@ -203,15 +201,21 @@ sub MAIN() {
     draw-field;
 
     # Main game loop
+    class Tick { }
     my $in-supply = raw-input-supply;
-    $in-supply.act: -> $_ {
-        try-drop;
-        when 'q' { $in-supply.done         }  # Quit
-        when ' ' { ++$score while try-drop }  # Hard drop
-        when 'z' { try-rotate(-1); redraw  }  # Rotate left
-        when 'x' { try-rotate(+1); redraw  }  # Rotate right
-        when ',' { try-move(-1);   redraw  }  # Move left
-        when '.' { try-move(+1);   redraw  }  # Move right
+    my $timer     = Supply.interval(.2).map: { Tick };
+    my $supplies  = Supply.merge($in-supply, $timer);
+
+    react {
+        whenever $supplies -> $_ {
+            when Tick { try-drop                }  # Timer Tick
+            when 'q'  { done                    }  # Quit
+            when ' '  { ++$score while try-drop }  # Hard drop
+            when 'z'  { try-rotate(-1); redraw  }  # Rotate left
+            when 'x'  { try-rotate(+1); redraw  }  # Rotate right
+            when ','  { try-move(-1);   redraw  }  # Move left
+            when '.'  { try-move(+1);   redraw  }  # Move right
+        }
     }
 
     T.shutdown-screen;
