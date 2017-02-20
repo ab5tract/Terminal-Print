@@ -64,7 +64,7 @@ sub MAIN() {
     }
 
     #| Erase and redraw mino after state changes
-    sub redraw() {
+    sub redraw-mino() {
         # Erase the old, draw the new
         my $old-blocks = %minos{$old-m}[$old-o];
         my $new-blocks = %minos{$mino}[$orientation];
@@ -84,6 +84,14 @@ sub MAIN() {
 
         # Everything new is old again
         set-old-state;
+    }
+
+    #| Draw per-frame updates
+    sub redraw() {
+        redraw-mino;
+
+        my $score-x = ($x-off + $w + 2) * 2 + 8;
+        $grid.print-string($score-x, 0, $score);
     }
 
     #| Draw the next mino that will come after the current one is locked in
