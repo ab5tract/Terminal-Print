@@ -21,7 +21,7 @@ await do for @rotor -> @ys {
     my $p = start {
         my @xs = ^3 .pick %% 2  ?? (^T.columns).reverse
                                 !! ^T.columns;
-        my @ys-rev := @ys.reverse;
+        my @ys-rev := @ys.reverse.Array;
         for @xs -> $x {
             my @yss := choosey()    ?? @ys-rev
                                     !! @ys;
