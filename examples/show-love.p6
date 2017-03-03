@@ -1,50 +1,22 @@
-use lib './lib';
+# ABSTRACT: Fill the screen with hearts
 
+use v6;
 use Terminal::Print;
-use Terminal::ANSIColor;
+
+
 my @colors = <red magenta yellow white>;
 
-my $b = Terminal::Print.new;
+T.initialize-screen;
 
-$b.initialize-screen;
-
-my @hearts;
-#for $b.grep-grid({$^x %% 3 && $^y}) -> [$x,$y] {
-for $b.grid-indices.pick(*) -> [$x,$y] {
+for T.indices.pick(*) -> [$x,$y] {
     next unless $x %% 3;
-    #    $b[$x][$y] = colored('♥', @colors.roll);
-    $b.print-cell($x,$y,colored('♥', @colors.roll));
-    # $b[$x][$y] ='♥';
-    push @hearts, [$x,$y];
+    T.print-cell: $x, $y, %( char => '♥', color => @colors.roll );
 }
 
-sleep 5;
+sleep 2;
+T.shutdown-screen;
 
-$b.clear-screen;
-
-#$b.clone-grid(0,'hearts');
-#
-#my $hg := $b.grid-object('hearts');
-#
-##$hg.grep-grid: {$^x %% 3 and $^y %% 3 || $x %% 2 and $y %% 2}, :o;
-#
-#my $og := $b.grid-object(0);
-#my $h3 := $b.clone-grid(0,'h3');
-#
-##$h3.grep-grid: {$^x == 21 || $^y == 12}, :o;
-#
-#sleep 5;
-#
-#$b.blit(0);
-#sleep 1;
-#$b.blit('h3');
-#sleep 1;
-#$b.blit('hearts');
-#sleep 1;
-#$b.blit(0);
-#sleep 1;
-#$b.blit('h3');
-#sleep 1;
-
-
-LEAVE { $b.shutdown-screen }
+### Golfed version!
+# perl6 -Ilib -MTerminal::Print -e 'd({for in.grep({$_[0]%%3}).pick(*) ->[$x,$y]{cl($x,$y,"♥",fgc.roll)};slp(2);$^p.keep });'
+### Fancier!
+# perl6 -MTerminal::Print -e 'd({ while $++ < 4 { for my @in = in.grep({$_[0] %% 3}).pick(*) -> [$x,$y] { cl($x,$y,"♥", fgc.roll) }; for @in.reverse -> [$x,$y] { cl($x,$y," ") }; }; $^p.keep })'

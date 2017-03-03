@@ -1,21 +1,23 @@
-use v6;
-use lib './lib';
+# ABSTRACT: Show random pages of characters from various "alphabets"
 
+use v6;
 use Terminal::Print;
 
-my $p = Terminal::Print.new;
+my $p = Terminal::Print.new(cursor-profile => 'universal');
 
 $p.initialize-screen;
 
-#say $p.grid-indices.perl;
+# my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
+my @char-ranges = '─'..'╿', 'ᚠ'..'ᛰ';
 
-my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
 for @char-ranges.pick(*) -> @alphabet {
-    for $p.grid-indices -> [$x,$y] {
-        $p.print-cell($x, $y, @alphabet.roll)
-            if $y %% 7 || ($x %% (0..5).roll || $y %% (0..6).roll);
+    $p.current-grid.clear;
+    for $p.indices -> [$x,$y] {
+        $p.change-cell($x, $y, @alphabet.roll)
+            if $y %% 7 || ($x %% (1..5).roll || $y %% (1..6).roll);
     }
-    $p.clear-screen;
+    print $p.current-grid.Str;
 }
 
+sleep 2;
 $p.shutdown-screen;

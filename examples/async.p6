@@ -1,32 +1,36 @@
-use v6;
+# ABSTRACT: Asynchronous race across the display
 
-use lib './lib';
+use v6;
 use Terminal::Print;
 
-my $t = Terminal::Print.new;   # TODO: take named parameter for grid name of default grid
 
-$t.initialize-screen;
+T.initialize-screen;
 
-my @indices = $t.grid-indices;
-
-# Other attempts that do not work very well
-#await do for ^$t.max-rows -> $x {
-#await do for ^10 -> $x {
+my @indices = T.indices;
 
 my @alphabet = 'j'..'z';
-await do for (^$t.max-rows).rotor(10, :partial).kv -> $thread,@ys {
-    my $char = @alphabet[$thread];
-    start {
-        sleep $thread / 2.3;
-        my @xs := $thread %% 2 ?? (^$t.max-columns).reverse !! ^$t.max-columns;
-        my @ys-rev = @ys.reverse;
+
+my @rotor = (^T.rows).rotor(10, :partial)>>.Array;
+my $thread = 0;
+
+# just a coinflipper, at the moment.
+sub choosey() { <1 2 3>.roll %% 2 }
+
+await do for @rotor -> @ys {
+    my $char := @alphabet.pick;
+    my $p = start {
+        my @xs = ^3 .pick %% 2  ?? (^T.columns).reverse
+                                !! ^T.columns;
+        my @ys-rev := @ys.reverse;
         for @xs -> $x {
-            my @yss := $thread %% 2 ?? @ys-rev !! @ys;
+            my @yss := choosey()    ?? @ys-rev
+                                    !! @ys;
             for @yss -> $y {
-                $t.print-cell($x,$y,$char);
+                T.print-cell($x, $y, choosey() ?? $char !! $char.uc);
             }
         }
     }
+    $p
 }
 
-$t.shutdown-screen;
+T.shutdown-screen;

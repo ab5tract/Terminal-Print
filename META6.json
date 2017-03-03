@@ -1,0 +1,29 @@
+{
+  "name" : "Terminal::Print",
+  "source-url" : "git://github.com/ab5tract/Terminal-Print.git",
+  "perl" : "6.c",
+  "resources" : [ ],
+  "build-depends" : [ ],
+  "provides" : {
+    "Terminal::Print"                 : "lib/Terminal/Print.pm6",
+    "Terminal::Print::Animated"       : "lib/Terminal/Print/Animated.pm6",
+    "Terminal::Print::BoxDrawing"     : "lib/Terminal/Print/BoxDrawing.pm6",
+    "Terminal::Print::Commands"       : "lib/Terminal/Print/Commands.pm6",
+    "Terminal::Print::Grid"           : "lib/Terminal/Print/Grid.pm6",
+    "Terminal::Print::ParticleEffect" : "lib/Terminal/Print/ParticleEffect.pm6",
+    "Terminal::Print::Pixelated"      : "lib/Terminal/Print/Pixelated.pm6",
+    "Terminal::Print::Util::Text"     : "lib/Terminal/Print/Util/Text.pm6",
+    "Terminal::Print::Util::Timing"   : "lib/Terminal/Print/Util/Timing.pm6",
+    "Terminal::Print::Widget"         : "lib/Terminal/Print/Widget.pm6"
+  },
+  "depends" : [
+    "OO::Monitors",
+    "Terminal::ANSIColor"
+  ],
+  "description" : "Asynchronous printing to your terminal -- as a simple grid",
+  "test-depends" : [ ],
+  "version" : "0.91",
+  "authors" : [
+    "John Haltiwanger"
+  ]
+}
