@@ -1,5 +1,6 @@
 {
   "name" : "Terminal::Print",
+  "license" : "Artistic-2.0",
   "source-url" : "git://github.com/ab5tract/Terminal-Print.git",
   "perl" : "6.c",
   "resources" : [ ],
