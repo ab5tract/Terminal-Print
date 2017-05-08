@@ -3,11 +3,6 @@
 use v6;
 use Terminal::Print;
 
-my $figlet = (q:x{which figlet} || q:x{which toilet}).trim;
-my $base-x = w div 2;
-my $base-y = h div 2;
-my $radius = min($base-x, $base-y * 2) - 1;  #=
-
 sub print-centered($cx, $cy, $string) {
     return unless $string;
 
@@ -35,10 +30,14 @@ sub print-seconds($cx, $cy, $r, $time) {
 
 T.initialize-screen;
 
-my $end-time = DateTime.now.later( :1minutes );
-my $exit = Promise.new;
-my $s = Supply.interval(1);
-$s.tap: {
+my $figlet   = (q:x{which figlet} || q:x{which toilet}).trim;
+my $base-x   = w div 2;
+my $base-y   = h div 2;
+my $radius   = min($base-x, $base-y * 2) - 1;
+my $end-time = DateTime.now.later :1minutes;
+my $exit     = Promise.new;
+
+Supply.interval(1).tap: {
     state $clear-string = '';
     my $now = DateTime.now(formatter => { sprintf '%d:%02d', .hour, .minute });
     if $now <= $end-time {
