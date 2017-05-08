@@ -28,7 +28,7 @@ $s.tap: {
     my $now = DateTime.now(formatter => *.hh-mm-ss);
     if $now <= $end-time {
         if $figlet {
-            my $fig-now = qq:x[$figlet -f bubble $now];
+            my $fig-now = qq:x[$figlet -W -f standard $now];
             print-centered($base-x, $base-y, $clear-string);
             print-centered($base-x, $base-y, $fig-now);
             $clear-string = $fig-now.subst(/\S/, ' ', :g);
