@@ -21,10 +21,11 @@ sub print-seconds($cx, $cy, $r, $time) {
 
     if $sec %% 5 {
         T.clear-screen if $sec == 0;
-        T.print-string($x, $y, $sec.fmt('%02d'));
+        T.print-string($x - ($sec <= 30), $y, $sec.fmt('%02d'));
     }
     else {
-        T.print-string($x, $y, '*');
+        my $char = $y - $y.Int < .5 ?? '▀' !! '▄';
+        T.print-string($x, $y, $char, 'red');
     }
 }
 
