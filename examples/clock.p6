@@ -21,7 +21,7 @@ sub print-seconds($cx, $cy, $r, $time) {
 
     if $sec %% 5 {
         T.clear-screen if $sec == 0;
-        T.print-string($x - 1, $y, $sec.fmt('%02d'));
+        T.print-string($x, $y, $sec.fmt('%02d'));
     }
     else {
         T.print-string($x, $y, '*');
@@ -33,7 +33,7 @@ T.initialize-screen;
 my $figlet   = (q:x{which figlet} || q:x{which toilet}).trim;
 my $base-x   = w div 2;
 my $base-y   = h div 2;
-my $radius   = min($base-x, $base-y * 2) - 1;
+my $radius   = min($base-x - 1, $base-y * 2 - 2);
 my $end-time = DateTime.now.later :1minutes;
 my $exit     = Promise.new;
 
