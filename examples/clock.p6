@@ -18,6 +18,21 @@ sub print-centered($cx, $cy, $string) {
     T.print-string($x, $y, $string);
 }
 
+sub print-seconds($cx, $cy, $r, $time) {
+    my $sec = $time.second.Int;
+    my $rad = τ * $sec / 60;
+    my $x   = $cx + $r * sin($rad);
+    my $y   = $cy - $r * cos($rad) / 2;
+
+    if $sec %% 5 {
+        T.clear-screen if $sec == 0;
+        T.print-string($x - 1, $y, $sec.fmt('%02d'));
+    }
+    else {
+        T.print-string($x, $y, '*');
+    }
+}
+
 T.initialize-screen;
 
 my $end-time = DateTime.now.later( :1minutes );
