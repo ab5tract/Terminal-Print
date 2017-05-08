@@ -24,10 +24,10 @@ my $end-time = DateTime.now.later( :1minutes );
 my $exit = Promise.new;
 my $s = Supply.interval(1);
 $s.tap: {
+    state $clear-string = '';
     my $now = DateTime.now(formatter => *.hh-mm-ss);
     if $now <= $end-time {
         if $figlet {
-            state $clear-string = '';
             my $fig-now = qq:x[$figlet -f bubble $now];
             print-centered($base-x, $base-y, $clear-string);
             print-centered($base-x, $base-y, $fig-now);
