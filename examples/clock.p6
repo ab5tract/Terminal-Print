@@ -6,7 +6,8 @@ use Terminal::Print;
 
 my $figlet = (q:x{which figlet} || q:x{which toilet}).trim;
 my $base-x = w div 2;
-my $base-y = h div 2;  # ==
+my $base-y = h div 2;
+my $radius = min($base-x, $base-y * 2) - 1;  #=
 
 sub print-centered($cx, $cy, $string) {
     return unless $string;
@@ -40,8 +41,10 @@ my $exit = Promise.new;
 my $s = Supply.interval(1);
 $s.tap: {
     state $clear-string = '';
-    my $now = DateTime.now(formatter => *.hh-mm-ss);
+    my $now = DateTime.now(formatter => { sprintf '%d:%02d', .hour, .minute });
     if $now <= $end-time {
+        print-seconds($base-x, $base-y, $radius, $now);
+
         if $figlet {
             my $fig-now = qq:x[$figlet -W -f standard $now];
             print-centered($base-x, $base-y, $clear-string);
@@ -116,12 +119,12 @@ class Clock {
     }
 }
 
-my $c = Clock.new: c => 80, ratio => 1.4;
-$c.fill($base-x, $base-y, '*');
+# my $c = Clock.new: c => 80, ratio => 1.4;
+# $c.fill($base-x, $base-y, '*');
 
-$s.tap: {
-    $c.draw-point();
-};
+# $s.tap: {
+#     $c.draw-point();
+# };
 
 await $exit;
 
