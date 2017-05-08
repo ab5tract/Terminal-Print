@@ -3,7 +3,7 @@
 use v6;
 use Terminal::Print;
 
-sub print-centered($cx, $cy, $string) {
+sub print-centered($cx, $cy, Str() $string) {
     return unless $string;
 
     my @lines = $string.lines;
