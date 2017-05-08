@@ -23,24 +23,18 @@ T.initialize-screen;
 my $end-time = DateTime.now.later( :1minutes );
 my $exit = Promise.new;
 my $s = Supply.interval(1);
-my $old-string = '';
 $s.tap: {
-    my $now = DateTime.now(formatter => { sprintf "%02d:%02d:%02d",.hour,.minute,.second });
-    my $fig-now;
-    if $figlet {
-        $fig-now = qq:x[figlet -f bubble $now];
-    }
+    my $now = DateTime.now(formatter => *.hh-mm-ss);
     if $now <= $end-time {
-        my $string = $fig-now ?? $fig-now !! $now;
-        # $old-string stays unset unless $figlet is true
-        if $old-string {
-            T.print-string($base-x, $base-y, $old-string);
-        }
-                # width of the time string is 8, so we subtract 4 to center
-        T.print-string($base-x - 4, $base-y, $string);
         if $figlet {
-            $old-string = $string;
-            $old-string ~~ s:g/\S/ /;
+            state $clear-string = '';
+            my $fig-now = qq:x[$figlet -f bubble $now];
+            print-centered($base-x, $base-y, $clear-string);
+            print-centered($base-x, $base-y, $fig-now);
+            $clear-string = $fig-now.subst(/\S/, ' ', :g);
+        }
+        else {
+            print-centered($base-x, $base-y, $now);  #,,
         }
     } else {
         T.shutdown-screen;
