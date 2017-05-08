@@ -2,7 +2,6 @@
 
 use v6;
 use Terminal::Print;
-# use Terminal::Print::Animation;
 
 my $figlet = (q:x{which figlet} || q:x{which toilet}).trim;
 my $base-x = w div 2;
@@ -61,5 +60,3 @@ $s.tap: {
 };
 
 await $exit;
-
-T.shutdown-screen;
