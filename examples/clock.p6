@@ -5,9 +5,9 @@ use Terminal::Print;
 # use Terminal::Print::Animation;
 
 my $figlet = (q:x{which figlet} || q:x{which toilet}).trim;
+my $base-x = w div 2;
+my $base-y = h div 2;  # ==
 
-my $base-x = (T.columns / 2).floor;
-my $base-y = (T.rows / 2).floor;
 
 T.initialize-screen;
 
