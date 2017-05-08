@@ -8,6 +8,15 @@ my $figlet = (q:x{which figlet} || q:x{which toilet}).trim;
 my $base-x = w div 2;
 my $base-y = h div 2;  # ==
 
+sub print-centered($cx, $cy, $string) {
+    return unless $string;
+
+    my @lines = $string.lines;
+    my $width = @lines».chars.max;
+    my $x = $cx -  $width div 2;
+    my $y = $cy - +@lines div 2;
+    T.print-string($x, $y, $string);
+}
 
 T.initialize-screen;
 
