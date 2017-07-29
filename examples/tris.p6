@@ -1,3 +1,4 @@
+use v6.d.PREVIEW;
 use Terminal::Print;
 use Terminal::Print::RawInput;
 
@@ -41,6 +42,7 @@ sub MAIN() {
     my $x = $w div 2;                   # Start drops from center of play area
     my $y = -1;                         # redraw() will cause blocks to fall
     my $x-off = (w div 2 - $w) div 2;   # Center play area horizontally
+    my $score-x = ($x-off + $w + 2) * 2 + 8;
 
     my ($mino, $next-mino) = %minos.keys.pick xx 2;
     my $orientation = 0;
@@ -90,7 +92,6 @@ sub MAIN() {
     sub redraw() {
         redraw-mino;
 
-        my $score-x = ($x-off + $w + 2) * 2 + 8;
         $grid.print-string($score-x, 0, $score);
     }
 
@@ -187,11 +188,72 @@ sub MAIN() {
         }
     }
 
+    #| Check whether a particular row has no gaps
+    sub row-complete($ry) {
+        my $row   := $grid.grid[$ry];
+        my @filled = (^$w).grep: { $row[($_ + $x-off) * 2].?color };
+
+        @filled == $w
+    }
+
+    #| Find any lines that would clear
+    sub clearable-rows() {
+        (^$h).grep: { row-complete($_) };
+    }
+
+    #| Copy all blocks from $src row to $dst row
+    sub copy-row($src, $dst) {
+        my ($left, $right) = $x-off * 2, ($x-off + w) * 2 - 1;
+        $grid.grid[$dst].splice($left, $w * 2,
+                                $grid.grid[$src][$left .. $right]);
+    }
+
+    #| Move all blocks from $src row to $dst row, printing result
+    sub move-row($src, $dst) {
+        return if $src == $dst;
+        copy-row($src, $dst);
+        print $grid.span-string($x-off * 2, ($x-off + $w) * 2 - 1, $dst);
+        $grid.print-string($x-off * 2, $src, '  ' x $w, '');
+    }
+
+    #| Try to clear some filled rows
+    sub try-clear() {
+        my @rows = clearable-rows;
+        return 0 unless @rows;
+
+        # Flash white
+        $grid.print-string($x-off * 2, $_, '  ' x $w, 'on_white') for @rows;
+        sleep .1;
+
+        # Drop uncleared rows into place
+        my $dst = $h - 1;
+        for (^$h).reverse -> $src {
+            next if $src ∈ @rows;
+            move-row($src, $dst--);
+        }
+
+        # Update score
+        $score += @rows² * 100;
+        $grid.print-string($score-x, 0, $score);
+
+        +@rows
+    }
+
+    #| Print the game over message and exit after a short delay
+    sub game-over() {
+        my $message = "　ＧＡＭＥ　ＯＶＥＲ！　";
+        $grid.print-string($x-off * 2, $h div 2 - 1, '  ' x $w, '');
+        $grid.print-string($x-off * 2, $h div 2,     $message,  'white');
+        $grid.print-string($x-off * 2, $h div 2 + 1, '  ' x $w, '');
+        sleep 3;
+        done;
+    }
+
     #| Drop or lock in
     sub try-drop() {
         if would-collide(0, 1, 0) {
             redraw;
-            # XXXX: Check for cleared lines
+            try-clear() or $y < 0 && game-over;
             ($mino, $next-mino) = $next-mino, %minos.keys.pick;
             $x = $w div 2;
             $y = -1;
