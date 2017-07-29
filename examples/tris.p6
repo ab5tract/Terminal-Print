@@ -36,8 +36,8 @@ sub MAIN() {
     T.initialize-screen;
     my $grid = T.current-grid;
 
-    my $w = 12;                         # In fullwidth blocks (to appear square)
-    my $h = min(h, 24) - 1;             # Fill the majority of a vt100 terminal
+    my $w = 12;                         # Fullwidth blocks (to appear square)
+    my $h = min(h, 24) - 1;             # Fill the majority of a vt100 screen
     my $x = $w div 2;                   # Start drops from center of play area
     my $y = -1;                         # redraw() will cause blocks to fall
     my $x-off = (w div 2 - $w) div 2;   # Center play area horizontally
@@ -80,7 +80,7 @@ sub MAIN() {
         # Reprint entire area within damage bounds
         print $grid.span-string(($x-off + $min-x) * 2,
                                 ($x-off + $max-x) * 2 + 1, $_)
-            for $min-y .. $max-y;  # ;;
+            for $min-y .. $max-y;  # .
 
         # Everything new is old again
         set-old-state;
@@ -127,10 +127,12 @@ sub MAIN() {
         $grid.print-string($right, 2, 'Next:');
 
         # Keymap
-        my @keys = q => 'quit', space => 'drop', z => 'rotate left',
-                   x => 'rotate right', ',' => 'move left', '.' => 'move right';
+        my @keys = q   => 'quit',        space => 'drop',
+                   z   => 'rotate left', x     => 'rotate right',
+                   ',' => 'move left',   '.'   => 'move right';
         for @keys.kv -> $i, (:$key, :$value) {
-            $grid.print-string($right, 7 + $i, sprintf "%-6s  %s", $key, $value);
+            $grid.print-string($right, 7 + $i,
+                               sprintf "%-6s  %s", $key, $value);
         }
 
         # Initial and next mino
@@ -149,13 +151,14 @@ sub MAIN() {
     sub would-collide($mx, $my, $mo) {
         my @orientations := %minos{$mino};
 
-        # First make sure the mino doesn't detect a false collision with itself
+        # First make sure the mino doesn't detect a false self-collision
         my @current-blocks := @orientations[$orientation];
         set-blocks(@current-blocks, $x + $x-off, $y, '');
 
         # Assume no collision, then look for trouble
         my  $would-collide    = False;
-        my  @proposed-blocks := @orientations[($orientation + $mo) % @orientations];
+        my  @proposed-blocks := @orientations[($orientation + $mo)
+                                              % @orientations];
         for @proposed-blocks -> $block ($dx, $dy) {
             my $bx = ($x + $dx + $mx + $x-off) * 2;
             my $by =  $y + $dy + $my;
@@ -173,7 +176,7 @@ sub MAIN() {
         $x += $mx unless would-collide($mx, 0, 0);
     }
 
-    #| Attempt to rotate, possibly resolving collisions by kicking right or left
+    #| Attempt to rotate, possibly resolving collisions by kicking right/left
     sub try-rotate($mo) {
         for 0, 1, -1 -> $mx {
             next if would-collide($mx, 0, $mo);
