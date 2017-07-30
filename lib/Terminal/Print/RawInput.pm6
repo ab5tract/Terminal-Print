@@ -23,16 +23,12 @@ sub raw-input-supply(IO::Handle $input = $*IN) is export {
     my $s    = Supplier::Preserving.new;
     my $done = False;
     start {
-        # Make sure the input handle is opened in *this thread*, otherwise
-        # libuv gets cranky about thread-crossing I/O handles
-        my $in = open("/dev/fd/$fd", :r);
-
         LOOP: until $done {
             my $buf = Buf.new;
 
             # TimToady++ for suggesting this decode loop idiom
             repeat {
-                my $b = $in.read(1) or last LOOP;
+                my $b = $input.read(1) or last LOOP;
                 $buf.push($b);
             } until $done || try my $c = $buf.decode;
 
