@@ -3,7 +3,7 @@
 #           mashup of a Roguelike and a high fantasy CRPG.
 
 use v6;
-use Terminal::Print;
+use Terminal::Print <T>;
 use Terminal::Print::Widget;
 use Terminal::Print::Animated;
 use Terminal::Print::BoxDrawing;

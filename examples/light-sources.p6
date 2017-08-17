@@ -1,7 +1,7 @@
 # ABSTRACT: Display linear and sqrt light sources of various radii in 16- and 256-color variants
 
 use v6;
-use Terminal::Print;
+use Terminal::Print <T>;
 
 
 sub yellowish-light($cx, $cy, $radius, :$color-bits = 4, :$sqrt) {
