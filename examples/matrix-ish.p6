@@ -1,8 +1,7 @@
 # ABSTRACT: Draw the green falling characters of a Matrix-like screen
 
 use v6;
-use Terminal::Print;
-
+use Terminal::Print <T>;
 
 T.initialize-screen;
 
