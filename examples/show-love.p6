@@ -1,7 +1,7 @@
 # ABSTRACT: Fill the screen with hearts
 
 use v6;
-use Terminal::Print;
+use Terminal::Print <T>;
 
 
 my @colors = <red magenta yellow white>;
@@ -10,7 +10,7 @@ T.initialize-screen;
 
 for T.indices.pick(*) -> [$x,$y] {
     next unless $x %% 3;
-    T.print-cell: $x, $y, %( char => '♥', color => @colors.roll );
+    T.print-cell($x, $y, %( char => '♥', color => @colors.roll ));
 }
 
 sleep 2;

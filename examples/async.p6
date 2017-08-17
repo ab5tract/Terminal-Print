@@ -1,7 +1,7 @@
 # ABSTRACT: Asynchronous race across the display
 
 use v6;
-use Terminal::Print;
+use Terminal::Print <T>;
 
 
 T.initialize-screen;

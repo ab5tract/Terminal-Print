@@ -3,9 +3,7 @@
 use v6;
 use Terminal::Print;
 
-
-#my $b = Terminal::Print.new(move-cursor-profile => 'debug');   # TODO: take named parameter for grid name of default grid
-my $b = Terminal::Print.new;   # TODO: take named parameter for grid name of default grid
+my $b = Terminal::Print.new;
 
 $b.initialize-screen;
 
@@ -40,6 +38,6 @@ my sub zig-zag( Int $start_y? ) {
 # TODO: Make this a better example
 # await do for ^12 { start { sleep ( 0.1 .. 0.5 ).roll; is-odd($_) ?? zig-zag($_*3) !! zig-zag((-$_)*3) } }
 
-await do for 0...7 { start { is-odd($_) ?? zig-zag($_*3) !! zig-zag(-$_*10) } }
+await do for 0..7 { start { is-odd($_) ?? zig-zag($_*3) !! zig-zag(-$_*10) } }
 
 $b.shutdown-screen;
