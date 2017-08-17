@@ -7,8 +7,8 @@ my $p = Terminal::Print.new(cursor-profile => 'universal');
 
 $p.initialize-screen;
 
-# my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
-my @char-ranges = '─'..'╿', 'ᚠ'..'ᛰ';
+my @char-ranges = '■'..'◿','ぁ'..'ゟ','᠀'..'ᢨ','ᚠ'..'ᛰ','Ꭰ'..'Ᏼ','─'..'╿';
+# my @char-ranges = '─'..'╿', 'ᚠ'..'ᛰ';
 
 for @char-ranges.pick(*) -> @alphabet {
     $p.current-grid.clear;
