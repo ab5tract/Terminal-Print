@@ -1,4 +1,4 @@
-use Terminal::Print;
+use Terminal::Print <T>;
 
 class Coord {
     has Int $.x is rw where * <= T.columns = 0;
