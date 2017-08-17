@@ -213,6 +213,7 @@ multi method FALLBACK( Str $command-name where %Terminal::Print::Commands::human
 
     #   Sometimes you simply want the object back (for stringification, or
     #   introspection on things like column-range)
+    proto method grid-object($) { }
     multi method grid-object( Int $index ) {
         @!grids[$index];
     }
@@ -246,7 +247,7 @@ multi method FALLBACK( Str $command-name where %Terminal::Print::Commands::human
     }
 
     #### print-grid stuff
-
+    proto method print-grid($) { }
     multi method print-grid( Int $index ) {
         die "Grid index $index does not exist" unless @!grids[$index]:exists;
         print @!grids[$index];
@@ -286,16 +287,16 @@ multi method FALLBACK( Str $command-name where %Terminal::Print::Commands::human
     method gist {
         "\{ cols: {self.columns} rows: {self.rows} which: {self.WHICH} grid: {self.current-grid.WHICH} \}";
     }
-}
 
-my module Terminal::Print::Golf {
     =begin Golfing
 
     The golfing mechanism is minimal. Further golfing functionality may be added via third party modules,
     but the following features seemed to fulfill a 'necessary minimum' set of golfing requirements:
 
         - Not being subjected to a constructor command, certainly not against the full name of the class
-            + Solved via 'T'
+            + Solved via an optional argument to the use/import statement, eg C<use Terminal::Print <T>>
+                will create an instance and stash it in the importing scope as C<T>.
+            + By default we do not construct an object for you.
         - Having a succinct subroutine form which can initialize and shutdown the screen automatically
             + Solved via 'draw'
         - Easy access to .print-string, sleep, colorization, and the grid indices list. (Even easier than using T());
@@ -303,41 +304,49 @@ my module Terminal::Print::Golf {
 
     =end Golfing
 
-    sub draw(Terminal::Print $T, Callable $block) {
+    multi method p($x, $y) {
+        self.current-grid.print-string($x, $y);
+    }
+
+    multi method p($x, $y, $string) {
+        $!current-grid.print-string($x, $y, $string);
+    }
+
+    multi method p($x, $y, $string, $color) {
+        $!current-grid.print-string($x, $y, $string, $color);
+    }
+
+    multi method p($x, $y, %details) {
+        $!current-grid.print-string($x, $y, %details);
+    }
+
+    method draw(Callable $block) {
         my $drawn-promise = Promise.new;
         start {
             my $end-promise = Promise.new;
-            $T.initialize-screen;
+            self.initialize-screen;
             $block($end-promise);
             await $end-promise;
-            $T.shutdown-screen;
+            self.shutdown-screen;
             $drawn-promise.keep;
         }
         await $drawn-promise;
     }
 
-    sub d(Terminal::Print $T, $block) {
-        draw($block);
+    multi method ch($x, $y, $char) {
+        $!current-grid.change-cell($x, $y, $char);
     }
 
-    multi sub ch(Terminal::Print $T, $x, $y, $char) {
-        $T.current-grid.change-cell($x, $y, $char);
+    multi method ch(Terminal::Print $T, $x, $y, $char, $color) {
+        $!current-grid.change-cell($x, $y, %(:$char, :$color) );
     }
 
-    multi sub ch(Terminal::Print $T, $x, $y, $char, $color) {
-        $T.current-grid.change-cell($x, $y, %(:$char, :$color) );
+    multi method cl(Terminal::Print $T, $x, $y, $char) {
+        $!current-grid.print-cell($x, $y, $char);
     }
 
-    multi sub cl(Terminal::Print $T, $x, $y, $char) {
-        $T.current-grid.print-cell($x, $y, $char);
-    }
-
-    multi sub cl(Terminal::Print $T, $x, $y, $char, $color) {
-        $T.current-grid.print-cell($x, $y, %(:$char, :$color) );
-    }
-
-    sub slp($seconds) {
-        sleep $seconds;
+    multi method cl(Terminal::Print $T, $x, $y, $char, $color) {
+        $!current-grid.print-cell($x, $y, %(:$char, :$color) );
     }
 }
 
@@ -345,31 +354,18 @@ sub EXPORT($term-name?) {
     if $term-name {
         my $t = PROCESS::<$TERMINAL> = Terminal::Print.new;
 
-        multi sub p(Terminal::Print $T, $x, $y) {
-            $T.current-grid.print-string($x, $y);
-        }
-
-        multi sub p(Terminal::Print $T, $x, $y, $string) {
-            $T.current-grid.print-string($x, $y, $string);
-        }
-
-        multi sub p(Terminal::Print $T, $x, $y, $string, $color) {
-            $T.current-grid.print-string($x, $y, $string, $color);
-        }
-
-        multi sub p(Terminal::Print $T, $x, $y, %details) {
-            $T.current-grid.print-string($x, $y, %details);
-        }
-
         return {
             "$term-name"    => $t,
-            "w"            => $t.rows,
-            "h"            => $t.columns,
-            "in"           => $t.indices,
-            "fgc"          => @Terminal::Print::Commands::fg_colors,
-            "bgc"          => @Terminal::Print::Commands::bg_colors,
-            "&draw"         => { Terminal::Print::Golf::draw($t, |@_) },
-            "&p"            => -> *@_ { p($t, |@_) },
+            "w"             => $t.columns,
+            "h"             => $t.rows,
+            "in"            => $t.indices,
+            "fgc"           => @Terminal::Print::Commands::fg_colors,
+            "bgc"           => @Terminal::Print::Commands::bg_colors,
+            "&draw"         => { $t.draw(|@_) },
+            "&p"            => { $t.p(|@_) },
+            "&ch"           => { $t.ch(|@_) },
+            "&cl"           => { $t.cl(|@_) },
+            "&slp"          => -> $seconds { sleep($seconds) }
         }
     } else {
         return {};
