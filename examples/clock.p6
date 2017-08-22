@@ -1,7 +1,7 @@
 # ABSTRACT: An animated clock
 
 use v6;
-use Terminal::Print;
+use Terminal::Print <T>;
 
 sub print-centered($cx, $cy, Str() $string) {
     return unless $string;
