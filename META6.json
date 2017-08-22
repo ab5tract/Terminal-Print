@@ -27,6 +27,7 @@
   "test-depends" : [ ],
   "version" : "0.92",
   "authors" : [
-    "John Haltiwanger"
+    "John Haltiwanger",
+    "japhb"
   ]
 }
