@@ -11,6 +11,8 @@ a bit nicer.
 
 =end pod
 
+use File::Which;
+
 our %human-command-names;
 our %human-commands;
 our %tput-commands;
@@ -28,7 +30,7 @@ constant @valid-terminals = < xterm xterm-256color vt100 screen screen-256color 
 my %tput-cache;
 BEGIN {
     die 'Cannot use Terminal::Print without `tput` (usually provided by `ncurses`)'
-        unless q:x{ which tput };
+        unless which('tput');
 
     my @caps = << clear smcup rmcup sc rc civis cnorm "cup 13 13" "ech 1" >>;
 
