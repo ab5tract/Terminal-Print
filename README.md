@@ -18,7 +18,7 @@ $screen.cell-string(9, 23);                     # returns the escape sequence to
 $screen.print-cell(9, 23);                      # prints "%" on the 23rd column of the 9th row
 $screen.print-cell(9, 23, '&');                 # changes the cell at 9:23 to '&' and prints it
 
-$screen.print-string(9, 23, 'hello\nworld!");   # prints a whole string (which can include newlines!)
+$screen.print-string(9, 23, "hello\nworld!");   # prints a whole string (which can include newlines!)
 
 $screen(9,23,'hello\nworld!');                  # uses CALL-ME to dispatch to .print-string
 
