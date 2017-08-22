@@ -12,6 +12,8 @@ a bit nicer.
 
 =end pod
 
+use File::Which;
+
 our %human-command-names;
 our %human-commands;
 our %tput-commands;
@@ -36,7 +38,7 @@ class X::TputCapaMissing is Exception
 my %tput-cache;
 BEGIN {
     die 'Cannot use Terminal::Print without `tput` (usually provided by `ncurses`)'
-        unless q:x{ which tput };
+        unless which('tput');
 
     my @caps = << clear smcup rmcup sc rc civis cnorm "cup 13 13" "ech 1" >>;
 
