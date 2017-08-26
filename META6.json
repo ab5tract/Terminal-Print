@@ -2,7 +2,7 @@
   "name" : "Terminal::Print",
   "license" : "Artistic-2.0",
   "source-url" : "git://github.com/ab5tract/Terminal-Print.git",
-  "perl" : "6.c",
+  "perl" : "6.d.PREVIEW",
   "resources" : [ ],
   "build-depends" : [ ],
   "provides" : {
@@ -13,12 +13,14 @@
     "Terminal::Print::Grid"           : "lib/Terminal/Print/Grid.pm6",
     "Terminal::Print::ParticleEffect" : "lib/Terminal/Print/ParticleEffect.pm6",
     "Terminal::Print::Pixelated"      : "lib/Terminal/Print/Pixelated.pm6",
+    "Terminal::Print::RawInput"       : "lib/Terminal/Print/RawInput.pm6",
     "Terminal::Print::Util::Text"     : "lib/Terminal/Print/Util/Text.pm6",
     "Terminal::Print::Util::Timing"   : "lib/Terminal/Print/Util/Timing.pm6",
     "Terminal::Print::Widget"         : "lib/Terminal/Print/Widget.pm6"
   },
   "depends" : [
     "OO::Monitors",
+    "Term::termios",
     "Terminal::ANSIColor"
   ],
   "description" : "Asynchronous printing to your terminal -- as a simple grid",

@@ -178,7 +178,7 @@ multi method CALL-ME($x, $y, $c) {
     $!current-grid.print-string($x, $y, $c);
 }
 
-multi method FALLBACK( Str $command-name where { %T::human-command-names{$_} } ) {
+multi method FALLBACK( Str $command-name where %Terminal::Print::Commands::human-command-names ) {
     print-command( $command-name );
 }
 
