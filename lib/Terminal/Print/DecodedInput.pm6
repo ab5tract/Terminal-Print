@@ -7,15 +7,51 @@ use Terminal::Print::RawInput;
 enum DecodeState < Ground Escape Intermediate >;
 
 enum SpecialKey is export <
-     CursorUp CursorDown CursorRight CursorLeft
+     CursorUp CursorDown CursorRight CursorLeft CursorHome CursorEnd
+     Delete Insert PageUp PageDown
+     F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14 F15 F16 F17 F18 F19 F20
 >;
 
 my %special-keys =
-    # PC Normal            PC Application         VT52
+    # PC Normal Style      PC Application Style   VT52 Style
+
+    # Cursor Keys
     "\e[A" => CursorUp,    "\eOA" => CursorUp,    "\eA" => CursorUp,
     "\e[B" => CursorDown,  "\eOB" => CursorDown,  "\eB" => CursorDown,
     "\e[C" => CursorRight, "\eOC" => CursorRight, "\eC" => CursorRight,
     "\e[D" => CursorLeft,  "\eOD" => CursorLeft,  "\eD" => CursorLeft,
+    "\e[H" => CursorHome,  "\eOH" => CursorHome,
+    "\e[F" => CursorEnd,   "\eOF" => CursorEnd,
+
+    # VT220-style Editing Keys
+    "\e[2~" => Insert,
+    "\e[3~" => Delete,
+    "\e[1~" => CursorHome,
+    "\e[4~" => CursorEnd,
+    "\e[5~" => PageUp,
+    "\e[6~" => PageDown,
+
+    # Function Keys
+    "\e[11~" => F1,        "\eOP" => F1,          "\eP" => F1,
+    "\e[12~" => F2,        "\eOQ" => F2,          "\eQ" => F2,
+    "\e[13~" => F3,        "\eOR" => F3,          "\eR" => F3,
+    "\e[14~" => F4,        "\eOS" => F4,          "\eS" => F4,
+    "\e[15~" => F5,
+    "\e[17~" => F6,
+    "\e[18~" => F7,
+    "\e[19~" => F8,
+    "\e[20~" => F9,
+    "\e[21~" => F10,
+    "\e[23~" => F11,
+    "\e[24~" => F12,
+    "\e[25~" => F13,
+    "\e[26~" => F14,
+    "\e[28~" => F15,
+    "\e[29~" => F16,
+    "\e[31~" => F17,
+    "\e[32~" => F18,
+    "\e[33~" => F19,
+    "\e[34~" => F20,
     ;
 
 
