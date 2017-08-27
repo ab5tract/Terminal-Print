@@ -8,7 +8,7 @@ enum DecodeState < Ground Escape Intermediate >;
 
 enum SpecialKey is export <
      CursorUp CursorDown CursorRight CursorLeft CursorHome CursorEnd
-     Delete Insert PageUp PageDown
+     Delete Insert Home End PageUp PageDown
      F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14 F15 F16 F17 F18 F19 F20
      PasteStart PasteEnd
 >;
@@ -27,8 +27,8 @@ my %special-keys =
     # VT220-style Editing Keys
     "\e[2~" => Insert,
     "\e[3~" => Delete,
-    "\e[1~" => CursorHome,
-    "\e[4~" => CursorEnd,
+    "\e[1~" => Home,
+    "\e[4~" => End,
     "\e[5~" => PageUp,
     "\e[6~" => PageDown,
 
