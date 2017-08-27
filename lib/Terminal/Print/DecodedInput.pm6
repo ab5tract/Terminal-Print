@@ -6,9 +6,13 @@ use Terminal::Print::RawInput;
 
 enum DecodeState < Ground Escape Intermediate >;
 
+# XXXX: Begin (KP5, CSI-E)
 enum SpecialKey is export <
      CursorUp CursorDown CursorRight CursorLeft CursorHome CursorEnd
      Delete Insert Home End PageUp PageDown
+     KeypadSpace KeypadTab KeypadEnter KeypadStar KeypadPlus KeypadComma
+     KeypadMinus KeypadPeriod KeypadSlash KeypadEqual Keypad0 Keypad1 Keypad2
+     Keypad3 Keypad4 Keypad5 Keypad6 Keypad7 Keypad8 Keypad9
      F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14 F15 F16 F17 F18 F19 F20
      PasteStart PasteEnd
 >;
@@ -31,6 +35,31 @@ my %special-keys =
     "\e[4~" => End,
     "\e[5~" => PageUp,
     "\e[6~" => PageDown,
+
+    # Keypad
+                           "\eO " => KeypadSpace,  "\e? " => KeypadSpace,
+                           "\eOI" => KeypadTab,    "\e?I" => KeypadTab,
+                           "\eOM" => KeypadEnter,  "\e?M" => KeypadEnter,
+                           "\eOj" => KeypadStar,   "\e?j" => KeypadStar,
+                           "\eOk" => KeypadPlus,   "\e?k" => KeypadPlus,
+                           "\eOl" => KeypadComma,  "\e?l" => KeypadComma,
+                           "\eOm" => KeypadMinus,  "\e?m" => KeypadMinus,
+                           # KeypadPeriod produces Delete on some keyboards
+                           "\eOn" => KeypadPeriod, "\e?n" => KeypadPeriod,
+                           "\eOo" => KeypadSlash,  "\e?o" => KeypadSlash,
+                           "\eOX" => KeypadEqual,  "\e?X" => KeypadEqual,
+
+                           # Mapped to cursor and edit keys on some keyboards
+                           "\eOp" => Keypad0,      "\e?p" => Keypad0,
+                           "\eOq" => Keypad1,      "\e?q" => Keypad1,
+                           "\eOr" => Keypad2,      "\e?r" => Keypad2,
+                           "\eOs" => Keypad3,      "\e?s" => Keypad3,
+                           "\eOt" => Keypad4,      "\e?t" => Keypad4,
+                           "\eOu" => Keypad5,      "\e?u" => Keypad5,
+                           "\eOv" => Keypad6,      "\e?v" => Keypad6,
+                           "\eOw" => Keypad7,      "\e?w" => Keypad7,
+                           "\eOx" => Keypad8,      "\e?x" => Keypad8,
+                           "\eOy" => Keypad9,      "\e?y" => Keypad9,
 
     # Function Keys
     "\e[11~" => F1,        "\eOP" => F1,           "\eP" => F1,
