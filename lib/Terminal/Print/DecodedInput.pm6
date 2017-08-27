@@ -6,9 +6,9 @@ use Terminal::Print::RawInput;
 
 enum DecodeState < Ground Escape Intermediate >;
 
-# XXXX: Begin (KP5, CSI-E)
 enum SpecialKey is export <
      CursorUp CursorDown CursorRight CursorLeft CursorHome CursorEnd
+     CursorBegin
      Delete Insert Home End PageUp PageDown
      KeypadSpace KeypadTab KeypadEnter KeypadStar KeypadPlus KeypadComma
      KeypadMinus KeypadPeriod KeypadSlash KeypadEqual Keypad0 Keypad1 Keypad2
@@ -27,6 +27,9 @@ my %special-keys =
     "\e[D" => CursorLeft,  "\eOD" => CursorLeft,   "\eD" => CursorLeft,
     "\e[H" => CursorHome,  "\eOH" => CursorHome,
     "\e[F" => CursorEnd,   "\eOF" => CursorEnd,
+
+    # Not sure if this is a Cursor or Edit key, but it uses a Cursor escape
+    "\e[E" => CursorBegin,
 
     # VT220-style Editing Keys
     "\e[2~" => Insert,
