@@ -17,6 +17,23 @@ enum SpecialKey is export <
      PasteStart PasteEnd
 >;
 
+enum ModifierKey is export (
+    Shift   => 1,
+    Alt     => 2,
+    Control => 4,
+    Meta    => 8,
+);
+
+class ModifiedSpecialKey {
+    has SpecialKey $.key;
+    has UInt       $.modifiers;
+
+    method shift   { $.modifiers +& Shift   }
+    method alt     { $.modifiers +& Alt     }
+    method control { $.modifiers +& Control }
+    method meta    { $.modifiers +& Meta    }
+}
+
 my %special-keys =
     # PC Normal Style      PC Application Style    VT52 Style
 
@@ -30,6 +47,15 @@ my %special-keys =
 
     # Not sure if this is a Cursor or Edit key, but it uses a Cursor escape
     "\e[E" => CursorBegin,
+
+    # Cursor key form used with modifiers
+    "\e[1A" => CursorUp,
+    "\e[1B" => CursorDown,
+    "\e[1C" => CursorRight,
+    "\e[1D" => CursorLeft,
+    "\e[1H" => CursorHome,
+    "\e[1F" => CursorEnd,
+    "\e[1E" => CursorBegin,
 
     # VT220-style Editing Keys
     "\e[2~" => Insert,
@@ -106,7 +132,15 @@ multi sub decoded-input-supply(Supply $in-supply) is export {
         }
 
         my sub try-convert() {
-            @partial = ($_,) with %special-keys{@partial.join};
+            my $sequence = @partial.join;
+            if (my $key = %special-keys{$sequence}).defined {
+                @partial = $key,;
+            }
+            elsif $sequence ~~ /^ (<-[;]>+) ';' (\d+) (\D) $/
+            && ($key = %special-keys{$0 ~ $2}).defined {
+                @partial = ModifiedSpecialKey.new(:$key, :modifiers($1 - 1)),;
+            }
+
             drain;
             $state = Ground;
         }

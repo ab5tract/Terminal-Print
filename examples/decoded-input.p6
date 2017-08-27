@@ -9,8 +9,13 @@ react {
             printf "got: %3d  %2s  %2s\r\n", $c.ord, $c.ord.base(16), $char;
             done if $c eq 'q';
         }
-        else {
+        elsif $c ~~ SpecialKey {
             printf "got: $c\r\n";
+        }
+        else {
+            my @mods = ('Meta' if $c.meta), ('Control' if $c.control),
+                       ('Alt'  if $c.alt),  ('Shift'   if $c.shift);
+            printf "got: %-12s  (@mods[])\r\n", $c.key;
         }
     }
 }
