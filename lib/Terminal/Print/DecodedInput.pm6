@@ -14,13 +14,13 @@ enum SpecialKey is export <
 >;
 
 my %special-keys =
-    # PC Normal Style      PC Application Style   VT52 Style
+    # PC Normal Style      PC Application Style    VT52 Style
 
     # Cursor Keys
-    "\e[A" => CursorUp,    "\eOA" => CursorUp,    "\eA" => CursorUp,
-    "\e[B" => CursorDown,  "\eOB" => CursorDown,  "\eB" => CursorDown,
-    "\e[C" => CursorRight, "\eOC" => CursorRight, "\eC" => CursorRight,
-    "\e[D" => CursorLeft,  "\eOD" => CursorLeft,  "\eD" => CursorLeft,
+    "\e[A" => CursorUp,    "\eOA" => CursorUp,     "\eA" => CursorUp,
+    "\e[B" => CursorDown,  "\eOB" => CursorDown,   "\eB" => CursorDown,
+    "\e[C" => CursorRight, "\eOC" => CursorRight,  "\eC" => CursorRight,
+    "\e[D" => CursorLeft,  "\eOD" => CursorLeft,   "\eD" => CursorLeft,
     "\e[H" => CursorHome,  "\eOH" => CursorHome,
     "\e[F" => CursorEnd,   "\eOF" => CursorEnd,
 
@@ -33,10 +33,10 @@ my %special-keys =
     "\e[6~" => PageDown,
 
     # Function Keys
-    "\e[11~" => F1,        "\eOP" => F1,          "\eP" => F1,
-    "\e[12~" => F2,        "\eOQ" => F2,          "\eQ" => F2,
-    "\e[13~" => F3,        "\eOR" => F3,          "\eR" => F3,
-    "\e[14~" => F4,        "\eOS" => F4,          "\eS" => F4,
+    "\e[11~" => F1,        "\eOP" => F1,           "\eP" => F1,
+    "\e[12~" => F2,        "\eOQ" => F2,           "\eQ" => F2,
+    "\e[13~" => F3,        "\eOR" => F3,           "\eR" => F3,
+    "\e[14~" => F4,        "\eOS" => F4,           "\eS" => F4,
     "\e[15~" => F5,
     "\e[17~" => F6,
     "\e[18~" => F7,
