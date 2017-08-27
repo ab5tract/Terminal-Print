@@ -10,6 +10,7 @@ enum SpecialKey is export <
      CursorUp CursorDown CursorRight CursorLeft CursorHome CursorEnd
      Delete Insert PageUp PageDown
      F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14 F15 F16 F17 F18 F19 F20
+     PasteStart PasteEnd
 >;
 
 my %special-keys =
@@ -52,6 +53,10 @@ my %special-keys =
     "\e[32~" => F18,
     "\e[33~" => F19,
     "\e[34~" => F20,
+
+    # Bracketed Paste
+    "\e[200~" => PasteStart,
+    "\e[201~" => PasteEnd,
     ;
 
 
