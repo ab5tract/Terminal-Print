@@ -119,8 +119,10 @@ my %special-keys =
 
 
 #| Decode a Terminal::Print::RawInput supply containing special key escapes
-multi sub decoded-input-supply(Supply $in-supply) is export {
+multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .05) is export {
     my $supplier = Supplier::Preserving.new;
+    my $timer    = Supplier.new;
+    my $timeout  = $timer.Supply.stable($decode-timeout);
 
     start react {
         my @partial;
@@ -181,6 +183,11 @@ multi sub decoded-input-supply(Supply $in-supply) is export {
                     }
                 }
             }
+            $timer.emit(now);
+        }
+
+        whenever $timeout -> $time {
+            if $state != Ground { drain; $state = Ground }
         }
     }
 
