@@ -2,6 +2,9 @@ use Terminal::Print::DecodedInput;
 
 # Display character stream, exiting the program when 'q' is pressed
 my $in-supply = decoded-input-supply;
+
+set-mouse-event-mode(AnyEvents);
+
 react {
     whenever $in-supply -> $c {
         if $c ~~ Str {
@@ -18,10 +21,17 @@ react {
             printf "got: %-12s  (@mods[])\r\n", $c.key;
         }
         elsif $c ~~ Terminal::Print::DecodedInput::MouseEvent {
-            printf "Mouse: $c.x(), $c.y()";
+            my @mods    = ('Meta'  if $c.meta), ('Control' if $c.control),
+                          ('Shift' if $c.shift);
+            my $mods    = @mods ?? " (@mods[])" !! '';
+            my $pressed = $c.pressed ?? 'press' !! 'release';
+            my $button  = $c.button ?? "button $c.button() $pressed" !! '';
+            printf "Mouse: $c.x(),$c.y() { 'motion ' if $c.motion }$button$mods\r\n";
         }
     }
 }
+
+set-mouse-event-mode(NoEvents);
 
 # Give the input supply enough time to restore the TTY state
 sleep .1;

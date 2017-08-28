@@ -4,7 +4,7 @@ unit module Terminal::Print::DecodedInput;
 use Terminal::Print::RawInput;
 
 
-enum DecodeState < Ground Escape Intermediate >;
+enum DecodeState < Ground Escape Intermediate Mouse >;
 
 enum SpecialKey is export <
      CursorUp CursorDown CursorRight CursorLeft CursorHome CursorEnd
@@ -23,6 +23,15 @@ enum ModifierKey is export (
     Control => 4,
     Meta    => 8,
 );
+
+enum MouseEventMode is export (
+    NoEvents        => 0,     # No events
+    NormalEvents    => 1000,  # Press and release only
+  # HighlightEvents => 1001,  # UNSUPPORTED
+    ButtonEvents    => 1002,  # Press, release, move while pressed
+    AnyEvents       => 1003,  # Press, release, any movement
+);
+
 
 class ModifiedSpecialKey {
     has SpecialKey $.key;
@@ -133,7 +142,7 @@ my %special-keys =
 
 
 #| Decode a Terminal::Print::RawInput supply containing special key escapes
-multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .05) is export {
+multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .1) is export {
     my $supplier = Supplier::Preserving.new;
     my $timer    = Supplier.new;
     my $timeout  = $timer.Supply.stable($decode-timeout);
@@ -156,12 +165,14 @@ multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .05) is exp
             && ($key = %special-keys{$0 ~ $2}).defined {
                 @partial = ModifiedSpecialKey.new(:$key, :modifiers($1 - 1)),;
             }
-            elsif $sequence ~~ /^ "\e<" (\d+) ';' (\d+) ';' (\d+) (<[Mm]>) $/ {
-                my ($encoded, $x, $y, $pressed) = +$0, +$1, +$2, ($3 eq 'M');
+            elsif $sequence ~~ /^ "\e[<" (\d+) ';' (\d+) ';' (\d+) (<[Mm]>) $/ {
+                my ($encoded, $x, $y, $pressed) = +$0, $1 - 1, $2 - 1, ($3 eq 'M');
                 my ($shift, $meta, $control, $motion)
                     = ?($encoded +& 4), ?($encoded +& 8), ?($encoded +& 16),
                       ?($encoded +& 32);
-                my $button = $encoded +& 3 + 3 * ?($encoded +& 64);  # ?
+                my $button = $encoded +& 3 == 3
+                             ?? UInt
+                             !! $encoded +& 3 + 1 + 3 * ?($encoded +& 64);  # ?
                 @partial = MouseEvent.new(:$x, :$y, :$shift, :$control, :$meta,
                                           :$motion, :$button, :$pressed),;
             }
@@ -196,12 +207,25 @@ multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .05) is exp
 
                     given $in {
                         when "\e"      { $state = Escape }
+                        when '<'       { $state = Mouse }
                         when ';'       { }
                         when '0'..'9'  { }
                         when 'A'..'Z'  { try-convert }
                         when 'a'..'z'  { try-convert }
                         when '~'       { try-convert }
                         when ' '       { try-convert }
+                        default        { drain; $state = Ground }
+                    }
+                }
+                when Mouse {
+                    drain if $in eq "\e";
+                    @partial.push: $in;
+
+                    given $in {
+                        when "\e"      { $state = Escape }
+                        when ';'       { }
+                        when '0'..'9'  { }
+                        when 'M'|'m'   { try-convert }
                         default        { drain; $state = Ground }
                     }
                 }
@@ -221,4 +245,22 @@ multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .05) is exp
 #| Convert an input stream into a Supply of characters and special key events
 multi sub decoded-input-supply(IO::Handle $input = $*IN) is export {
     decoded-input-supply(raw-input-supply($*IN))
+}
+
+
+#| Set new mouse event mode, disabling previous mode first if needed
+sub set-mouse-event-mode(MouseEventMode $mode) is export {
+    state $previous-mode = NoEvents;
+
+    # Encoding/extras:
+    #   1004: Focus events
+    #   1006: SGR encoding
+
+    print "\e[?{+$previous-mode}l\e[?1004l\e[?1006l"
+        if $previous-mode != NoEvents;
+
+    print "\e[?1006h\e[?1004h\e[?{+$mode}h"
+        if $mode != NoEvents;
+
+    $previous-mode = $mode;
 }
