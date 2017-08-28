@@ -12,10 +12,13 @@ react {
         elsif $c ~~ SpecialKey {
             printf "got: $c\r\n";
         }
-        else {
+        elsif $c ~~ Terminal::Print::DecodedInput::ModifiedSpecialKey {
             my @mods = ('Meta' if $c.meta), ('Control' if $c.control),
                        ('Alt'  if $c.alt),  ('Shift'   if $c.shift);
             printf "got: %-12s  (@mods[])\r\n", $c.key;
+        }
+        elsif $c ~~ Terminal::Print::DecodedInput::MouseEvent {
+            printf "Mouse: $c.x(), $c.y()";
         }
     }
 }

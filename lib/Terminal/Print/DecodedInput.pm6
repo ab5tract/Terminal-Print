@@ -14,7 +14,7 @@ enum SpecialKey is export <
      KeypadMinus KeypadPeriod KeypadSlash KeypadEqual Keypad0 Keypad1 Keypad2
      Keypad3 Keypad4 Keypad5 Keypad6 Keypad7 Keypad8 Keypad9
      F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14 F15 F16 F17 F18 F19 F20
-     PasteStart PasteEnd
+     PasteStart PasteEnd FocusIn FocusOut
 >;
 
 enum ModifierKey is export (
@@ -33,6 +33,18 @@ class ModifiedSpecialKey {
     method control { $.modifiers +& Control }
     method meta    { $.modifiers +& Meta    }
 }
+
+class MouseEvent {
+    has UInt $.x;
+    has UInt $.y;
+    has UInt $.button;
+    has Bool $.pressed;
+    has Bool $.motion;
+    has Bool $.shift;
+    has Bool $.control;
+    has Bool $.meta;
+}
+
 
 my %special-keys =
     # PC Normal Style      PC Application Style    VT52 Style
@@ -112,9 +124,11 @@ my %special-keys =
     "\e[33~" => F19,
     "\e[34~" => F20,
 
-    # Bracketed Paste
+    # Special events: Bracketed Paste and Terminal Focus
     "\e[200~" => PasteStart,
     "\e[201~" => PasteEnd,
+    "\e[I"    => FocusIn,
+    "\e[O"    => FocusOut,
     ;
 
 
@@ -141,6 +155,15 @@ multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .05) is exp
             elsif $sequence ~~ /^ (<-[;]>+) ';' (\d+) (\D) $/
             && ($key = %special-keys{$0 ~ $2}).defined {
                 @partial = ModifiedSpecialKey.new(:$key, :modifiers($1 - 1)),;
+            }
+            elsif $sequence ~~ /^ "\e<" (\d+) ';' (\d+) ';' (\d+) (<[Mm]>) $/ {
+                my ($encoded, $x, $y, $pressed) = +$0, +$1, +$2, ($3 eq 'M');
+                my ($shift, $meta, $control, $motion)
+                    = ?($encoded +& 4), ?($encoded +& 8), ?($encoded +& 16),
+                      ?($encoded +& 32);
+                my $button = $encoded +& 3 + 3 * ?($encoded +& 64);  # ?
+                @partial = MouseEvent.new(:$x, :$y, :$shift, :$control, :$meta,
+                                          :$motion, :$button, :$pressed),;
             }
 
             drain;
