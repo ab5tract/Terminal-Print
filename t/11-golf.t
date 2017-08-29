@@ -1,16 +1,16 @@
 use v6;
 
-use Terminal::Print;
+use Terminal::Print <T>;
 use Test;
 
 plan 1;
- 
+
 my $STOP-TIME = %*ENV<STOP_TIME> // 0;
 
 
 subtest {
     ok T ~~ Terminal::Print, "T is a Terminal::Print object";
-    
+
     lives-ok {
         do draw( -> Promise $p {
             my $secondly = Supply.interval(1);
