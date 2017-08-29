@@ -72,19 +72,18 @@ class Terminal::Print {
 
     use Terminal::Print::Commands;
 
-    subset Valid::X of Int is export where * < %Terminal::Print::Commands::attributes<columns>;
-    subset Valid::Y of Int is export where * < %Terminal::Print::Commands::attributes<rows>;
+    subset Valid::X of Int is export where * < columns();
+    subset Valid::Y of Int is export where * < rows();
     subset Valid::Char of Str is export where *.chars == 1;
 
     has Terminal::Print::CursorProfile $.cursor-profile;
     has $.move-cursor;
 
     method new( :$cursor-profile = 'ansi' ) {
-        my $columns      = %Terminal::Print::Commands::attributes<columns>;
-        my $rows         = %Terminal::Print::Commands::attributes<rows>;
+        my $columns      = columns();
+        my $rows         = rows();
         my $move-cursor  = move-cursor-template($cursor-profile);
         my $current-grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
-
         self.bless( :$columns, :$rows, :$current-grid,
                     :$cursor-profile,  :$move-cursor );
     }
