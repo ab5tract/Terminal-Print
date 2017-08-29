@@ -240,6 +240,10 @@ class Terminal::Print {
         $!current-grid.change-cell($x, $y, $c);
     }
 
+    method cell-string($x, $y) {
+        $!current-grid.cell-string($x, $y);
+    }
+
     #### print-grid stuff
     proto method print-grid($) { }
     multi method print-grid( Int $index ) {
