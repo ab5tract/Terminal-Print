@@ -18,15 +18,16 @@
     "Terminal::Print::Util::Timing"   : "lib/Terminal/Print/Util/Timing.pm6",
     "Terminal::Print::Widget"         : "lib/Terminal/Print/Widget.pm6"
   },
+  "tags" : [ "Terminal" ],
   "depends" : [
     "OO::Monitors",
-    "Term::termios",
-    "Terminal::ANSIColor"
+    "Terminal::ANSIColor",
+    "File::Which"
   ],
   "description" : "Asynchronous printing to your terminal -- as a simple grid",
   "test-depends" : [ ],
-  "version" : "0.91",
+  "version" : "0.92",
   "authors" : [
-    "John Haltiwanger"
+    "John Haltiwanger", "japhb"
   ]
 }
