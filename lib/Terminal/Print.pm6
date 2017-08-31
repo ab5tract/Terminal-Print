@@ -134,17 +134,11 @@ class Terminal::Print {
         print-command <clear>;
     }
 
-<<<<<<< HEAD
-multi method FALLBACK( Str $command-name where %Terminal::Print::Commands::human-command-names ) {
-    print-command( $command-name );
-}
-=======
     method initialize-screen {
         print-command <save-screen>;
         print-command <hide-cursor>;
         print-command <clear>;
     }
->>>>>>> getting tired of it
 
     method shutdown-screen {
         print-command <clear>;
