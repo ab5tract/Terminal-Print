@@ -244,7 +244,7 @@ multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .1) is expo
 
 #| Convert an input stream into a Supply of characters and special key events
 multi sub decoded-input-supply(IO::Handle $input = $*IN) is export {
-    decoded-input-supply(raw-input-supply($*IN))
+    decoded-input-supply(raw-input-supply($input))
 }
 
 
