@@ -10,6 +10,7 @@
     "Terminal::Print::Animated"       : "lib/Terminal/Print/Animated.pm6",
     "Terminal::Print::BoxDrawing"     : "lib/Terminal/Print/BoxDrawing.pm6",
     "Terminal::Print::Commands"       : "lib/Terminal/Print/Commands.pm6",
+    "Terminal::Print::DecodedInput"   : "lib/Terminal/Print/DecodedInput.pm6",
     "Terminal::Print::Grid"           : "lib/Terminal/Print/Grid.pm6",
     "Terminal::Print::ParticleEffect" : "lib/Terminal/Print/ParticleEffect.pm6",
     "Terminal::Print::Pixelated"      : "lib/Terminal/Print/Pixelated.pm6",
