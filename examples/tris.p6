@@ -1,5 +1,5 @@
 use v6.d.PREVIEW;
-use Terminal::Print;
+use Terminal::Print <T>;
 use Terminal::Print::RawInput;
 
 
