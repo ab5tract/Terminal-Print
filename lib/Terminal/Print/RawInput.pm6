@@ -8,13 +8,15 @@ use Term::termios;
 #| Convert an input stream to a Supply of individual characters
 #  Reads bytes in order to work around lower-layer grapheme combiner handling
 #  (which will make the input seem to be on a one-character delay).
-sub raw-input-supply(IO::Handle $input = $*IN) is export {
+sub raw-input-supply(IO::Handle $input = $*IN,
+                     Bool :$drop-old-unread) is export {
     # If a TTY, convert to raw mode, saving current mode first
     my $fd = $input.native-descriptor;
     my $saved-termios;
     if $input.t {
         $saved-termios = Term::termios.new(:$fd).getattr;
-        Term::termios.new(:$fd).getattr.makeraw.setattr(:DRAIN);
+        my $mode       = $drop-old-unread ?? :FLUSH !! :DRAIN;
+        Term::termios.new(:$fd).getattr.makeraw.setattr(|$mode);
     }
 
     # Cancelable character supply loop; emits a character as soon as any
