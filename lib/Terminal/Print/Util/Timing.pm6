@@ -41,7 +41,7 @@ sub show-timings(:$verbosity = 1) is export {
     if $verbosity >= 2 {
         my $raw-format = "%7.3f %7.3f %6d  %s\n";
         say '  START SECONDS THREAD  DESCRIPTION';
-        printf $raw-format, .<start> - $*INITTIME, .<delta>, .<thread>, .<desc> for @timings;
+        printf $raw-format, .<start> - ($*INIT-INSTANT // $*INITTIME), .<delta>, .<thread>, .<desc> for @timings;
         say '';
     }
 
