@@ -28,7 +28,7 @@
   ],
   "description" : "Asynchronous printing to your terminal -- as a simple grid",
   "test-depends" : [ ],
-  "version" : "0.93",
+  "version" : "0.94",
   "authors" : [
     "John Haltiwanger", "japhb"
   ]
