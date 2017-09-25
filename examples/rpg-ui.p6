@@ -1633,6 +1633,6 @@ sub MAIN(
     T.shutdown-screen;
 
     # Show timing results
-    record-time('TOTAL TIME', $*INITTIME);
+    record-time('TOTAL TIME', $*INIT-INSTANT // $*INITTIME);
     show-timings() if $bench;
 }
