@@ -14,9 +14,13 @@ sub cell($new-char?, :%details) is export {
     #       Also, should we check the size and clear it at some point?
     #       Maybe it should just be a lexically scoped class var?
     state %cache;
-    
-    my $char = $new-char ~~ Str     ?? ~$new-char
-                                    !! %details<char> // ' ';
+
+    my $char;
+    with $new-char {
+        $char = $new-char;
+    } else {
+        $char = %details<char> // ' ';
+    }
 
     # This should be considered the simplest case. If %details has a render sub, for instance,
     # we shouldn't cache. So for any other similar cases, we will have checked before we got here.

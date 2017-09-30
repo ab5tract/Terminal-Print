@@ -64,6 +64,11 @@ class Terminal::Print {
     has Terminal::Print::Grid $.current-grid handles 'indices';
     has Terminal::Print::Grid @.grids;
 
+    has IO::Handle $.output;
+
+    use Term::termios;
+    has Term::termios $!saved-termios;
+
     has %!grid-name-map;
     has %!root-widget-map{Terminal::Print::Grid};
 
@@ -79,7 +84,7 @@ class Terminal::Print {
     has Terminal::Print::CursorProfile $.cursor-profile;
     has $.move-cursor;
 
-    method new( :$cursor-profile = 'ansi' ) {
+    method new( :$cursor-profile = 'ansi', :$output = $*OUT ) {
         my $columns      = columns();
         my $rows         = rows();
         my $move-cursor  = move-cursor-template($cursor-profile);
@@ -89,8 +94,13 @@ class Terminal::Print {
                     :$cursor-profile,  :$move-cursor );
     }
 
-    submethod BUILD( :$!current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!move-cursor ) {
+    submethod BUILD( :$!current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!move-cursor, :$!output = $*OUT ) {
         push @!grids, $!current-grid;
+
+        #XXX: investigate whether this is ideal or not
+        my $fd = $!output.native-descriptor;
+        $!saved-termios = Term::termios.new(:$fd).getattr;
+        Term::termios.new(:$fd).getattr.makeraw.setattr(:DRAIN);
 
         # set up a tap on SIGINT so that we can cleanly shutdown, restoring the previous screen and cursor
         signal(SIGINT).tap: {
@@ -145,6 +155,7 @@ class Terminal::Print {
         print-command <clear>;
         print-command <restore-screen>;
         print-command <show-cursor>;
+        $!saved-termios.setattr(:DRAIN);
     }
 
     method print-command( $command ) {
