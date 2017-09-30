@@ -1,7 +1,5 @@
 use v6;
 
-use Term::termios;
-
 class Terminal::Print {
 
     =begin pod
@@ -66,9 +64,6 @@ class Terminal::Print {
     has Terminal::Print::Grid $.current-grid handles 'indices';
     has Terminal::Print::Grid @.grids;
 
-    has Term::termios $!termios;
-    has $!saved-termios;
-
     has %!grid-name-map;
     has %!root-widget-map{Terminal::Print::Grid};
 
@@ -90,17 +85,12 @@ class Terminal::Print {
         my $move-cursor  = move-cursor-template($cursor-profile);
         my $current-grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
 
-        #XXX: investigate whether this is ideal or not
-        my $termios := Term::termios.new(fd => 1).getattr;
-
         self.bless( :$columns, :$rows, :$current-grid,
-                    :$cursor-profile,  :$move-cursor, :$termios );
+                    :$cursor-profile,  :$move-cursor );
     }
 
-    submethod BUILD( :$!current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!move-cursor, :$!termios ) {
+    submethod BUILD( :$!current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!move-cursor ) {
         push @!grids, $!current-grid;
-
-        $!saved-termios = $!termios;
 
         # set up a tap on SIGINT so that we can cleanly shutdown, restoring the previous screen and cursor
         signal(SIGINT).tap: {
@@ -146,14 +136,12 @@ class Terminal::Print {
     }
 
     method initialize-screen {
-        $!termios.makeraw;
         print-command <save-screen>;
         print-command <hide-cursor>;
         print-command <clear>;
     }
 
     method shutdown-screen {
-        $!saved-termios.setattr(:DRAIN);
         print-command <clear>;
         print-command <restore-screen>;
         print-command <show-cursor>;
