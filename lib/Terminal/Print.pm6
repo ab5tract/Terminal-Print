@@ -216,23 +216,12 @@ class Terminal::Print {
         @!grids[$grid-index];
     }
 
-    multi method print-cell( $x, $y ) {
-        $!current-grid.print-cell($x, $y);
+    method print-cell(|c) {
+        $!current-grid.print-cell(|c);
     }
 
-    multi method print-cell( $x, $y, Str $c ) {
-        $!current-grid.print-cell($x, $y, $c);
-    }
-    multi method print-cell( $x, $y, %c ) {
-        $!current-grid.print-cell($x, $y, %c);
-    }
-
-    multi method print-string( $x, $y, Str() $string) {
-        $!current-grid.print-string($x, $y, $string);
-    }
-
-    multi method print-string( $x, $y, Str() $string, $color) {
-        $!current-grid.print-string($x, $y, $string, $color);
+    method print-string(|c) {
+        $!current-grid.print-string(|c);
     }
 
     method change-cell( $x, $y, Str $c ) {
