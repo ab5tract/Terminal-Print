@@ -225,12 +225,12 @@ class Terminal::Print {
         $!current-grid.print-string(|c);
     }
 
-    method change-cell( $x, $y, Str $c ) {
-        $!current-grid.change-cell($x, $y, $c);
+    method change-cell(|c) {
+        $!current-grid.change-cell(|c);
     }
 
-    method cell-string($x, $y) {
-        $!current-grid.cell-string($x, $y);
+    method cell-string(|c) {
+        $!current-grid.cell-string(|c);
     }
 
     #### print-grid stuff
