@@ -5,34 +5,73 @@ use Terminal::Print::Commands;
 #| A rectangular grid containing Unicode characters and color/style information
 unit monitor Terminal::Print::Grid;
 
-#| Internal (immutable) class holding all position-independent information about a single grid cell
-my class Cell {
-    use Terminal::ANSIColor; # lexical imports FTW
-    has $.char is required;
-    has $.color;
-    has $!string;
+sub cell($new-char?, :%details) is export {
+    use Terminal::ANSIColor;
+    
+    constant RESET-COLOR = color('reset');
 
-    my $reset = color('reset');
-    my %cache = '' => '';
+    #XXX: is a state var in a lexical sub in an OO::Monitors a potential race condition?
+    #       Also, should we check the size and clear it at some point?
+    #       Maybe it should just be a lexically scoped class var?
+    state %cache;
+    
+    my $char = $new-char ~~ Str     ?? ~$new-char
+                                    !! %details<char> // ' ';
 
-    submethod BUILD(:$!char, :$color) {
-        $!color = $color // '';
-        if $!color.contains(',') {
-            $!string = colored($!char, $!color);
+    # This should be considered the simplest case. If %details has a render sub, for instance,
+    # we shouldn't cache. So for any other similar cases, we will have checked before we got here.
+    my $color = %details<color> // '';
+    my $key = $color ?? $char ~ $color
+                     !! $char;
+    return %cache{ $key } if %cache{ $key }:exists;
+
+    my ($string);
+    if $color {
+        if $color.contains(',') {
+            $string = %cache{ $key } = colored($char, $color);
+        } else {
+            my $cached-color = %cache{$color} //= color($color);
+            $string = %cache{ $key } = "{ $cached-color }{ $char }{ RESET-COLOR }";
         }
-        else {
-            %cache{$!color} //= color($!color);
-            $!string = $!color ?? "%cache{$!color}$!char$reset" !! $!char;
-        }
+    } else {
+        $string = %cache{ $key } = $char;
     }
 
-    method Str() { $!string }
+    return $string;
 }
+
+#| Internal (immutable) class holding all position-independent information about a single grid cell
+#my class Cell {
+#    has $.char is required;
+#    has $.color;
+#    has $!string;
+#
+#    my $reset = color('reset');
+#    my %cache = '' => '';
+#
+#    submethod BUILD(:$!char, :$color) {
+#        $!color = $color // '';
+#        if $!color.contains(',') {
+#            $!string = colored($!char, $!color);
+#        }
+#        else {
+#            %cache{$!color} //= color($!color);
+#            $!string = $!color ?? "%cache{$!color}$!char$reset" !! $!char;
+#        }
+#    }
+#
+#    method Str() { $!string }
+#}
 
 has $.w;
 has $.h;
 has @!indices;
+
+#| self.grid contains all the strings, ready to print
 has @.grid;
+#| self.grid-details contains hashes with details such as color
+has @.grid-details;
+
 has $.grid-string = '';
 has $.move-cursor;
 has $!print-enabled = True;
@@ -46,8 +85,9 @@ method height  { $!h }
 #| Instantiate a new (row-major) grid of size $w x $h
 method new($w, $h, :$move-cursor = move-cursor-template) {
     my @grid = [ [ ' ' xx $w ] xx $h ];
+    my @grid-details = [ [ Hash.new  xx $w ] xx $h ];
 
-    self.bless(:$w, :$h, :@grid, :$move-cursor);
+    self.bless(:$w, :$h, :@grid, :@grid-details, :$move-cursor);
 }
 
 #| Clear the grid to blanks (ASCII spaces) with no color/style overrides
@@ -72,12 +112,22 @@ method span-string($x1, $x2, $y) {
 }
 
 #| Set both the text and color of a span
-method set-span($x, $y, Str $text, $color) {
+method set-span($x, $y, Str $text, $color?) {
     $!grid-string = '';
     my $row = @!grid[$y];
 
     if $color {
-        my @cells = $text.comb.map: { Cell.new(:char($_), :$color) };
+        my @cells;
+        for $text.comb -> $char {
+            @cells.push: cell($char, :details(:$color));
+            my $details := @!grid-details[$y][$x];
+            #XXX: Right now we don't apply/utilize existing details.. but we could.
+            #       We could even allow custom "render" subroutines that allow higher level sugar
+            #       at minimal cost. That would happen in the cell sub itself, but here I'm
+            #       just making note that we aren't using existing details in set-span.
+            $details<color> = $color;
+            $details<char>  = $char;
+        }
         $row.splice($x, +@cells, @cells);
     }
     else {
@@ -89,20 +139,28 @@ method set-span($x, $y, Str $text, $color) {
 #| Set the text of a span, but keep the color unchanged
 method set-span-text($x, $y, Str $text) {
     $!grid-string = '';
-    my $row = @!grid[$y];
+    my $row := @!grid[$y];
+    my $details-row := @!grid-details[$y];
     for $text.comb.kv -> $i, $char {
         my $cell := $row[$x + $i];
-        $cell = $cell ~~ Cell ?? Cell.new(:$char, :color($cell.color)) !! $char;
+        my $details := $details-row[$x + $i] //= Hash.new;
+
+        $details<char> = $char;
+        $cell = cell($char, :$details);
     }
 }
 
 #| Set the color of a span, but keep the text unchanged
 method set-span-color($x1, $x2, $y, $color) {
     $!grid-string = '';
-    my $row = @!grid[$y];
+    my $row := @!grid[$y];
+    my $details-row := @!grid-details[$y];
     for $x1..$x2 -> $x {
         my $cell := $row[$x];
-        $cell = Cell.new(:char($cell ~~ Cell ?? $cell.char !! $cell // ' '), :$color);
+        my $details := $details-row[$x];
+
+        $details<color> = $color;
+        $cell = cell(:$details);
     }
 }
 
@@ -135,14 +193,17 @@ method copy-from(Terminal::Print::Grid $grid, $x, $y) {
     my ($x1, $y1, $w, $h)
         = self.clip-rect($x, $y, $grid.w, $grid.h);
 
+
     # Actually do the copy (actually a splice because immutable Cells)
     $!grid-string = '';
     my $from = $grid.grid;
     if $w == $grid.w {
         @!grid[$_ + $y1].splice($x1, $w, $from[$_]) for ^$h;
+        @!grid-details[$_ + $y1].splice($x1, $w, $from[$_]) for ^$h;
     }
     else {
         @!grid[$_ + $y1].splice($x1, $w, $from[$_][^$w]) for ^$h;
+        @!grid-details[$_ + $y1].splice($x1, $w, $from[$_][^$w]) for ^$h;
     }
 
     # Return the clipped rectangle in case a caller (such as print-from)
@@ -164,7 +225,8 @@ method print-from(Terminal::Print::Grid $grid, $x, $y) {
 multi method change-cell($x, $y, %c) {
     return unless 0 <= $x < $!w && 0 <= $y < $!h;
     $!grid-string = '';
-    @!grid[$y][$x] = Cell.new(|%c);
+    @!grid[$y][$x] = cell(details => %c);
+    @!grid-details[$y][$x] = %c;
 }
 
 #| Replace the contents of a single grid cell with a single uncolored/unstyled character
@@ -172,13 +234,10 @@ multi method change-cell($x, $y, Str $char) {
     return unless 0 <= $x < $!w && 0 <= $y < $!h;
     $!grid-string = '';
     @!grid[$y][$x] = $char;
-}
-
-#| Replace the contents of a single grid cell with a prebuilt Cell object
-multi method change-cell($x, $y, Cell $cell) {
-    return unless 0 <= $x < $!w && 0 <= $y < $!h;
-    $!grid-string = '';
-    @!grid[$y][$x] = $cell;
+    #XXX: Can't use the existing details yet because it violates the documented API of 'uncolored, unstyled'
+    #    my $details := @!grid-details[$y][$x];
+    my $details := @!grid-details[$y][$x] = Hash.new;
+    $details<char> = $char;
 }
 
 #| Print the .cell-string for a single cell
@@ -191,13 +250,15 @@ multi method print-cell($x, $y) {
 
 #| Replace the contents of a cell with an uncolored/unstyled character, then print its .cell-string
 multi method print-cell($x, $y, Str $char) {
-    self.change-cell($x, $y, $char);
+    @!grid[$y][$x] = cell($char);
+    @!grid-details[$y][$x]<char> = $char;
     self.print-cell($x, $y);
 }
 
 #| Replace the contents of a cell, specifying a hash with char and color keys, then print its .cell-string
 multi method print-cell($x, $y, %c) {
-    self.change-cell($x, $y, Cell.new(|%c));
+    @!grid[$y][$x] = cell(details => %c);
+    @!grid-details[$y][$x] = %c;
     self.print-cell($x, $y);
 }
 
