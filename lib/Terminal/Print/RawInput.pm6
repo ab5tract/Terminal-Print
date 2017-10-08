@@ -21,11 +21,10 @@ sub raw-input-supply(IO::Handle $input = $*IN,
 
     # Cancelable character supply loop; emits a character as soon as any
     # collected bytes are decodable.  jnthn++ for explaining this supply variant
-    # in https://rt.perl.org/Public/Bug/Display.html?id=130716#txn-1448844
-    my $s    = Supplier::Preserving.new;
-    my $done = False;
-    start {
-        LOOP: until $done {
+    # and providing successive improvements in API and semantics in
+    # https://rt.perl.org/Public/Bug/Display.html?id=130716
+    supply {
+        LOOP: until my $done {
             my $buf = Buf.new;
 
             # TimToady++ for suggesting this decode loop idiom
@@ -34,12 +33,12 @@ sub raw-input-supply(IO::Handle $input = $*IN,
                 $buf.push($b);
             } until $done || try my $c = $buf.decode;
 
-            $s.emit($c) unless $done;
+            emit($c) unless $done;
         }
-    }
-    $s.Supply.on-close: {
-        # Restore saved TTY mode if any
-        $saved-termios.setattr(:DRAIN) if $saved-termios;
-        $done = True;
+        CLOSE {
+            # Restore saved TTY mode if any
+            $saved-termios.setattr(:DRAIN) if $saved-termios;
+            $done = True;
+        }
     }
 }

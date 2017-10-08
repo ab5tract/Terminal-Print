@@ -143,16 +143,15 @@ my %special-keys =
 
 #| Decode a Terminal::Print::RawInput supply containing special key escapes
 multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .1) is export {
-    my $supplier = Supplier::Preserving.new;
     my $timer    = Supplier.new;
     my $timeout  = $timer.Supply.stable($decode-timeout);
 
-    start react {
+    supply {
         my @partial;
         my $state = Ground;
 
         my sub drain() {
-            $supplier.emit($_) for @partial;
+            emit($_) for @partial;
             @partial = ();
         }
 
@@ -186,7 +185,7 @@ multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .1) is expo
                 when Ground {
                     given $in {
                         when "\e" { @partial = $in,; $state = Escape }
-                        default   { $supplier.emit($in) }
+                        default   { emit($in) }
                     }
                 }
                 when Escape {
@@ -237,8 +236,6 @@ multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .1) is expo
             if $state != Ground { drain; $state = Ground }
         }
     }
-
-    $supplier.Supply.on-close: { $in-supply.done }
 }
 
 

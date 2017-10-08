@@ -32,6 +32,3 @@ react {
 }
 
 set-mouse-event-mode(NoEvents);
-
-# Give the input supply enough time to restore the TTY state
-sleep .1;
