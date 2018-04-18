@@ -25,7 +25,8 @@ our @styles    = [ <reset bold underline inverse> ];
 subset Terminal::Print::CursorProfile is export where * ~~ / ^('ansi' | 'universal')$ /;
 
 # we can add more, but there is a qq:x call so whitelist is the way to go.
-constant @valid-terminals = < xterm xterm-256color vt100 linux screen screen-256color >;
+constant @valid-terminals = < xterm xterm-256color vt100 linux screen screen-256color
+                              screen.xterm-256color >;
 
 class X::TputCapaMissing is Exception
 {
