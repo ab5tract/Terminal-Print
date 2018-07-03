@@ -7,6 +7,7 @@ use Terminal::Print::RawInput;
 enum DecodeState < Ground Escape Intermediate Mouse >;
 
 enum SpecialKey is export <
+     Backspace
      CursorUp CursorDown CursorRight CursorLeft CursorHome CursorEnd
      CursorBegin
      Delete Insert Home End PageUp PageDown
@@ -185,6 +186,7 @@ multi sub decoded-input-supply(Supply $in-supply, :$decode-timeout = .1) is expo
                 when Ground {
                     given $in {
                         when "\e" { @partial = $in,; $state = Escape }
+                        when .ord == 127 { emit(Backspace) }
                         default   { emit($in) }
                     }
                 }
