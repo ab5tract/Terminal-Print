@@ -502,13 +502,19 @@ sub MAIN(
     T.initialize-screen;
     my $root = FullPaintAnimation.new-from-grid(T.current-grid);  # , :concurrent);
 
-    my $h = 9;
-    my $w = $h * $height-ratio;
-    for (ArrowBurst, SwirlBlast, DragonBreath, WaveFront).kv -> $i, $anim {
-        $anim.new(:parent($root), :x($i * $w), :y(1), :$w, :$h);
-    }
-    for (LightningBolt, SolarBeam, ColdCone, Teleport).kv -> $i, $anim {
-        $anim.new(:parent($root), :x($i * $w), :y(2 + $h), :$w, :$h);
+    my @rows = (ArrowBurst, SwirlBlast, WaveFront, DragonBreath),
+               (LightningBolt, SolarBeam, ColdCone, Teleport);
+    my $cols = max @rows>>.elems;
+    my $h1 = (T.rows    / @rows).floor - 1;
+    my $h2 = (T.columns / $cols / $height-ratio).floor;
+    my $h  = min $h1, $h2;
+       $h -= $h %% 2;
+    my $w  = $h * $height-ratio;
+
+    for @rows.kv -> $row, @animations {
+        for @animations.kv -> $i, $anim {
+            $anim.new(:parent($root), :x($i * $w), :y($row * ($h + 1) + 1), :$w, :$h);
+        }
     }
 
     my $fps;
