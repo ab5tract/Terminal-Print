@@ -521,7 +521,7 @@ sub MAIN(
             my $frame = Terminal::Print::FrameInfo.new(:id(++$frames), :$time);
             $root.do-frame($frame);
             $root.grid.print-string(0, 0, sprintf("Time: %5.3f", $root.rel.time));
-            $root.grid.print-string(15, 0, sprintf("FPS: %2d", $fps))
+            $root.grid.print-string(15, 0, sprintf("FPS: %3d", $fps))
                 if $fps && $show-fps;
             $root.composite;
         }
