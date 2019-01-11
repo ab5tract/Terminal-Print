@@ -526,7 +526,7 @@ sub MAIN(
             $root.composite;
         }
         $fps = (10 / (now - $period-start)).floor;
-    } while $root.rel.time < 5e0;
+    } while $root.rel.time < 4e0;
     my $anim-end = now;
 
     T.shutdown-screen;
