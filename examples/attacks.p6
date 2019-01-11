@@ -59,7 +59,7 @@ class ParticleEffect is Terminal::Print::ParticleEffect {
     #| Display the particle count each frame
     method draw-frame() {
         callsame;
-        $.grid.set-span-text($.w - 4, 0, sprintf('%4d', @.particles.elems));
+        $.grid.set-span-text($.w - 5, 0, sprintf('%5d', @.particles.elems));
     }
 }
 
