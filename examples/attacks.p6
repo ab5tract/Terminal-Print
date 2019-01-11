@@ -121,18 +121,24 @@ class SimpleParticle is Terminal::Print::Particle {
 
 
 class DragonBreath is ParticleEffect {
+    has $.size = min(self.w, self.h);
+
+    # Tuned for 4 second total effect lifetime
     method generate-particles(Num $dt) {
         return if $.rel.time > 2;
 
-        for ^($dt * 100) {
+        my $v0 = .20e0 * $!size;
+        my $vr = .30e0 * $!size;
+
+        for ^($dt * $!size * $!size * 3) {
             @.particles.push: SimpleParticle.new:
                 age   => 0e0,
-                life  => 3e0,
+                life  => 2e0,
                 color => rgb-color(1e0, 1e0, 0e0),  # Saturated yellow
                 x     => 1e0.rand,
                 y     => 1e0.rand,
-                dx    => 2e0 + 3e0.rand,
-                dy    => 2e0 + 3e0.rand;
+                dx    => $v0 + $vr.rand,
+                dy    => $v0 + $vr.rand;
         }
     }
 
