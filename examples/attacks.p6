@@ -155,8 +155,9 @@ class DragonBreath is ParticleEffect {
 
 
 class SwirlBlast is ParticleEffect {
-    has $.size = min(self.w div 2, self.h div 2);
+    has $.size = min(self.w / 2e0, self.h / 2e0);
 
+    # Tuned for 3 second total effect lifetime
     method generate-particles(Num $dt) {
         my $swirl-time = 1.2e0;
         if $.rel.time == 0 {
@@ -175,11 +176,11 @@ class SwirlBlast is ParticleEffect {
         elsif $swirl-time < $.rel.time < $swirl-time + 0.3e0 {
             for ^(max(1, 100 * $dt)) {
                 my $radians = τ.rand;
-                my $speed   = 4.5e0 + .5e0.rand;
+                my $speed   = $!size * (.95e0 + .1e0.rand);
                 @.particles.push: SimpleParticle.new:
                     age   => 0e0,
-                    life  => 3e0,
-                    color => gray-color(.8e0 + .3e0.rand),
+                    life  => 1.5e0,
+                    color => gray-color(.8e0 + .2e0.rand),
                     x     => $!size,
                     y     => $!size,
                     dx    =>  $speed * cos($radians),
@@ -197,8 +198,9 @@ class SwirlBlast is ParticleEffect {
             }
             default {
                 my $fade = 1e0 - .age / .life;
-                .x = $!size + $!size * $fade * cos(($i / $count + .age) * τ);
-                .y = $!size - $!size * $fade * sin(($i / $count + .age) * τ);  # ==
+                my $radians = ($i / $count + .5e0 * .age) * τ;
+                .x = $!size + $!size * $fade * cos($radians);
+                .y = $!size - $!size * $fade * sin($radians);
             }
         }
     }
