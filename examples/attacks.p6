@@ -98,6 +98,7 @@ class Arrow is FullPaintAnimation {
 
 
 class ArrowBurst is ClearingAnimation {
+    # Tuned for 2 second total effect lifetime
     submethod TWEAK() {
         my ($x, $y) = self.w div 2, self.h div 2;
         my $size    = min $x, $y;
@@ -107,8 +108,7 @@ class ArrowBurst is ClearingAnimation {
             my $target-y = $y - $size * sin($radians);  # Note inverted Y
 
             Arrow.new(:$x, :$y, :w(1), :h(1), :$target-x, :$target-y,
-                      :parent(self), :speed(5));
-            # ==
+                      :parent(self), :speed($size/1.35e0));
         }
     }
 }
