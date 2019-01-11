@@ -208,15 +208,17 @@ class SwirlBlast is ParticleEffect {
 
 
 class WaveFront is Terminal::Print::PixelAnimation {
+    # Tuned for 3 second total effect lifetime
     method compute-pixels() {
         my $w     = $.w;
         my $h     = $.h * 2;
-        my $cx    = $w div 2;
-        my $cy    = $h div 2;
-        my $r     = min($cx, $cy).Num;
+        my $cx    = ($w - 1) / 2e0;
+        my $cy    = ($h - 1) / 2e0;
+        my $r     = min($cx, $cy);
         my $life  = 1.5e0;
         my $t     = $.rel.time.Num / $life;
         my $rt    = max(1e0, $r * $t);
+        my $min   = $rt < 2.5e0 ?? 0e0 !! .71e0;
 
         my @colors;
         for ^$h -> $y {
@@ -230,8 +232,8 @@ class WaveFront is Terminal::Print::PixelAnimation {
                 my $d   = √($dx2 + $dy2);
                 my $rd  = $d / $rt;
 
-                if .7e0 < $rd < 1e0 {
-                    my $tint = $rd * $rd * (.9e0 + .1e0.rand);
+                if $min <= $rd <= 1e0 {
+                    my $tint = $rd * $rd * (.95e0 + .05e0.rand);
                     $row[$x] = rgb-color($tint, $tint, 1e0);
                 }
             }
