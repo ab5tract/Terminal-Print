@@ -31,7 +31,9 @@ class ParticleEffect is Terminal::Print::PixelAnimation {
 
     #| Remove any particles that have outlasted their .life
     method gc-particles() {
-        @!particles .= grep: { .age < .life }
+        my @particles;
+        @particles.push($_) if .age < .life for @!particles;
+        @!particles := @particles;
     }
 
     #| Composite particles into pixels
