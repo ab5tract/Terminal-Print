@@ -3,21 +3,21 @@ use Terminal::Print::Animated;
 
 unit package Terminal::Print;
 
-
 #| Widget maintains a (color only) pixel field with double Y resolution
 role Pixelated {
     my %cell-cache;
 
     #| Composite pixels into grid cells by using unicode half-height blocks
+    #| Composite pixels into grid cells by using unicode half-height blocks
     method composite-pixels(@pixels, :$skip-empty) {
         my $grid = $.grid.grid;
-        for ^$.h -> $y {
+        for ^$.h -> int $y {
             my $row1 = @pixels[$y * 2]     // [];
             my $row2 = @pixels[$y * 2 + 1] // [];
             next if $skip-empty && !$row1.elems && !$row2.elems;
 
             my $grid-row = $grid[$y];
-            for ^$.w -> $x {
+            for ^$.w -> int $x {
                 my $c1 = $row1[$x] // '';
                 my $c2 = $row2[$x] // '';
                 next if $skip-empty && !$c1 && !$c2;
@@ -29,7 +29,6 @@ role Pixelated {
                                $c1        ?? %( :char('▀'), :color($c1)          ) !!
                                $c2        ?? %( :char('▄'), :color($c2)          ) !! ' ';
                     $.grid.change-cell($x, $y, $cell);
-                    $grid-row[$x];
                 }
             }
         }
