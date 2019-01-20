@@ -8,7 +8,6 @@ role Pixelated {
     my %cell-cache;
 
     #| Composite pixels into grid cells by using unicode half-height blocks
-    #| Composite pixels into grid cells by using unicode half-height blocks
     method composite-pixels(@pixels, :$skip-empty) {
         my $grid = $.grid.grid;
         for ^$.h -> int $y {
