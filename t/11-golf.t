@@ -9,6 +9,8 @@ my $STOP-TIME = %*ENV<STOP_TIME> // 0;
 
 
 subtest {
+    plan 2;
+
     ok T ~~ Terminal::Print, "T is a Terminal::Print object";
 
     lives-ok {

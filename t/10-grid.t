@@ -18,6 +18,8 @@ my $SLEEP_TIME = %*ENV<SLEEP_TIME> // 0.1;
 plan 1;
 
 subtest {
+    plan 3;
+
     lives-ok {
         for $b.indices -> [$x, $y] {
             $b.change-cell($x, $y, '♥');
