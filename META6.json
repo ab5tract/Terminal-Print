@@ -2,7 +2,7 @@
   "name" : "Terminal::Print",
   "license" : "Artistic-2.0",
   "source-url" : "git://github.com/ab5tract/Terminal-Print.git",
-  "perl" : "6.d.PREVIEW",
+  "perl" : "6.d",
   "resources" : [ ],
   "build-depends" : [ ],
   "provides" : {
@@ -28,7 +28,8 @@
   ],
   "description" : "Asynchronous printing to your terminal -- as a simple grid",
   "test-depends" : [ ],
-  "version" : "0.94",
+    "version" : "0.95",
+    "auth"    : "github:JJ",
   "authors" : [
     "John Haltiwanger", "japhb"
   ]
