@@ -529,7 +529,6 @@ sub MAIN(
             $root.grid.print-string(0, 0, sprintf("Time: %5.3f", $root.rel.time));
             $root.grid.print-string(15, 0, sprintf("FPS: %3d", $fps))
                 if $fps && $show-fps;
-            $root.composite;
         }
         $fps = (10 / (now - $period-start)).floor;
     } while $root.rel.time < 4e0;
