@@ -59,7 +59,7 @@ class ParticleEffect is Terminal::Print::ParticleEffect {
     #| Display the particle count each frame
     method draw-frame() {
         callsame;
-        $.grid.set-span-text($.w - 4, 0, sprintf('%4d', @.particles.elems));
+        $.grid.set-span-text($.w - 5, 0, sprintf('%5d', @.particles.elems));
     }
 }
 
@@ -98,6 +98,7 @@ class Arrow is FullPaintAnimation {
 
 
 class ArrowBurst is ClearingAnimation {
+    # Tuned for 2 second total effect lifetime
     submethod TWEAK() {
         my ($x, $y) = self.w div 2, self.h div 2;
         my $size    = min $x, $y;
@@ -107,8 +108,7 @@ class ArrowBurst is ClearingAnimation {
             my $target-y = $y - $size * sin($radians);  # Note inverted Y
 
             Arrow.new(:$x, :$y, :w(1), :h(1), :$target-x, :$target-y,
-                      :parent(self), :speed(5));
-            # ==
+                      :parent(self), :speed($size/1.35e0));
         }
     }
 }
@@ -121,18 +121,24 @@ class SimpleParticle is Terminal::Print::Particle {
 
 
 class DragonBreath is ParticleEffect {
+    has $.size = min(self.w, self.h);
+
+    # Tuned for 4 second total effect lifetime
     method generate-particles(Num $dt) {
         return if $.rel.time > 2;
 
-        for ^($dt * 100) {
+        my $v0 = .20e0 * $!size;
+        my $vr = .30e0 * $!size;
+
+        for ^($dt * $!size * $!size * 3) {
             @.particles.push: SimpleParticle.new:
                 age   => 0e0,
-                life  => 3e0,
+                life  => 2e0,
                 color => rgb-color(1e0, 1e0, 0e0),  # Saturated yellow
                 x     => 1e0.rand,
                 y     => 1e0.rand,
-                dx    => 2e0 + 3e0.rand,
-                dy    => 2e0 + 3e0.rand;
+                dx    => $v0 + $vr.rand,
+                dy    => $v0 + $vr.rand;
         }
     }
 
@@ -149,8 +155,9 @@ class DragonBreath is ParticleEffect {
 
 
 class SwirlBlast is ParticleEffect {
-    has $.size = min(self.w div 2, self.h div 2);
+    has $.size = min(self.w / 2e0, self.h / 2e0);
 
+    # Tuned for 3 second total effect lifetime
     method generate-particles(Num $dt) {
         my $swirl-time = 1.2e0;
         if $.rel.time == 0 {
@@ -169,11 +176,11 @@ class SwirlBlast is ParticleEffect {
         elsif $swirl-time < $.rel.time < $swirl-time + 0.3e0 {
             for ^(max(1, 100 * $dt)) {
                 my $radians = τ.rand;
-                my $speed   = 4.5e0 + .5e0.rand;
+                my $speed   = $!size * (.95e0 + .1e0.rand);
                 @.particles.push: SimpleParticle.new:
                     age   => 0e0,
-                    life  => 3e0,
-                    color => gray-color(.8e0 + .3e0.rand),
+                    life  => 1.5e0,
+                    color => gray-color(.8e0 + .2e0.rand),
                     x     => $!size,
                     y     => $!size,
                     dx    =>  $speed * cos($radians),
@@ -191,8 +198,9 @@ class SwirlBlast is ParticleEffect {
             }
             default {
                 my $fade = 1e0 - .age / .life;
-                .x = $!size + $!size * $fade * cos(($i / $count + .age) * τ);
-                .y = $!size - $!size * $fade * sin(($i / $count + .age) * τ);  # ==
+                my $radians = ($i / $count + .5e0 * .age) * τ;
+                .x = $!size + $!size * $fade * cos($radians);
+                .y = $!size - $!size * $fade * sin($radians);
             }
         }
     }
@@ -200,15 +208,17 @@ class SwirlBlast is ParticleEffect {
 
 
 class WaveFront is Terminal::Print::PixelAnimation {
+    # Tuned for 3 second total effect lifetime
     method compute-pixels() {
         my $w     = $.w;
         my $h     = $.h * 2;
-        my $cx    = $w div 2;
-        my $cy    = $h div 2;
-        my $r     = min($cx, $cy).Num;
+        my $cx    = ($w - 1) / 2e0;
+        my $cy    = ($h - 1) / 2e0;
+        my $r     = min($cx, $cy);
         my $life  = 1.5e0;
         my $t     = $.rel.time.Num / $life;
         my $rt    = max(1e0, $r * $t);
+        my $min   = $rt < 2.5e0 ?? 0e0 !! .71e0;
 
         my @colors;
         for ^$h -> $y {
@@ -222,8 +232,8 @@ class WaveFront is Terminal::Print::PixelAnimation {
                 my $d   = √($dx2 + $dy2);
                 my $rd  = $d / $rt;
 
-                if .7e0 < $rd < 1e0 {
-                    my $tint = $rd * $rd * (.9e0 + .1e0.rand);
+                if $min <= $rd <= 1e0 {
+                    my $tint = $rd * $rd * (.95e0 + .05e0.rand);
                     $row[$x] = rgb-color($tint, $tint, 1e0);
                 }
             }
@@ -447,7 +457,7 @@ class Teleport is ClearingAnimation does Terminal::Print::Pixelated {
 
     method flash($pct) {
         self.form-tesseract(1e0);
-        next unless ($pct * 23).round % 2;
+        return unless ($pct * 23).round % 2;
 
         my $ratio = $*TERMINAL-HEIGHT-RATIO;
         my $rtx   = ($!r * $pct * $*TERMINAL-HEIGHT-RATIO).round;
@@ -492,13 +502,19 @@ sub MAIN(
     T.initialize-screen;
     my $root = FullPaintAnimation.new-from-grid(T.current-grid);  # , :concurrent);
 
-    my $h = 9;
-    my $w = $h * $height-ratio;
-    for (ArrowBurst, SwirlBlast, DragonBreath, WaveFront).kv -> $i, $anim {
-        $anim.new(:parent($root), :x($i * $w), :y(1), :$w, :$h);
-    }
-    for (LightningBolt, SolarBeam, ColdCone, Teleport).kv -> $i, $anim {
-        $anim.new(:parent($root), :x($i * $w), :y(2 + $h), :$w, :$h);
+    my @rows = (ArrowBurst, SwirlBlast, WaveFront, DragonBreath),
+               (LightningBolt, SolarBeam, ColdCone, Teleport);
+    my $cols = max @rows>>.elems;
+    my $h1 = (T.rows    / @rows).floor - 1;
+    my $h2 = (T.columns / $cols / $height-ratio).floor;
+    my $h  = min $h1, $h2;
+       $h -= $h %% 2;
+    my $w  = $h * $height-ratio;
+
+    for @rows.kv -> $row, @animations {
+        for @animations.kv -> $i, $anim {
+            $anim.new(:parent($root), :x($i * $w), :y($row * ($h + 1) + 1), :$w, :$h);
+        }
     }
 
     my $fps;
@@ -511,12 +527,11 @@ sub MAIN(
             my $frame = Terminal::Print::FrameInfo.new(:id(++$frames), :$time);
             $root.do-frame($frame);
             $root.grid.print-string(0, 0, sprintf("Time: %5.3f", $root.rel.time));
-            $root.grid.print-string(15, 0, sprintf("FPS: %2d", $fps))
+            $root.grid.print-string(15, 0, sprintf("FPS: %3d", $fps))
                 if $fps && $show-fps;
-            $root.composite;
         }
         $fps = (10 / (now - $period-start)).floor;
-    } while $root.rel.time < 5e0;
+    } while $root.rel.time < 4e0;
     my $anim-end = now;
 
     T.shutdown-screen;

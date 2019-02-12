@@ -992,7 +992,7 @@ class Missiles is Terminal::Print::ParticleEffect
                 age   => 0e0,
                 life  => $.life,
                 color => rgb-color(.6e0, 0e0, 1e0),  # Blueish purple
-                x     => 0,
+                x     => 0e0,
                 y     => $.h / 2e0,
                 dx    => myrand(1e0, .15e0) * $.w / $.life,
                 dy    => myrand(($_ + .5e0) / $.count - .6e0, .05e0) * 1.5e0 * $.h / $.life;

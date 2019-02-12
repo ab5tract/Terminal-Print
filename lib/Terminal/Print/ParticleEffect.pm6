@@ -31,17 +31,19 @@ class ParticleEffect is Terminal::Print::PixelAnimation {
 
     #| Remove any particles that have outlasted their .life
     method gc-particles() {
-        @!particles .= grep: { .age < .life }
+        my @particles;
+        @particles.push($_) if .age < .life for @!particles;
+        @!particles := @particles;
     }
 
     #| Composite particles into pixels
     method composite-particles() {
-        my $ratio = $.cell-height-ratio.Num;
+        my num $ratio = $.cell-height-ratio.Num;
 
         my @colors;
         for @!particles {
-            next if .x < 0e0 || .y < 0e0;
-            @colors[.y * 2e0][.x * $ratio] = .color;
+            next if (my num $x = .x) < 0e0 || (my num $y = .y) < 0e0;
+            @colors[$y * 2e0][$x * $ratio] = .color;
         }
 
         @colors
