@@ -1596,7 +1596,8 @@ sub MAIN(
     await @loading-promises;
     $bar.set-progress(100);
 
-    T.switch-grid('main', :blit);
+    T.switch-grid('main');
+    $ui.composite;
     sleep $medium-sleep;
 
     # XXXX: Popup help
