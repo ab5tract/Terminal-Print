@@ -1,25 +1,9 @@
 {
-  "name" : "Terminal::Print",
-  "license" : "Artistic-2.0",
-  "source-url" : "git://github.com/ab5tract/Terminal-Print.git",
-  "perl" : "6.d.PREVIEW",
-  "resources" : [ ],
+  "authors" : [
+    "John Haltiwanger",
+    "japhb"
+  ],
   "build-depends" : [ ],
-  "provides" : {
-    "Terminal::Print"                 : "lib/Terminal/Print.pm6",
-    "Terminal::Print::Animated"       : "lib/Terminal/Print/Animated.pm6",
-    "Terminal::Print::BoxDrawing"     : "lib/Terminal/Print/BoxDrawing.pm6",
-    "Terminal::Print::Commands"       : "lib/Terminal/Print/Commands.pm6",
-    "Terminal::Print::DecodedInput"   : "lib/Terminal/Print/DecodedInput.pm6",
-    "Terminal::Print::Grid"           : "lib/Terminal/Print/Grid.pm6",
-    "Terminal::Print::ParticleEffect" : "lib/Terminal/Print/ParticleEffect.pm6",
-    "Terminal::Print::Pixelated"      : "lib/Terminal/Print/Pixelated.pm6",
-    "Terminal::Print::RawInput"       : "lib/Terminal/Print/RawInput.pm6",
-    "Terminal::Print::Util::Text"     : "lib/Terminal/Print/Util/Text.pm6",
-    "Terminal::Print::Util::Timing"   : "lib/Terminal/Print/Util/Timing.pm6",
-    "Terminal::Print::Widget"         : "lib/Terminal/Print/Widget.pm6"
-  },
-  "tags" : [ "Terminal" ],
   "depends" : [
     "OO::Monitors",
     "Terminal::ANSIColor",
@@ -27,9 +11,28 @@
     "File::Which"
   ],
   "description" : "Asynchronous printing to your terminal -- as a simple grid",
+  "license" : "Artistic-2.0",
+  "name" : "Terminal::Print",
+  "perl" : "6.d.PREVIEW",
+  "provides" : {
+    "Terminal::Print" : "lib/Terminal/Print.pm6",
+    "Terminal::Print::Animated" : "lib/Terminal/Print/Animated.pm6",
+    "Terminal::Print::BoxDrawing" : "lib/Terminal/Print/BoxDrawing.pm6",
+    "Terminal::Print::Commands" : "lib/Terminal/Print/Commands.pm6",
+    "Terminal::Print::DecodedInput" : "lib/Terminal/Print/DecodedInput.pm6",
+    "Terminal::Print::Grid" : "lib/Terminal/Print/Grid.pm6",
+    "Terminal::Print::ParticleEffect" : "lib/Terminal/Print/ParticleEffect.pm6",
+    "Terminal::Print::Pixelated" : "lib/Terminal/Print/Pixelated.pm6",
+    "Terminal::Print::RawInput" : "lib/Terminal/Print/RawInput.pm6",
+    "Terminal::Print::Util::Text" : "lib/Terminal/Print/Util/Text.pm6",
+    "Terminal::Print::Util::Timing" : "lib/Terminal/Print/Util/Timing.pm6",
+    "Terminal::Print::Widget" : "lib/Terminal/Print/Widget.pm6"
+  },
+  "resources" : [ ],
+  "source-url" : "git://github.com/ab5tract/Terminal-Print.git",
+  "tags" : [
+    "Terminal"
+  ],
   "test-depends" : [ ],
-  "version" : "0.94",
-  "authors" : [
-    "John Haltiwanger", "japhb"
-  ]
+  "version" : "0.94"
 }
