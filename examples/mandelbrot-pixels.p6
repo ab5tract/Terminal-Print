@@ -73,9 +73,11 @@ class Mandelbrot is Terminal::Print::PixelAnimation {
         my $real-offset = $real-range.min + .5e0 * $real-pixel;
         my $imag-offset = $imag-range.max - .5e0 * $imag-pixel;  # inverted Y coord
 
-        # Main pixel loop
+        # Main pixel loop, parallelized $degree ways across batches of rows
         my $ramp   = +@ramp;
-        my @pixels = ^$h .map: -> $y {
+        my $degree = 8;
+        my $batch  = ($h / $degree).ceiling;
+        my @pixels = ^$h .hyper(:$batch, :$degree).map: -> $y {
             my num $i = $y * $imag-pixel + $imag-offset;
             my num $r = $real-offset;
             my @row;
@@ -85,7 +87,6 @@ class Mandelbrot is Terminal::Print::PixelAnimation {
             }
             @row
         }
-
     }
 
     #| Convert from center + size to real + imaginary ranges, then compute those Mandelbrot pixels
