@@ -5,6 +5,7 @@ use Terminal::Print <T>;
 use Terminal::Print::Pixelated;
 
 
+# Calculate the color ramp once
 my @colors =
     (0, 0, 1), (0, 0, 2), (0, 0, 3), (0, 0, 4), (0, 0, 5),  # Dark to bright blue
     (1, 1, 5), (2, 2, 5), (3, 3, 5), (4, 4, 5), (5, 5, 5),  # Light blue to white
@@ -15,6 +16,7 @@ my @colors =
 my @ramp = @colors.map: { ~(16 + 36 * .[0] + 6 * .[1] + .[2]) }
 
 
+#| A Mandelbrot renderer producing unicode half-height block "pixels"
 class Mandelbrot is Terminal::Print::PixelAnimation {
     has $.max-iter          = @ramp * 20 - 1;
     has $.cell-height-ratio = 2e0;   # XXXX: Should this be pushed down to Widget?
@@ -100,7 +102,7 @@ class Mandelbrot is Terminal::Print::PixelAnimation {
         self.draw-mandel(:real-range($reals), :imag-range($imags));
     }
 
-    # Show the area on the current image that will be zoomed into
+    #| Show the area on the current image that will be zoomed into
     method box-zoom($zoom-factor) {
         my $margin    = (1 - 1 / $zoom-factor) / 2;
         my $x-margin  = $.w * $margin;
@@ -125,7 +127,7 @@ class FrameInfo is Terminal::Print::FrameInfo {
 }
 
 
-# Draw a series of zooming Mandelbrot set images
+#| Draw a series of zooming Mandelbrot set images
 sub MAIN() {
     T.initialize-screen;
     my $mandel = Mandelbrot.new-from-grid(T.current-grid);
