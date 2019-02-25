@@ -147,10 +147,13 @@ sub MAIN() {
             $size /= $zoom-factor;
         }
     }
-    my $t1 = now;
+    my $time   = now - $t0;
+    my $pixels = T.columns * T.rows * 2;
+    my $speed  = $zooms * $pixels / ($time || .001);
 
     # sleep 10;
     T.shutdown-screen;
 
-    printf "%.3f seconds\n", $t1 - $t0;
+    printf "$zooms zooms of $pixels pixels each in %.3f seconds = %d pixels/second\n",
+           $time, $speed;
 }
