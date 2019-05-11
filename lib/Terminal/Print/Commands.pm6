@@ -27,7 +27,7 @@ subset Terminal::Print::CursorProfile is export where * ~~ / ^('ansi' | 'univers
 # we can add more, but there is a qq:x call so whitelist is the way to go.
 
 constant @valid-terminals = < xterm xterm-256color vt100 linux screen screen-256color rxvt
-                              screen.xterm-256color tmux tmux-256color xterm-kitty rxvt-unicode-256color>;
+                              screen.xterm-256color tmux tmux-256color xterm-kitty rxvt-unicode-256color st-256color>;
 
 class X::TputCapaMissing is Exception
 {
