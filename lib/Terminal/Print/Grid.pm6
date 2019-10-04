@@ -160,6 +160,21 @@ method print-from(Terminal::Print::Grid $grid, $x, $y) {
         if $!print-enabled;
 }
 
+#| Return a position-independent immutable object representing the data for a single colored/styled grid cell, given a hash with char and color keys
+multi method cell(%c) {
+    Cell.new(|%c)
+}
+
+#| Return a position-independent immutable object representing the data for a single colored/styled grid cell, given char and color
+multi method cell(Str $char, $color) {
+    Cell.new(:$char, :$color)
+}
+
+#| Return a position-independent immutable object representing the data for a single uncolored/unstyled character in a grid cell
+multi method cell(Str $char) {
+    $char
+}
+
 #| Replace the contents of a single grid cell, specifying a hash with char and color keys
 multi method change-cell($x, $y, %c) {
     return unless 0 <= $x < $!w && 0 <= $y < $!h;
