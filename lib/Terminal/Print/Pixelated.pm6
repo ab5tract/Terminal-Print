@@ -21,16 +21,27 @@ role Pixelated {
                 my $c2 = $row2[$x] // '';
                 next if $skip-empty && !$c1 && !$c2;
 
-                $grid-row[$x] = %cell-cache{$c1}{$c2} //= do {
-                    my $cell = $c1 && $c2
-                            && $c1 eq $c2 ?? %( :char(' '), :color("on_$c1")     ) !!
-                               $c1 && $c2 ?? %( :char('▄'), :color("$c2 on_$c1") ) !!
-                               $c1        ?? %( :char('▀'), :color($c1)          ) !!
-                               $c2        ?? %( :char('▄'), :color($c2)          ) !! ' ';
-                    $.grid.change-cell($x, $y, $cell);
-                }
+                # Manually inlined for performance
+                $grid-row[$x] = %cell-cache{$c1}{$c2} //=
+                       $c1 && $c2
+                    && $c1 eq $c2 ?? $.grid.cell(' ', "on_$c1"    ) !!
+                       $c1 && $c2 ?? $.grid.cell('▄', "$c2 on_$c1") !!
+                       $c1        ?? $.grid.cell('▀',  $c1        ) !!
+                       $c2        ?? $.grid.cell('▄',  $c2        ) !! ' ';
             }
         }
+        # Force invalidation of $.grid.Str cache
+        $.grid.change-cell(0, 0, $grid[0][0]);
+    }
+
+    #| Convert top and bottom pixel colors into a grid cell object using unicode half-height blocks
+    method cell-from-pixel-pair($c1, $c2) {
+        %cell-cache{$c1}{$c2} //=
+               $c1 && $c2
+            && $c1 eq $c2 ?? $.grid.cell(' ', "on_$c1"    ) !!
+               $c1 && $c2 ?? $.grid.cell('▄', "$c2 on_$c1") !!
+               $c1        ?? $.grid.cell('▀',  $c1        ) !!
+               $c2        ?? $.grid.cell('▄',  $c2        ) !! ' '
     }
 }
 
