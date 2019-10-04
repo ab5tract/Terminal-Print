@@ -500,8 +500,20 @@ sub MAIN(
     my $*TERMINAL-HEIGHT-RATIO = $height-ratio;
 
     T.initialize-screen;
-    my $root = FullPaintAnimation.new-from-grid(T.current-grid);  # , :concurrent);
 
+    my class Root is FullPaintAnimation {
+        has $.fps is rw;
+
+        method draw-frame() {
+            callsame;
+
+            $.grid.print-string(0, 0, sprintf("Time: %5.3f", $.rel.time));
+            $.grid.print-string(15, 0, sprintf("FPS: %3d", $!fps))
+                if $!fps && $show-fps;
+        }
+    }
+
+    my $root = Root.new-from-grid(T.current-grid);
     my @rows = (ArrowBurst, SwirlBlast, WaveFront, DragonBreath),
                (LightningBolt, SolarBeam, ColdCone, Teleport);
     my $cols = max @rows>>.elems;
@@ -517,7 +529,6 @@ sub MAIN(
         }
     }
 
-    my $fps;
     my $frames = 0;
     my $anim-start = now;
     repeat {
@@ -526,11 +537,8 @@ sub MAIN(
             my $time  = ($bench ?? .1 * $frames !! now) / $slow-mo;
             my $frame = Terminal::Print::FrameInfo.new(:id(++$frames), :$time);
             $root.do-frame($frame);
-            $root.grid.print-string(0, 0, sprintf("Time: %5.3f", $root.rel.time));
-            $root.grid.print-string(15, 0, sprintf("FPS: %3d", $fps))
-                if $fps && $show-fps;
         }
-        $fps = (10 / (now - $period-start)).floor;
+        $root.fps = (10 / (now - $period-start)).floor;
     } while $root.rel.time < 4e0;
     my $anim-end = now;
 
