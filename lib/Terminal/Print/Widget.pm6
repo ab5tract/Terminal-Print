@@ -17,6 +17,12 @@ class Terminal::Print::Widget {
         self.new(:$grid, :w($grid.w), :h($grid.h), :x(0), :y(0), |c);
     }
 
+    #| Replace widget's backing grid, updating widget size to match
+    method replace-grid($!grid) {
+        $!w = $!grid.w;
+        $!h = $!grid.h;
+    }
+
     #| Make sure parent widget knows about this child
     submethod TWEAK() {
         $!parent.add-child(self) if $!parent ~~ Terminal::Print::Widget;
