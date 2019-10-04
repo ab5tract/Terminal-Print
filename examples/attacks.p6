@@ -460,7 +460,7 @@ class Teleport is ClearingAnimation does Terminal::Print::Pixelated {
         return unless ($pct * 23).round % 2;
 
         my $ratio = $*TERMINAL-HEIGHT-RATIO;
-        my $rtx   = ($!r * $pct * $*TERMINAL-HEIGHT-RATIO).round;
+        my $rtx   = ($!r * $pct * $ratio).round;
         my $rty   = ($!r * $pct / 2e0).round;
 
         my $color = gray-color(.75e0 + $pct / 4e0);
