@@ -23,8 +23,10 @@ sub raw-input-supply(IO::Handle $input = $*IN,
     # collected bytes are decodable.  jnthn++ for explaining this supply variant
     # and providing successive improvements in API and semantics in
     # https://rt.perl.org/Public/Bug/Display.html?id=130716
-    supply {
-        LOOP: until my $done {
+    my $s = Supplier::Preserving.new;
+    my $done = False;
+    start {
+        LOOP: until $done {
             my $buf = Buf.new;
 
             # TimToady++ for suggesting this decode loop idiom
@@ -33,12 +35,12 @@ sub raw-input-supply(IO::Handle $input = $*IN,
                 $buf.push($b);
             } until $done || try my $c = $buf.decode;
 
-            emit($c) unless $done;
+            $s.emit($c) unless $done;
         }
-        CLOSE {
-            # Restore saved TTY mode if any
-            $saved-termios.setattr(:DRAIN) if $saved-termios;
-            $done = True;
-        }
+    }
+    $s.Supply.on-close: {
+        # Restore saved TTY mode if any
+        $saved-termios.setattr(:DRAIN) if $saved-termios;
+        $done = True;
     }
 }
