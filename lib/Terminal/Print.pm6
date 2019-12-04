@@ -120,9 +120,9 @@ class Terminal::Print {
         }
     }
 
-    multi method root-widget(Terminal::Print::Widget $widget-type?) {
+    multi method root-widget(Terminal::Print::Widget:U $widget-type) {
         my $grid = self.current-grid;
-        %!root-widget-map{$grid} ||= $widget-type.WHAT.new-from-grid($grid);
+        %!root-widget-map{$grid} ||= $widget-type.new-from-grid($grid);
     }
 
     multi method root-widget(Terminal::Print::Widget:D $root-widget) {
