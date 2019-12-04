@@ -88,7 +88,7 @@ method span-string($x1, $x2, $y) {
 }
 
 #| Set both the text and color of a span
-method set-span($x, $y, Str $text, $color) {
+multi method set-span($x, $y, Str $text, $color?) {
     $!grid-string = '';
     my $row = @!grid[$y];
 
@@ -100,6 +100,11 @@ method set-span($x, $y, Str $text, $color) {
         my @chars = $text.comb;
         $row.splice($x, +@chars, @chars);
     }
+}
+
+#| Set both the text and color of a span using interface similar to that of change-cell
+multi method set-span($x, $y, %c) {
+    self.set-span($x, $y, %c<char>, %c<color>)
 }
 
 #| Set the text of a span, but keep the color unchanged
