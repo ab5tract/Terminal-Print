@@ -198,7 +198,7 @@ multi method change-cell($x, $y, %c) {
     @!grid[$y][$x] = Cell.new(|%c);
 }
 
-multi method change-cell($x, $y, *%c) { samewith($x, $y, %c) }
+multi method change-cell($x, $y, *%c) { self.change-cell($x, $y, %c) }
 
 #| Replace the contents of a single grid cell with a single uncolored/unstyled character
 multi method change-cell($x, $y, Str $char) {
@@ -215,11 +215,16 @@ multi method change-cell($x, $y, Cell $cell) {
 }
 
 #| Print the .cell-string for a single cell
-multi method print-cell($x, $y) {
-    print self.cell-string($x, $y)
-        if $!print-enabled
-        && 0 <= $x < $!w
-        && 0 <= $y < $!h;
+multi method print-cell($x, $y, *%c) {
+    if %c {
+        self.print-cell($x, $y, %c);
+    }
+    else {
+        print self.cell-string($x, $y)
+            if $!print-enabled
+            && 0 <= $x < $!w
+            && 0 <= $y < $!h;
+    }
 }
 
 #| Replace the contents of a cell with an uncolored/unstyled character, then print its .cell-string
@@ -233,8 +238,6 @@ multi method print-cell($x, $y, %c) {
     self.change-cell($x, $y, Cell.new(|%c));
     self.print-cell($x, $y);
 }
-
-multi method print-cell($x, $y, *%c where *.elems) { samewith($x, $y, %c) }
 
 #| Degenerate case: print an individual cell
 multi method print-string($x, $y) {
