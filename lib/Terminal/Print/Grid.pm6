@@ -8,7 +8,7 @@ unit monitor Terminal::Print::Grid;
 #| Internal (immutable) class holding all position-independent information about a single grid cell
 my class Cell {
     use Terminal::ANSIColor; # lexical imports FTW
-    has $.char is required;
+    has Str:D $.char is required where *.chars == 1;
     has $.color;
     has $!string;
 
