@@ -76,20 +76,15 @@ class Terminal::Print {
     subset Valid::Y of Int is export where * < rows();
     subset Valid::Char of Str is export where *.chars == 1;
 
-    has Terminal::Print::CursorProfile $.cursor-profile;
+    has Terminal::Print::CursorProfile $.cursor-profile = 'ansi';
     has $.move-cursor;
 
-    method new( :$cursor-profile = 'ansi' ) {
-        my $columns      = columns();
-        my $rows         = rows();
-        my $move-cursor  = move-cursor-template($cursor-profile);
-        my $current-grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
-        self.bless( :$columns, :$rows, :$current-grid,
-                    :$cursor-profile,  :$move-cursor );
-    }
+    submethod TWEAK(|) {
+        self.setup;
 
-    submethod BUILD( :$!current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!move-cursor ) {
-        push @!grids, $!current-grid;
+        unless PROCESS::<$TERMINAL>:exists {
+            PROCESS::<$TERMINAL> = self;
+        }
 
         # set up a tap on SIGINT so that we can cleanly shutdown, restoring the previous screen and cursor
         signal(SIGINT).tap: {
@@ -99,9 +94,39 @@ class Terminal::Print {
         }
     }
 
-    method root-widget() {
+    method setup(:$reset = False) {
+        $!move-cursor  //= move-cursor-template($!cursor-profile);
+        if $reset {
+            $!columns = columns();
+            $!rows = rows();
+            $!current-grid = Terminal::Print::Grid.new( $!columns, $!rows, :$!move-cursor );
+        }
+        else {
+            $!columns //= columns();
+            $!rows //= rows();
+            $!current-grid //= Terminal::Print::Grid.new( $!columns, $!rows, :$!move-cursor );
+        }
+        if %!grid-name-map<.default>.defined {
+            my $gidx = %!grid-name-map<.default>;
+            my $old-grid = @!grids[$gidx];
+            unless $!current-grid<> =:= $old-grid {
+                my $root-widget = %!root-widget-map{$old-grid}:delete;
+                %!root-widget-map{$!current-grid} = $root-widget;
+                $root-widget.replace-grid: @!grids[$gidx] = $!current-grid;
+            }
+        }
+        else {
+            self.add-grid: '.default', new-grid => $!current-grid;
+        }
+    }
+
+    multi method root-widget(Terminal::Print::Widget $widget-type?) {
         my $grid = self.current-grid;
-        %!root-widget-map{$grid} ||= Terminal::Print::Widget.new-from-grid($grid);
+        %!root-widget-map{$grid} ||= $widget-type.WHAT.new-from-grid($grid);
+    }
+
+    multi method root-widget(Terminal::Print::Widget:D $root-widget) {
+        %!root-widget-map{$root-widget.grid} ||= $root-widget;
     }
 
     method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( $!columns, $!rows, :$!move-cursor ) ) {
@@ -198,22 +223,22 @@ class Terminal::Print {
     }
 
     multi method grid( Str $name ) {
-        die "No grid has been named $name" unless my $grid-index = %!grid-name-map{$name};
-        @!grids[$grid-index].grid;
+        die "No grid has been named $name" unless %!grid-name-map{$name}:exists;
+        @!grids[ %!grid-name-map{$name} ].grid;
     }
 
     #### grid-object stuff
 
     #   Sometimes you simply want the object back (for stringification, or
     #   introspection on things like column-range)
-    proto method grid-object($) { }
+    proto method grid-object($) {*}
     multi method grid-object( Int $index ) {
         @!grids[$index];
     }
 
     multi method grid-object( Str $name ) {
-        die "No grid has been named $name" unless my $grid-index = %!grid-name-map{$name};
-        @!grids[$grid-index];
+        die "No grid has been named $name" unless %!grid-name-map{$name}:exists;
+        @!grids[ %!grid-name-map{$name} ];
     }
 
     multi method print-cell( $x, $y ) {
