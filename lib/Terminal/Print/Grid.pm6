@@ -44,10 +44,26 @@ method rows    { $!h }
 method height  { $!h }
 
 #| Instantiate a new (row-major) grid of size $w x $h
-method new($w, $h, :$move-cursor = move-cursor-template) {
-    my @grid = [ [ ' ' xx $w ] xx $h ];
+method new($w, $h, :@grid is copy, :$move-cursor = move-cursor-template) {
+    for ^$h -> $row {
+        my @grid-row = [ ' ' xx $w ];
+        if $row < @grid {
+            my $splice-w = $w > @grid[$row] ?? @grid[$row].elems !! $w;
+            @grid-row.splice(0, $splice-w, @grid[$row][0..^$splice-w]);
+        }
+        @grid[$row] = @grid-row;
+    }
 
     self.bless(:$w, :$h, :@grid, :$move-cursor);
+}
+
+#| Create a new grid based on self with possibly some parameters changed. Grid content is not preserved.
+method new-from-self(::?CLASS:D: *%args) {
+    self.WHAT.new( $!w, $!h, :$!move-cursor, |%args )
+}
+
+method clone(::?CLASS:D: *%args) {
+    self.WHAT.new( $!w, $!h, :$!move-cursor, :@!grid, |%args )
 }
 
 #| Clear the grid to blanks (ASCII spaces) with no color/style overrides
