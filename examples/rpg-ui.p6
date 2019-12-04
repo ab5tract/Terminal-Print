@@ -393,7 +393,7 @@ class MapViewer is Animation {
                         my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] // '' };
                            $mapped = %( :char($mapped), :color('246') ) if $mapped;
 
-                        $g.change-cell($x * 2, $y, $mapped || (($!map-x + $x) %% 10 ?? $marker !! '  '));
+                        $g.set-span($x * 2, $y, $mapped || (($!map-x + $x) %% 10 ?? $marker !! '  '));
                         $g.change-cell($x * 2 + 1, $y, '');
                     }
                 }
@@ -401,7 +401,7 @@ class MapViewer is Animation {
                     for ^$map-width -> $x {
                         my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] or next };
 
-                        $g.change-cell($x * 2,     $y, %( :char($mapped), :color('246') ));
+                        $g.set-span($x * 2,     $y, %( :char($mapped), :color('246') ));
                         $g.change-cell($x * 2 + 1, $y, '');
                     }
                 }
@@ -418,15 +418,15 @@ class MapViewer is Animation {
                         my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] // '' };
 
                         if $full-width {
-                            $g.change-cell($x * 2, $y, $mapped || (($!map-x + $x) %% 10 ?? $marker !! '  '));
+                            $g.set-span($x * 2, $y, $mapped || (($!map-x + $x) %% 10 ?? $marker !! '  '));
                             $g.change-cell($x * 2 + 1, $y, '');
                         }
                         elsif $mapped {
                             $mapped = %( :char($mapped), :color('246') ) if $color-bits > 4;
-                            $g.change-cell($x, $y, $mapped);
+                            $g.set-span($x, $y, $mapped);
                         }
                         elsif ($!map-x + $x) %% 10 {
-                            $g.change-cell($x, $y, $marker);
+                            $g.set-span($x, $y, $marker);
                         }
                     }
                 }
@@ -434,7 +434,7 @@ class MapViewer is Animation {
                     for ^$map-width -> $x {
                         my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] or next };
 
-                        $g.change-cell($x * 2,     $y, $mapped);
+                        $g.set-span($x * 2,     $y, $mapped);
                         $g.change-cell($x * 2 + 1, $y, '');
                     }
                 }
@@ -443,7 +443,7 @@ class MapViewer is Animation {
                         my $mapped = $tiles{ $seen-row[$!map-x + $x] && $row[$!map-x + $x] or next };
                            $mapped = %( :char($mapped), :color('246') ) if $color-bits > 4;
 
-                        $g.change-cell($x, $y, $mapped);
+                        $g.set-span($x, $y, $mapped);
                     }
                 }
             }
@@ -732,8 +732,8 @@ sub make-title-animation(ProgressBar :$bar, Bool :$ascii) {
     my $t0 = now;
 
     my $standard = q:to/STANDARD/;
-         ____        _                    __      _    _    _             _       
-        |  _ \ _   _(_)_ __  ___    ___  / _|    / \  | | _| |_ __ _ _ __(_) __ _ 
+         ____        _                    __      _    _    _             _
+        |  _ \ _   _(_)_ __  ___    ___  / _|    / \  | | _| |_ __ _ _ __(_) __ _
         | |_) | | | | | '_ \/ __|  / _ \| |_    / _ \ | |/ / __/ _` | '__| |/ _` |
         |  _ <| |_| | | | | \__ \ | (_) |  _|  / ___ \|   <| || (_| | |  | | (_| |
         |_| \_\\\\__,_|_|_| |_|___/  \___/|_|   /_/   \_\_|\_\\\\__\__,_|_|  |_|\__,_|
@@ -1379,16 +1379,16 @@ sub dragon-battle(UI $ui, Game $game) {
     #| Add the dragon to the screen
     my sub add-dragon(:$dx, :$dy) {
         my $dragon-wide = q:to/DRAGON/;
-                 __     
-            <,  /\      
-             `=<###>.   
+                 __
+            <,  /\
+             `=<###>.
                ]   ] `~+
             DRAGON
 
         my $dragon-narrow = q:to/DRAGON/;
-                _   
-            <, /\   
-             `<##>. 
+                _
+            <, /\
+             `<##>.
               ]  ]`+
             DRAGON
 
