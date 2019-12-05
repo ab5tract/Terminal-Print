@@ -59,11 +59,14 @@ method new($w, $h, :@grid is copy, :$move-cursor = move-cursor-template) {
 
 #| Create a new grid based on self with possibly some parameters changed. Grid content is not preserved.
 method new-from-self(::?CLASS:D: *%args) {
-    self.WHAT.new( $!w, $!h, :$!move-cursor, |%args )
+    self.WHAT.new(%args<w> // $!w, %args<h> // $!h, :$!move-cursor, |%args)
 }
 
 method clone(::?CLASS:D: *%args) {
-    self.WHAT.new( $!w, $!h, :$!move-cursor, :@!grid, |%args )
+    self.WHAT.new(
+        %args<w> // $!w, %args<h> // $!h,
+        :$!move-cursor, :@!grid, |%args
+    )
 }
 
 #| Clear the grid to blanks (ASCII spaces) with no color/style overrides
