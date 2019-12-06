@@ -97,12 +97,12 @@ multi method set-span($x, $y, Str $text, $color?) {
     $!grid-string = '';
     my $row = @!grid[$y];
 
+    my @chars = $text.comb[^(min $text.chars, $!w - $x)];
     if $color {
-        my @cells = $text.comb.map: { Cell.new(:char($_), :$color) };
+        my @cells = @chars.map: { Cell.new(:char($_), :$color) };
         $row.splice($x, +@cells, @cells);
     }
     else {
-        my @chars = $text.comb;
         $row.splice($x, +@chars, @chars);
     }
 }
@@ -116,7 +116,7 @@ multi method set-span($x, $y, %c) {
 method set-span-text($x, $y, Str $text) {
     $!grid-string = '';
     my $row = @!grid[$y];
-    for $text.comb.kv -> $i, $char {
+    for $text.comb[^(min $text.chars, $!w - $x)].kv -> $i, $char {
         my $cell := $row[$x + $i];
         $cell = $cell ~~ Cell ?? Cell.new(:$char, :color($cell.color)) !! $char;
     }
