@@ -48,7 +48,7 @@ method new($w, $h, :@grid is copy, :$move-cursor = move-cursor-template) {
     for ^$h -> $row {
         my @grid-row = [ ' ' xx $w ];
         if $row < @grid {
-            my $splice-w = $w > @grid[$row] ?? @grid[$row].elems !! $w;
+            my $splice-w = min @grid[$row].elems, $w;
             @grid-row.splice(0, $splice-w, @grid[$row][0..^$splice-w]);
         }
         @grid[$row] = @grid-row;
@@ -85,8 +85,10 @@ method cell-string($x, $y) {
 }
 
 #| Return the escape string necessary to move to (x1, y) and output every cell (with color) on that row from x1..x2
-method span-string($x1, $x2, $y) {
+method span-string($x1 is copy, $x2 is copy, $y) {
     my $row = @!grid[$y];
+    $x1 min= $!w;
+    $x2 min= $!w;
     $!move-cursor($x1, $y) ~ $row[$x1..$x2].join.subst("\e[0m\e[", "\e[0;", :g);
 }
 
@@ -121,9 +123,11 @@ method set-span-text($x, $y, Str $text) {
 }
 
 #| Set the color of a span, but keep the text unchanged
-method set-span-color($x1, $x2, $y, $color) {
+method set-span-color($x1 is copy, $x2 is copy, $y, $color) {
     $!grid-string = '';
     my $row = @!grid[$y];
+    $x1 min= $!w;
+    $x2 min= $!w;
     for $x1..$x2 -> $x {
         my $cell := $row[$x];
         $cell = Cell.new(:char($cell ~~ Cell ?? $cell.char !! $cell // ' '), :$color);
