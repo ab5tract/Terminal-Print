@@ -46,6 +46,7 @@ BEGIN {
     sub query-cap(Str $term, Str $cap)
     {
 	    my $proc = run 'tput', '-T', $term, $cap, :out;
+	    my $proc.err.slurp if $prox.exitcode != 0;
 	    return $proc.out.slurp if $proc.exitcode == 0;
 	    return query-cap($term, "clear") if $cap ~~ /^ <[sr]>mcup $/;
 	    # TODO: Replace the -1 with a Failure.new(...) once the compiler can cope with it correctly.

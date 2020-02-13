@@ -15,18 +15,18 @@
   "name" : "Terminal::Print",
   "perl" : "6.d.PREVIEW",
   "provides" : {
-    "Terminal::Print" : "lib/Terminal/Print.pm6",
-    "Terminal::Print::Animated" : "lib/Terminal/Print/Animated.pm6",
-    "Terminal::Print::BoxDrawing" : "lib/Terminal/Print/BoxDrawing.pm6",
-    "Terminal::Print::Commands" : "lib/Terminal/Print/Commands.pm6",
-    "Terminal::Print::DecodedInput" : "lib/Terminal/Print/DecodedInput.pm6",
-    "Terminal::Print::Grid" : "lib/Terminal/Print/Grid.pm6",
-    "Terminal::Print::ParticleEffect" : "lib/Terminal/Print/ParticleEffect.pm6",
-    "Terminal::Print::Pixelated" : "lib/Terminal/Print/Pixelated.pm6",
-    "Terminal::Print::RawInput" : "lib/Terminal/Print/RawInput.pm6",
-    "Terminal::Print::Util::Text" : "lib/Terminal/Print/Util/Text.pm6",
-    "Terminal::Print::Util::Timing" : "lib/Terminal/Print/Util/Timing.pm6",
-    "Terminal::Print::Widget" : "lib/Terminal/Print/Widget.pm6"
+    "Terminal::Print" : "lib/Terminal/Print.rakumod",
+    "Terminal::Print::Animated" : "lib/Terminal/Print/Animated.rakumod",
+    "Terminal::Print::BoxDrawing" : "lib/Terminal/Print/BoxDrawing.rakumod",
+    "Terminal::Print::Commands" : "lib/Terminal/Print/Commands.rakumod",
+    "Terminal::Print::DecodedInput" : "lib/Terminal/Print/DecodedInput.rakumod",
+    "Terminal::Print::Grid" : "lib/Terminal/Print/Grid.rakumod",
+    "Terminal::Print::ParticleEffect" : "lib/Terminal/Print/ParticleEffect.rakumod",
+    "Terminal::Print::Pixelated" : "lib/Terminal/Print/Pixelated.rakumod",
+    "Terminal::Print::RawInput" : "lib/Terminal/Print/RawInput.rakumod",
+    "Terminal::Print::Util::Text" : "lib/Terminal/Print/Util/Text.rakumod",
+    "Terminal::Print::Util::Timing" : "lib/Terminal/Print/Util/Timing.rakumod",
+    "Terminal::Print::Widget" : "lib/Terminal/Print/Widget.rakumod"
   },
   "resources" : [ ],
   "source-url" : "git://github.com/ab5tract/Terminal-Print.git",
@@ -34,5 +34,5 @@
     "Terminal"
   ],
   "test-depends" : [ ],
-  "version" : "0.972"
+  "version" : "0.973"
 }
