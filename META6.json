@@ -12,10 +12,9 @@
   ],
   "description" : "Asynchronous printing to your terminal -- as a simple grid",
   "license" : "Artistic-2.0",
-  "name" : "Terminal::Print",
+  "name" : "Terminal::Print::Grid",
   "perl" : "6.d.PREVIEW",
   "provides" : {
-    "Terminal::Print" : "lib/Terminal/Print.rakumod",
     "Terminal::Print::Animated" : "lib/Terminal/Print/Animated.rakumod",
     "Terminal::Print::BoxDrawing" : "lib/Terminal/Print/BoxDrawing.rakumod",
     "Terminal::Print::Commands" : "lib/Terminal/Print/Commands.rakumod",

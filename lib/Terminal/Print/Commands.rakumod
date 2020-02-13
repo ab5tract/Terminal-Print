@@ -47,7 +47,6 @@ BEGIN {
     {
 	    my $proc = run 'tput', '-T', $term, $cap, :out, :err;
 	    return $proc.out.slurp if $proc.exitcode == 0;
-	    $proc.err.slurp;
 	    return query-cap($term, "clear") if $cap ~~ /^ <[sr]>mcup $/;
 	    # TODO: Replace the -1 with a Failure.new(...) once the compiler can cope with it correctly.
 	    -1; # We use the "-1" as a poor man's Failure (we die whenever we try to use it)

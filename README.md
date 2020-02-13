@@ -1,79 +1,292 @@
-# Terminal::Print
+[![Build Status](https://travis-ci.org/ab5tract/Terminal-Print.svg?branch=master)](https://travis-ci.org/ab5tract/Terminal-Print)
 
-## Synopsis
+class Terminal::Print::Grid
+---------------------------
 
-Terminal::Print intends to provide the essential underpinnings of command-line printing, to be the fuel for the fire, so to speak, for libraries which might aim towards 'command-line user interfaces' (CUI), asynchronous monitoring, rogue-like adventures, screensavers, video art, etc.
+A rectangular grid containing Unicode characters and color/style information
 
-## Usage
+class Terminal::Print::Grid::Cell
+---------------------------------
 
-Right now it only provides a grid with some nice access semantics.
+Internal (immutable) class holding all position-independent information about a single grid cell
 
-````
-my $screen = Terminal::Print.new;
+### method new
 
-$screen.initialize-screen;                      # saves current screen state, blanks screen, and hides cursor
-
-$screen.change-cell(9, 23, '%');                # change the contents of the grid cell at column 9 line 23
-$screen.cell-string(9, 23);                     # returns the escape sequence to put '%' on column 9 line 23
-$screen.print-cell(9, 23);                      # prints "%" on the 9th column of the 23rd line
-$screen.print-cell(9, 23, '&');                 # changes the cell at x:9, y:23 to '&' and prints it
-
-$screen.print-string(9, 23, "hello\nworld!");   # prints a whole string (which can include newlines!)
-
-$screen(9,23,'hello\nworld!');                  # uses CALL-ME to dispatch to .print-string
-
-$screen.shutdown-screen;                        # unwinds the process from .initialize-screen
-````
-
-Check out some animations:
-
-````
-perl6 -Ilib examples/rpg-ui.p6
-perl6 -Ilib examples/show-love.p6
-perl6 -Ilib examples/zig-zag.p6
-perl6 -Ilib examples/matrix-ish.p6
-perl6 -Ilib examples/async.p6
-````
-
-By default the `Terminal::Print` object will use ANSI escape sequences for it's cursor drawing, but you can tell it to use `universal` if you would prefer to use the cursor movement commands as provided by `tput`. (You should only really need this if you are having trouble with the default).
-
-```
-my $t = Terminal::Print.new(cursor-profile => 'universal')
+```perl6
+method new(
+    $w,
+    $h,
+    :$move-cursor = { ... }
+) returns Mu
 ```
 
-## History
+Instantiate a new (row-major) grid of size $w x $h
 
-At first I thought I might try writing a NativeCall wrapper around ncurses. Then I realized that there is absolutely no reason to fight a C library which has mostly bolted on Unicode when I can do it in Pure Perl 6, with native Unicode goodness.
+### method clear
 
-## Roadmap
+```perl6
+method clear() returns Mu
+```
 
-Status: *BETA* -- Current API is fixed and guaranteed!
+Clear the grid to blanks (ASCII spaces) with no color/style overrides
 
-- Improved documentation and examples
-- Upgrade the tests with robust comparisons against a known-good corpus
-- Investigate the potential of binding to `libtparm` (the backend to `tput`) via NativeCall
+### method indices
 
-## Problems?
+```perl6
+method indices() returns Mu
+```
 
-### It dies immediately complaining about my TERM env setting
+Lazily computed array of every [x, y] coordinate pair in the grid
 
-In order to make the shelling out to `tput` safer, I have opted to use a whitelist of
-valid terminals. The list is quite short at the moment, so my apologies if you trigger
-this error. Everything should work smoothly once you have added it to the lookup hash
-in `Terminal::Print::Commands`. Please consider sending it in as a PR, or filing a bug
-report!
+### method cell-string
 
-### It seems to be sending the wrong escape codes when using a different terminal on the same box
+```perl6
+method cell-string(
+    $x,
+    $y
+) returns Mu
+```
 
-This should only be an issue for non-ANSI terminal users. The tradeoff we currently make
-is to only disable precompilation on the module which determines the width and height of the
-current screen. This means that other escape sequences in `Terminal::Print::Commands` will
-only be run once and then cached in precompiled form. Clearing the related precomp files is
-a quick and dirty solution. If you run into this issue, please let me know. I will certainly
-get overly excited about your ancient TTY :D
+Return the escape string necessary to move to, color, and output a single cell
 
-## Contributors
+### method span-string
 
-ab5tract, japhb, Bluebear94, Xliff
+```perl6
+method span-string(
+    $x1,
+    $x2,
+    $y
+) returns Mu
+```
 
-Released under the Artistic License 2.0.
+Return the escape string necessary to move to (x1, y) and output every cell (with color) on that row from x1..x2
+
+### method set-span
+
+```perl6
+method set-span(
+    $x,
+    $y,
+    Str $text,
+    $color
+) returns Mu
+```
+
+Set both the text and color of a span
+
+### method set-span-text
+
+```perl6
+method set-span-text(
+    $x,
+    $y,
+    Str $text
+) returns Mu
+```
+
+Set the text of a span, but keep the color unchanged
+
+### method set-span-color
+
+```perl6
+method set-span-color(
+    $x1,
+    $x2,
+    $y,
+    $color
+) returns Mu
+```
+
+Set the color of a span, but keep the text unchanged
+
+### method clip-rect
+
+```perl6
+method clip-rect(
+    $x is copy,
+    $y is copy,
+    $w is copy,
+    $h is copy
+) returns Mu
+```
+
+Clip a rectangle to entirely fit within this grid
+
+### method copy-from
+
+```perl6
+method copy-from(
+    Terminal::Print::Grid $grid,
+    $x,
+    $y
+) returns Mu
+```
+
+Copy an entire other grid into this grid with upper left at ($x, $y), clipping the copy to this grid's edges
+
+### method print-from
+
+```perl6
+method print-from(
+    Terminal::Print::Grid $grid,
+    $x,
+    $y
+) returns Mu
+```
+
+Copy another grid into this one as with .copy-from and print the modified area
+
+### multi method cell
+
+```perl6
+multi method cell(
+    %c
+) returns Mu
+```
+
+Return a position-independent immutable object representing the data for a single colored/styled grid cell, given a hash with char and color keys
+
+### multi method cell
+
+```perl6
+multi method cell(
+    Str $char,
+    $color
+) returns Mu
+```
+
+Return a position-independent immutable object representing the data for a single colored/styled grid cell, given char and color
+
+### multi method cell
+
+```perl6
+multi method cell(
+    Str $char
+) returns Mu
+```
+
+Return a position-independent immutable object representing the data for a single uncolored/unstyled character in a grid cell
+
+### multi method change-cell
+
+```perl6
+multi method change-cell(
+    $x,
+    $y,
+    %c
+) returns Mu
+```
+
+Replace the contents of a single grid cell, specifying a hash with char and color keys
+
+### multi method change-cell
+
+```perl6
+multi method change-cell(
+    $x,
+    $y,
+    Str $char
+) returns Mu
+```
+
+Replace the contents of a single grid cell with a single uncolored/unstyled character
+
+### multi method change-cell
+
+```perl6
+multi method change-cell(
+    $x,
+    $y,
+    Terminal::Print::Grid::Cell $cell
+) returns Mu
+```
+
+Replace the contents of a single grid cell with a prebuilt Cell object
+
+### multi method print-cell
+
+```perl6
+multi method print-cell(
+    $x,
+    $y
+) returns Mu
+```
+
+Print the .cell-string for a single cell
+
+### multi method print-cell
+
+```perl6
+multi method print-cell(
+    $x,
+    $y,
+    Str $char
+) returns Mu
+```
+
+Replace the contents of a cell with an uncolored/unstyled character, then print its .cell-string
+
+### multi method print-cell
+
+```perl6
+multi method print-cell(
+    $x,
+    $y,
+    %c
+) returns Mu
+```
+
+Replace the contents of a cell, specifying a hash with char and color keys, then print its .cell-string
+
+### multi method print-string
+
+```perl6
+multi method print-string(
+    $x,
+    $y
+) returns Mu
+```
+
+Degenerate case: print an individual cell
+
+### multi method print-string
+
+```perl6
+multi method print-string(
+    $x,
+    $y,
+    $string
+) returns Mu
+```
+
+Print a (possibly ragged multi-line) string with first character at (x, y), incrementing y for each additional line
+
+### multi method print-string
+
+```perl6
+multi method print-string(
+    $x,
+    $y,
+    $string,
+    $color
+) returns Mu
+```
+
+Print a (possibly ragged multi-line) string with first character at (x, y), and in a given color
+
+### method disable
+
+```perl6
+method disable() returns Mu
+```
+
+Don't actually print in .print-* methods
+
+### method Str
+
+```perl6
+method Str() returns Mu
+```
+
+Lazily computed stringification of entire grid, including color escapes and cursor movement
+
