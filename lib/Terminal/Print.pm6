@@ -235,7 +235,11 @@ class Terminal::Print {
         $!current-grid.print-string($x, $y, $string, $color);
     }
 
-    method change-cell( $x, $y, Str $c ) {
+    multi method change-cell( $x, $y, %c ) {
+        $!current-grid.change-cell($x, $y, %c);
+    }
+
+    multi method change-cell( $x, $y, Str $c ) {
         $!current-grid.change-cell($x, $y, $c);
     }
 
