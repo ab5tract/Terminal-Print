@@ -248,7 +248,6 @@ class Terminal::Print {
     }
 
     #### print-grid stuff
-    proto method print-grid($) { }
     multi method print-grid( Int $index ) {
         die "Grid index $index does not exist" unless @!grids[$index]:exists;
         print @!grids[$index];
