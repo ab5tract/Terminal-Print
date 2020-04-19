@@ -239,9 +239,6 @@ class KeyframeAnimation is Widget {
 
     #| Blend from one keyframe to the next by replacing cells randomly over time
     method speckle($delay = .01) {
-        my $p = Promise.new;
-        my $v = $p.vow;
-
         # Start by simply copying first frame and printing that
         $.grid.copy-from(@!keyframes[0], 0, 0);
         self.composite(:print);
@@ -253,21 +250,9 @@ class KeyframeAnimation is Widget {
         # Keep a constant pace through the entire animation, changing one cell
         # at a time until converted to the next keyframe and then continuing
         # with the next one.  As each transition completes, emit the 0-based
-        # number of the keyframe just completed into $.on-keyframe.
-        #
-        # NOTE 1: Due to choosing .tap instead of .act, if this code is running
-        # slowly most of it will end up scheduling on alternating threads (only
-        # the internals of the composite call will single-thread).
-        #
-        # NOTE 2: While for a decent-length animation it's unlikely to occur,
-        # there is a race between assignment of $tap and $tap.close.  This can
-        # be fixed by using:
-        #
-        #     react { whenever Supply.interval($delay) -> $frame { ... done; }
-        #
-        # but unfortunately this forces .act semantics, losing the win from
-        # multithreading described in NOTE 1.
-        my $tap = Supply.interval($delay).tap: -> $frame {
+        # number of the keyframe just completed into $.on-keyframe.  Returns a
+        # promise that is kept when the animation fully completes.
+        start react whenever Supply.interval($delay) -> $frame {
             my $keyframe = 1 + $frame div +@indices;
             $!on-keyframe.emit($keyframe - 1) if $frame %% @indices;
 
@@ -280,13 +265,9 @@ class KeyframeAnimation is Widget {
             }
             else {
                 $!on-keyframe.done;
-                $tap.close;
-                $v.keep(True);
+                done;
             }
         }
-
-        # Return a promise that is kept when the animation fully completes
-        $p;
     }
 }
 
