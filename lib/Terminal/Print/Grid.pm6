@@ -8,7 +8,7 @@ unit monitor Terminal::Print::Grid;
 #| Internal (immutable) class holding all position-independent information about a single grid cell
 my class Cell {
     use Terminal::ANSIColor; # lexical imports FTW
-    has $.char is required;
+    has Str:D $.char is required where *.chars == 1;
     has $.color;
     has $!string;
 
@@ -44,10 +44,29 @@ method rows    { $!h }
 method height  { $!h }
 
 #| Instantiate a new (row-major) grid of size $w x $h
-method new($w, $h, :$move-cursor = move-cursor-template) {
-    my @grid = [ [ ' ' xx $w ] xx $h ];
+method new($w, $h, :@grid is copy, :$move-cursor = move-cursor-template) {
+    for ^$h -> $row {
+        my @grid-row = [ ' ' xx $w ];
+        if $row < @grid {
+            my $splice-w = min @grid[$row].elems, $w;
+            @grid-row.splice(0, $splice-w, @grid[$row][0..^$splice-w]);
+        }
+        @grid[$row] = @grid-row;
+    }
 
     self.bless(:$w, :$h, :@grid, :$move-cursor);
+}
+
+#| Create a new grid based on self with possibly some parameters changed. Grid content is not preserved.
+method new-from-self(::?CLASS:D: *%args) {
+    self.WHAT.new(%args<w> // $!w, %args<h> // $!h, :$!move-cursor, |%args)
+}
+
+method clone(::?CLASS:D: *%args) {
+    self.WHAT.new(
+        %args<w> // $!w, %args<h> // $!h,
+        :$!move-cursor, :@!grid, |%args
+    )
 }
 
 #| Clear the grid to blanks (ASCII spaces) with no color/style overrides
@@ -66,40 +85,49 @@ method cell-string($x, $y) {
 }
 
 #| Return the escape string necessary to move to (x1, y) and output every cell (with color) on that row from x1..x2
-method span-string($x1, $x2, $y) {
+method span-string($x1 is copy, $x2 is copy, $y) {
     my $row = @!grid[$y];
+    $x1 min= $!w;
+    $x2 min= $!w;
     $!move-cursor($x1, $y) ~ $row[$x1..$x2].join.subst("\e[0m\e[", "\e[0;", :g);
 }
 
 #| Set both the text and color of a span
-method set-span($x, $y, Str $text, $color) {
+multi method set-span($x, $y, Str $text, $color?) {
     $!grid-string = '';
     my $row = @!grid[$y];
 
+    my @chars = $text.comb[^(min $text.chars, $!w - $x)];
     if $color {
-        my @cells = $text.comb.map: { Cell.new(:char($_), :$color) };
+        my @cells = @chars.map: { Cell.new(:char($_), :$color) };
         $row.splice($x, +@cells, @cells);
     }
     else {
-        my @chars = $text.comb;
         $row.splice($x, +@chars, @chars);
     }
+}
+
+#| Set both the text and color of a span using interface similar to that of change-cell
+multi method set-span($x, $y, %c) {
+    self.set-span($x, $y, %c<char>, %c<color>)
 }
 
 #| Set the text of a span, but keep the color unchanged
 method set-span-text($x, $y, Str $text) {
     $!grid-string = '';
     my $row = @!grid[$y];
-    for $text.comb.kv -> $i, $char {
+    for $text.comb[^(min $text.chars, $!w - $x)].kv -> $i, $char {
         my $cell := $row[$x + $i];
         $cell = $cell ~~ Cell ?? Cell.new(:$char, :color($cell.color)) !! $char;
     }
 }
 
 #| Set the color of a span, but keep the text unchanged
-method set-span-color($x1, $x2, $y, $color) {
+method set-span-color($x1 is copy, $x2 is copy, $y, $color) {
     $!grid-string = '';
     my $row = @!grid[$y];
+    $x1 min= $!w;
+    $x2 min= $!w;
     for $x1..$x2 -> $x {
         my $cell := $row[$x];
         $cell = Cell.new(:char($cell ~~ Cell ?? $cell.char !! $cell // ' '), :$color);
@@ -182,6 +210,8 @@ multi method change-cell($x, $y, %c) {
     @!grid[$y][$x] = Cell.new(|%c);
 }
 
+multi method change-cell($x, $y, *%c) { self.change-cell($x, $y, %c) }
+
 #| Replace the contents of a single grid cell with a single uncolored/unstyled character
 multi method change-cell($x, $y, Str $char) {
     return unless 0 <= $x < $!w && 0 <= $y < $!h;
@@ -197,11 +227,16 @@ multi method change-cell($x, $y, Cell $cell) {
 }
 
 #| Print the .cell-string for a single cell
-multi method print-cell($x, $y) {
-    print self.cell-string($x, $y)
-        if $!print-enabled
-        && 0 <= $x < $!w
-        && 0 <= $y < $!h;
+multi method print-cell($x, $y, *%c) {
+    if %c {
+        self.print-cell($x, $y, %c);
+    }
+    else {
+        print self.cell-string($x, $y)
+            if $!print-enabled
+            && 0 <= $x < $!w
+            && 0 <= $y < $!h;
+    }
 }
 
 #| Replace the contents of a cell with an uncolored/unstyled character, then print its .cell-string
