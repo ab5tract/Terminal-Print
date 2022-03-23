@@ -27,6 +27,7 @@ my class Cell {
             %cache{$!color} //= color($!color);
             $!string = $!color ?? "%cache{$!color}$!char$reset" !! $!char;
         }
+        self
     }
 
     submethod BUILD(:$!char, :$color) {
