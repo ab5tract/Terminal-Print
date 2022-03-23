@@ -177,7 +177,7 @@ method print-from(Terminal::Print::Grid $grid, $x, $y) {
 
 #| Return a position-independent immutable object representing the data for a single colored/styled grid cell, given a hash with char and color keys
 multi method cell(%c) {
-    Cell.new(|%c)
+    Cell.fast-create(%c<char>, %c<color>)
 }
 
 #| Return a position-independent immutable object representing the data for a single colored/styled grid cell, given char and color
@@ -194,7 +194,7 @@ multi method cell(Str $char) {
 multi method change-cell($x, $y, %c) {
     return unless 0 <= $x < $!w && 0 <= $y < $!h;
     $!grid-string = '';
-    @!grid[$y][$x] = Cell.new(|%c);
+    @!grid[$y][$x] = Cell.fast-create(%c<char>, %c<color>);
 }
 
 #| Replace the contents of a single grid cell with a single uncolored/unstyled character
@@ -227,7 +227,7 @@ multi method print-cell($x, $y, Str $char) {
 
 #| Replace the contents of a cell, specifying a hash with char and color keys, then print its .cell-string
 multi method print-cell($x, $y, %c) {
-    self.change-cell($x, $y, Cell.new(|%c));
+    self.change-cell($x, $y, Cell.fast-create(%c<char>, %c<color>));
     self.print-cell($x, $y);
 }
 
