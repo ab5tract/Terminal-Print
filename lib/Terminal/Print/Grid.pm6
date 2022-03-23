@@ -15,6 +15,20 @@ my class Cell {
     my $reset = color('reset');
     my %cache = '' => '';
 
+    method fast-create($char, $color) {
+        self.CREATE!SET-SELF($char, $color // '')
+    }
+
+    method !SET-SELF($!char, $!color) {
+        if $!color.contains(',') {
+            $!string = colored($!char, $!color);
+        }
+        else {
+            %cache{$!color} //= color($!color);
+            $!string = $!color ?? "%cache{$!color}$!char$reset" !! $!char;
+        }
+    }
+
     submethod BUILD(:$!char, :$color) {
         $!color = $color // '';
         if $!color.contains(',') {
@@ -77,7 +91,7 @@ method set-span($x, $y, Str $text, $color) {
     my $row = @!grid[$y];
 
     if $color {
-        my @cells = $text.comb.map: { Cell.new(:char($_), :$color) };
+        my @cells = $text.comb.map: { Cell.fast-create($_, $color) };
         $row.splice($x, +@cells, @cells);
     }
     else {
@@ -92,7 +106,7 @@ method set-span-text($x, $y, Str $text) {
     my $row = @!grid[$y];
     for $text.comb.kv -> $i, $char {
         my $cell := $row[$x + $i];
-        $cell = $cell ~~ Cell ?? Cell.new(:$char, :color($cell.color)) !! $char;
+        $cell = $cell ~~ Cell ?? Cell.fast-create($char, $cell.color) !! $char;
     }
 }
 
@@ -102,7 +116,7 @@ method set-span-color($x1, $x2, $y, $color) {
     my $row = @!grid[$y];
     for $x1..$x2 -> $x {
         my $cell := $row[$x];
-        $cell = Cell.new(:char($cell ~~ Cell ?? $cell.char !! $cell // ' '), :$color);
+        $cell = Cell.fast-create($cell ~~ Cell ?? $cell.char !! $cell // ' ', $color);
     }
 }
 
@@ -167,7 +181,7 @@ multi method cell(%c) {
 
 #| Return a position-independent immutable object representing the data for a single colored/styled grid cell, given char and color
 multi method cell(Str $char, $color) {
-    Cell.new(:$char, :$color)
+    Cell.fast-create($char, $color)
 }
 
 #| Return a position-independent immutable object representing the data for a single uncolored/unstyled character in a grid cell
