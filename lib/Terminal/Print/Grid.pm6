@@ -15,18 +15,16 @@ my class Cell {
     my $reset = color('reset');
     my %cache = '' => '';
 
-    method fast-create($char, $color) {
-        self.CREATE!SET-SELF($char, $color // '')
+    method fast-create($char is raw, $color is raw) {
+        self.CREATE!SET-SELF($char, $color<> // '')
     }
 
-    method !SET-SELF($!char, $!color) {
-        if $!color.contains(',') {
-            $!string = colored($!char, $!color);
-        }
-        else {
-            %cache{$!color} //= color($!color);
-            $!string = $!color ?? "%cache{$!color}$!char$reset" !! $!char;
-        }
+    method !SET-SELF($char is raw, $color is raw) {
+        $!char   := $char;
+        $!color  := $color;
+        $!string := $color.contains(',') ?? colored($char, $color) !!
+                    $color               ?? (%cache{$color} //= color($color)) ~ "$char$reset" !!
+                                             $char;
         self
     }
 
