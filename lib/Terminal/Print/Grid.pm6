@@ -16,7 +16,7 @@ my class Cell {
     my %cache = '' => '';
 
     method fast-create($char is raw, $color is raw) {
-        self.CREATE!SET-SELF($char, $color<> // '')
+        self.CREATE!SET-SELF($char<> // '', $color<> // '')
     }
 
     method !SET-SELF($char is raw, $color is raw) {
