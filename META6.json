@@ -1,4 +1,5 @@
 {
+  "auth": "zef:terminal-printers",
   "authors": [
     "John Haltiwanger",
     "japhb"
