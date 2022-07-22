@@ -1,5 +1,7 @@
 # Terminal::Print
 
+[![Actions Status](https://github.com/ab5tract/Terminal-Print/workflows/test/badge.svg)](https://github.com/ab5tract/Terminal-Print/actions)
+
 ## Synopsis
 
 Terminal::Print intends to provide the essential underpinnings of command-line printing, to be the fuel for the fire, so to speak, for libraries which might aim towards 'command-line user interfaces' (CUI), asynchronous monitoring, rogue-like adventures, screensavers, video art, etc.
