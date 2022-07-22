@@ -1,1 +1,13 @@
-.precomp
+# Caches
+.precomp/
+
+# Packages
+/sdist/
+/Terminal-Print-*
+
+# Backup files
+*~
+
+# IDE files
+/.idea
+*.iml
