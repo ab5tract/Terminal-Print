@@ -1,6 +1,8 @@
 Revision history for Terminal-Print
 
 {{$NEXT}}
+
+0.974  2023-06-10T20:45:32-07:00
   [Features]
   - Support override of box corner style in BoxDrawing role
 
