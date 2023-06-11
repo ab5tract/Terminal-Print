@@ -1,6 +1,13 @@
 Revision history for Terminal-Print
 
 {{$NEXT}}
+  [Features]
+  - Support override of box corner style in BoxDrawing role
+
+  [Packaging]
+  - Update CI checkout action to v3 to avoid GitHub warnings
+  - Drop CI testing on old Rakudos (conflict with current `prove6`)
+
 
 0.973  2022-07-22T15:36:47-07:00
   - Begin conversion to modern packaging
