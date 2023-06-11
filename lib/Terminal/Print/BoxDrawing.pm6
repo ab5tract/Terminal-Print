@@ -59,7 +59,9 @@ role Terminal::Print::BoxDrawing {
     }
 
     #| Draw a box in a chosen color
-    multi method draw-box($x1, $y1, $x2, $y2, :$color!, :$style where HLINE = $.default-box-style) {
+    multi method draw-box($x1, $y1, $x2, $y2, :$color!,
+                          :$style where HLINE = $.default-box-style,
+                          :$corners where CORNERS|Positional = WEIGHT{$style}) {
         # Draw sides in order: left, right, top, bottom
         self.draw-vline($x1, $y1 + 1, $y2 - 1, :$color, :$style);
         self.draw-vline($x2, $y1 + 1, $y2 - 1, :$color, :$style);
@@ -67,7 +69,7 @@ role Terminal::Print::BoxDrawing {
         self.draw-hline($x1 + 1, $x2 - 1, $y2, :$color, :$style);
 
         # Draw corners
-        my @corners = |CORNERS{WEIGHT{$style}};
+        my @corners = $corners ~~ Positional ?? |$corners !! |CORNERS{$corners};
         $.grid.set-span($x1, $y1, @corners[0], $color);
         $.grid.set-span($x2, $y1, @corners[1], $color);
         $.grid.set-span($x1, $y2, @corners[2], $color);
@@ -75,7 +77,9 @@ role Terminal::Print::BoxDrawing {
     }
 
     #| Draw a box without altering color
-    multi method draw-box($x1, $y1, $x2, $y2, :$style where HLINE = $.default-box-style) {
+    multi method draw-box($x1, $y1, $x2, $y2,
+                          :$style where HLINE = $.default-box-style,
+                          :$corners where CORNERS|Positional = WEIGHT{$style}) {
         # Draw sides in order: left, right, top, bottom
         self.draw-vline($x1, $y1 + 1, $y2 - 1, :$style);
         self.draw-vline($x2, $y1 + 1, $y2 - 1, :$style);
@@ -83,7 +87,7 @@ role Terminal::Print::BoxDrawing {
         self.draw-hline($x1 + 1, $x2 - 1, $y2, :$style);
 
         # Draw corners
-        my @corners = |CORNERS{WEIGHT{$style}};
+        my @corners = $corners ~~ Positional ?? |$corners !! |CORNERS{$corners};
         $.grid.set-span-text($x1, $y1, @corners[0]);
         $.grid.set-span-text($x2, $y1, @corners[1]);
         $.grid.set-span-text($x1, $y2, @corners[2]);
