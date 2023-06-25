@@ -1,6 +1,12 @@
 Revision history for Terminal-Print
 
 {{$NEXT}}
+  [Features]
+  - Add support for Grid.with-grid-lock method, which allows widget libraries
+    built on top of Terminal::Print to observe the T::P::Grid locking protocol:
+    during low-level copies and other grid changes, the destination Grid holds
+    a mutex for thread safety.
+
 
 0.974  2023-06-10T20:45:32-07:00
   [Features]
