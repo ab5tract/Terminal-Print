@@ -273,3 +273,8 @@ method disable() {
 method Str() {
     $!grid-string ||= join '', ^$!h .map({ self.span-string(0, $!w - 1, $_) });
 }
+
+#| Run a Callable with the grid's monitor method lock held
+method with-grid-lock(&code, |c) {
+    code(|c)
+}
