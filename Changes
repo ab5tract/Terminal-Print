@@ -1,6 +1,9 @@
 Revision history for Terminal-Print
 
 {{$NEXT}}
+  [Packaging]
+  - Require exactly Term::termios:ver<0.2> to avoid bugs later in 0.2.x series.
+
 
 0.975  2023-06-24T21:59:25-07:00
   [Features]

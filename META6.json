@@ -9,7 +9,7 @@
   "depends": [
     "OO::Monitors",
     "Terminal::ANSIColor",
-    "Term::termios",
+    "Term::termios:ver<0.2>",
     "File::Which"
   ],
   "description": "Asynchronous printing to your terminal -- as a simple grid",
