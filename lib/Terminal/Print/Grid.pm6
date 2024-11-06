@@ -9,11 +9,24 @@ unit monitor Terminal::Print::Grid;
 my class Cell {
     use Terminal::ANSIColor; # lexical imports FTW
     has $.char is required;
-    has $.color;
+    has $!color;
+    has $.sgr;
     has $!string;
 
     my $reset = color('reset');
     my %cache = '' => '';
+
+    method color() {
+        if $!color {
+            $!color
+        }
+        elsif $!sgr {
+            $!color = uncolor($!sgr)
+        }
+        else {
+            ''
+        }
+    }
 
     method fast-create($char is raw, $color is raw) {
         self.CREATE!SET-SELF($char<> // '', $color<> // '')
@@ -22,20 +35,44 @@ my class Cell {
     method !SET-SELF($char is raw, $color is raw) {
         $!char   := $char;
         $!color  := $color;
-        $!string := $color.contains(',') ?? colored($char, $color) !!
-                    $color               ?? (%cache{$color} //= color($color)) ~ "$char$reset" !!
-                                             $char;
+        $!sgr    := $color.contains(',') ?? color($color) !!
+                    $color               ?? (%cache{$color} //= color($color)) !!
+                                            '';
+        $!string := $color               ?? "$!sgr$char$reset" !!
+                                            $char;
         self
     }
 
-    submethod BUILD(:$!char, :$color) {
-        $!color = $color // '';
-        if $!color.contains(',') {
-            $!string = colored($!char, $!color);
+    method fast-create-sgr($char is raw, $sgr is raw) {
+        self.CREATE!SET-SELF-SGR($char<> // '', $sgr<> // '')
+    }
+    method !SET-SELF-SGR($char is raw, $sgr is raw) {
+        $!char   := $char;
+        $!sgr    := $sgr;
+        $!string := $sgr ?? "$sgr$char$reset" !!
+                            $char;
+        self
+    }
+
+    submethod BUILD(:$!char, :$color, :$sgr) {
+        if $color.defined && $sgr.defined {
+            die "Can only specify color or sgr, not both.";
+        }
+        if $!color = $color // '' {
+            if $!color.contains(',') {
+                $!sgr = color($color);
+                $!string = "$!sgr$!char$reset";
+            }
+            else {
+                $!sgr = %cache{$!color} //= color($!color);
+                $!string = "$!sgr$!char$reset";
+            }
+        }
+        elsif $!sgr = $sgr // '' {
+            $!string = "$!sgr$!char$reset";
         }
         else {
-            %cache{$!color} //= color($!color);
-            $!string = $!color ?? "%cache{$!color}$!char$reset" !! $!char;
+            $!string = $!char;
         }
     }
 
@@ -84,6 +121,21 @@ method span-string($x1, $x2, $y) {
     $!move-cursor($x1, $y) ~ $row[$x1..$x2].join.subst("\e[0m\e[", "\e[0;", :g);
 }
 
+#| Set both the text and sgr color of a span
+method set-span-sgr($x, $y, Str $text, $sgr) {
+    $!grid-string = '';
+    my $row = @!grid[$y];
+
+    if $sgr {
+        my @cells = $text.comb.map: { Cell.fast-create-sgr($_, $sgr) };
+        $row.splice($x, +@cells, @cells);
+    }
+    else {
+        my @chars = $text.comb;
+        $row.splice($x, +@chars, @chars);
+    }
+}
+
 #| Set both the text and color of a span
 method set-span($x, $y, Str $text, $color) {
     $!grid-string = '';
@@ -105,7 +157,7 @@ method set-span-text($x, $y, Str $text) {
     my $row = @!grid[$y];
     for $text.comb.kv -> $i, $char {
         my $cell := $row[$x + $i];
-        $cell = $cell ~~ Cell ?? Cell.fast-create($char, $cell.color) !! $char;
+        $cell = $cell ~~ Cell ?? Cell.fast-create-sgr($char, $cell.sgr) !! $char;
     }
 }
 
