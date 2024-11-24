@@ -13,6 +13,7 @@ a bit nicer.
 =end pod
 
 use File::Which;
+use Terminal::API;
 
 our @fg_colors = [ <black red green yellow blue magenta cyan white default> ];
 our @bg_colors = [ <on_black on_red on_green on_yellow on_blue on_magenta on_cyan on_white on_default> ];
@@ -26,8 +27,8 @@ my %commands =
     show-cursor => "\e[?12l\e[?25h",
 ;
 
-sub columns is export { q:x{ tput cols  } .chomp.Int }
-sub rows    is export { q:x{ tput lines } .chomp.Int }
+sub columns is export { Terminal::API::get-window-size().cols }
+sub rows    is export { Terminal::API::get-window-size().rows }
 
 sub move-cursor(Int $x, Int $y) is export {
     "\e[{$y+1};{$x+1}H"
