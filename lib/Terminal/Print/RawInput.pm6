@@ -2,7 +2,7 @@ use v6.d.PREVIEW;
 unit module Terminal::Print::RawInput;
 
 # For TTY raw mode
-use Terminal::API;
+use Terminal::MakeRaw;
 
 #| Convert an input stream to a Supply of individual characters
 #  Reads bytes in order to work around lower-layer grapheme combiner handling
@@ -11,11 +11,11 @@ sub raw-input-supply(IO::Handle $input = $*IN,
                      Bool :$drop-old-unread) is export {
     # If a TTY, convert to raw mode, saving current mode first
     my $fd = $input.native-descriptor;
-    my $saved-term-config;
+    my $saved-termios;
     if $input.t {
-        $saved-term-config = Terminal::API::get-config($fd);
-        my $when           = $drop-old-unread ?? Terminal::API::FLUSH !! Terminal::API::DRAIN;
-        Terminal::API::make-raw($fd, :$when);
+        $saved-termios = Terminal::MakeRaw::getattr($fd);
+        my $mode       = $drop-old-unread ?? :FLUSH !! :DRAIN;
+        Terminal::MakeRaw::makeraw($fd, |$mode);
     }
 
     # Cancelable character supply loop; emits a character as soon as any
@@ -39,7 +39,7 @@ sub raw-input-supply(IO::Handle $input = $*IN,
     }
     $s.Supply.on-close: {
         # Restore saved TTY mode if any
-        Terminal::API::restore-config($saved-term-config, $fd, :when(Terminal::API::DRAIN)) if $saved-term-config;
+        Terminal::MakeRaw::setattr($fd, $saved-termios, :DRAIN) if $saved-termios;
         $done = True;
     }
 }
