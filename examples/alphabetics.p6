@@ -3,7 +3,7 @@
 use v6;
 use Terminal::Print;
 
-my $p = Terminal::Print.new();
+my $p = Terminal::Print.new(cursor-profile => 'universal');
 
 $p.initialize-screen;
 

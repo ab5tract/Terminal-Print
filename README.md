@@ -37,6 +37,12 @@ perl6 -Ilib examples/matrix-ish.p6
 perl6 -Ilib examples/async.p6
 ````
 
+By default the `Terminal::Print` object will use ANSI escape sequences for its cursor drawing, but you can tell it to use `universal` if you would prefer to use the cursor movement commands as provided by `tput`. (You should only really need this if you are having trouble with the default).
+
+```
+my $t = Terminal::Print.new(cursor-profile => 'universal')
+```
+
 ## History
 
 At first I thought I might try writing a NativeCall wrapper around ncurses. Then I realized that there is absolutely no reason to fight a C library which has mostly bolted on Unicode when I can do it in Pure Perl 6, with native Unicode goodness.

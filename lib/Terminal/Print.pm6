@@ -76,14 +76,19 @@ class Terminal::Print:auth<zef:terminal-printers>:api<1>:ver<0.976> {
     subset Valid::Y of Int is export where * < rows();
     subset Valid::Char of Str is export where *.chars == 1;
 
-    method new() {
+    has Terminal::Print::CursorProfile $.cursor-profile;
+    has $.move-cursor;
+
+    method new( :$cursor-profile = 'ansi' ) {
         my $columns      = columns();
         my $rows         = rows();
-        my $current-grid = Terminal::Print::Grid.new( $columns, $rows );
-        self.bless( :$columns, :$rows, :$current-grid );
+        my $move-cursor  = move-cursor-template($cursor-profile);
+        my $current-grid = Terminal::Print::Grid.new( $columns, $rows, :$move-cursor );
+        self.bless( :$columns, :$rows, :$current-grid,
+                    :$cursor-profile,  :$move-cursor );
     }
 
-    submethod BUILD( :$!current-grid, :$!columns, :$!rows ) {
+    submethod BUILD( :$!current-grid, :$!columns, :$!rows, :$!cursor-profile, :$!move-cursor ) {
         push @!grids, $!current-grid;
 
         # set up a tap on SIGINT so that we can cleanly shutdown, restoring the previous screen and cursor
@@ -99,7 +104,7 @@ class Terminal::Print:auth<zef:terminal-printers>:api<1>:ver<0.976> {
         %!root-widget-map{$grid} ||= Terminal::Print::Widget.new-from-grid($grid);
     }
 
-    method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( $!columns, $!rows ) ) {
+    method add-grid( $name?, :$new-grid = Terminal::Print::Grid.new( $!columns, $!rows, :$!move-cursor ) ) {
         push @!grids, $new-grid;
         if $name {
             %!grid-name-map{$name} = +@!grids-1;
@@ -142,7 +147,7 @@ class Terminal::Print:auth<zef:terminal-printers>:api<1>:ver<0.976> {
     }
 
     method print-command( $command ) {
-        print-command($command);
+        print-command($command, $!cursor-profile);
     }
 
     # AT-POS hands back a Terminal::Print::Column

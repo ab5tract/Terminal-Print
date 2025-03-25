@@ -84,6 +84,7 @@ has $.h;
 has @!indices;
 has @.grid;
 has $.grid-string = '';
+has $.move-cursor;
 has $!print-enabled = True;
 
 # Compatibility accessors
@@ -93,10 +94,10 @@ method rows    { $!h }
 method height  { $!h }
 
 #| Instantiate a new (row-major) grid of size $w x $h
-method new($w, $h) {
+method new($w, $h, :$move-cursor = move-cursor-template) {
     my @grid = [ [ ' ' xx $w ] xx $h ];
 
-    self.bless(:$w, :$h, :@grid);
+    self.bless(:$w, :$h, :@grid, :$move-cursor);
 }
 
 #| Clear the grid to blanks (ASCII spaces) with no color/style overrides
@@ -111,13 +112,13 @@ method indices() {
 
 #| Return the escape string necessary to move to, color, and output a single cell
 method cell-string($x, $y) {
-    "{move-cursor($x, $y)}{~@!grid[$y][$x]}"
+    "{$!move-cursor($x, $y)}{~@!grid[$y][$x]}"
 }
 
 #| Return the escape string necessary to move to (x1, y) and output every cell (with color) on that row from x1..x2
 method span-string($x1, $x2, $y) {
     my $row = @!grid[$y];
-    move-cursor($x1, $y) ~ $row[$x1..$x2].join.subst("\e[0m\e[", "\e[0;", :g);
+    $!move-cursor($x1, $y) ~ $row[$x1..$x2].join.subst("\e[0m\e[", "\e[0;", :g);
 }
 
 #| Set both the text and sgr color of a span
