@@ -9,7 +9,7 @@
   "depends": [
     "OO::Monitors",
     "Terminal::ANSIColor",
-    "Terminal::MakeRaw",
+    "Terminal::API:auth<zef:patrickb>:ver<1.0.1>",
     "File::Which"
   ],
   "description": "Asynchronous printing to your terminal -- as a simple grid",
