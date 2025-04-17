@@ -13,6 +13,7 @@ a bit nicer.
 =end pod
 
 use File::Which;
+use Terminal::API;
 
 our %human-command-names;
 our %human-commands;
@@ -101,8 +102,8 @@ for %human-command-names.kv -> $human,$command {
     %human-commands{$human} = %tput-commands{$command};
 }
 
-sub columns is export { q:x{ tput cols  } .chomp.Int }
-sub rows    is export { q:x{ tput lines } .chomp.Int }
+sub columns is export { Terminal::API::get-window-size().cols }
+sub rows    is export { Terminal::API::get-window-size().rows }
 
 sub move-cursor-template( Terminal::Print::CursorProfile $profile = 'ansi' ) returns Code is export {
     $profile eq 'ansi' ?? &ansi !! &universal
