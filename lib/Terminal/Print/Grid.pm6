@@ -240,21 +240,21 @@ multi method cell(Str $char) {
 }
 
 #| Replace the contents of a single grid cell, specifying a hash with char and color keys
-multi method change-cell($x, $y, %c) {
+multi method change-cell(Int() $x, Int() $y, %c) {
     return unless 0 <= $x < $!w && 0 <= $y < $!h;
     $!grid-string = '';
     @!grid[$y][$x] = Cell.fast-create(%c<char>, %c<color>);
 }
 
 #| Replace the contents of a single grid cell with a single uncolored/unstyled character
-multi method change-cell($x, $y, Str $char) {
+multi method change-cell(Int() $x, Int() $y, Str $char) {
     return unless 0 <= $x < $!w && 0 <= $y < $!h;
     $!grid-string = '';
     @!grid[$y][$x] = $char;
 }
 
 #| Replace the contents of a single grid cell with a prebuilt Cell object
-multi method change-cell($x, $y, Cell $cell) {
+multi method change-cell(Int() $x, Int() $y, Cell $cell) {
     return unless 0 <= $x < $!w && 0 <= $y < $!h;
     $!grid-string = '';
     @!grid[$y][$x] = $cell;
