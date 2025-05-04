@@ -30,7 +30,7 @@ my %commands =
 sub columns is export { Terminal::API::get-window-size().cols }
 sub rows    is export { Terminal::API::get-window-size().rows }
 
-sub move-cursor(Int $x, Int $y) is export {
+sub move-cursor(Int() $x, Int() $y) is export {
     "\e[{$y+1};{$x+1}H"
 }
 
