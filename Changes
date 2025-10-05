@@ -1,6 +1,23 @@
 Revision history for Terminal-Print
 
 {{$NEXT}}
+  NOTE: Special thanks to patrickbkr++ who implemented ALL of the following!
+
+  [Bug Fixes]
+  - Automatically convert Rat/Real positions to Int in print commands
+
+  [Functionality]
+  - Add Grid.set-span-sgr method, allowing colors/attributes to be specified
+    with raw ANSI SGR strings rather than named identifiers
+
+  [Packaging]
+  - Switch from depending on Term::termios to Terminal::API for portability
+
+  [Performance/Portability]
+  - Stop shelling out to `tput` anywhere:
+    * For escape sequences now that ANSI/VT sequences "won"
+    * For terminal size now that Terminal::API is available
+
 
 0.976  2023-08-20T15:07:58-07:00
   [Packaging]
