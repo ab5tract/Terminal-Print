@@ -9,8 +9,7 @@
   "depends": [
     "OO::Monitors",
     "Terminal::ANSIColor",
-    "Terminal::API:auth<zef:patrickb>:ver<1.0.3>",
-    "File::Which"
+    "Terminal::API:auth<zef:patrickb>:ver<1.0.3>"
   ],
   "description": "Asynchronous printing to your terminal -- as a simple grid",
   "license": "Artistic-2.0",

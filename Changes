@@ -1,7 +1,7 @@
 Revision history for Terminal-Print
 
 {{$NEXT}}
-  NOTE: Special thanks to patrickbkr++ who implemented ALL of the following!
+  NOTE: Special thanks to patrickbkr++ who implemented almost ALL of the following!
 
   [Bug Fixes]
   - Automatically convert Rat/Real positions to Int in print commands
@@ -12,6 +12,7 @@ Revision history for Terminal-Print
 
   [Packaging]
   - Switch from depending on Term::termios to Terminal::API for portability
+  - Drop now-unneeded dependency on File::Which
 
   [Performance/Portability]
   - Stop shelling out to `tput` anywhere:

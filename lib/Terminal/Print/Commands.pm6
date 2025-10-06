@@ -12,7 +12,6 @@ a bit nicer.
 
 =end pod
 
-use File::Which;
 use Terminal::API;
 
 our @fg_colors = [ <black red green yellow blue magenta cyan white default> ];
