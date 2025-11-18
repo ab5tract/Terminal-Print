@@ -1,6 +1,8 @@
 Revision history for Terminal-Print
 
 {{$NEXT}}
+  [Packaging]
+  - Bump Terminal-API dependency to 1.0.5. This gets rid of `tput` for good.
 
 0.977  2025-11-06T13:10:41-08:00
   NOTE: Special thanks to patrickbkr++ who implemented almost ALL of the following!
