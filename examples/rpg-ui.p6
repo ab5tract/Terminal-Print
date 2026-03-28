@@ -4,6 +4,7 @@
 
 use v6;
 use Terminal::Print <T>;
+use Terminal::Print::Commands;
 use Terminal::Print::Widget;
 use Terminal::Print::Animated;
 use Terminal::Print::BoxDrawing;
@@ -261,7 +262,7 @@ class KeyframeAnimation is Widget {
 
                 $.grid.grid[$y][$x] = @!keyframes[$keyframe].grid[$y][$x];
                 # self.composite(:print);
-                print &($.grid.move-cursor)($x + $.x, $y + $.y) ~ $.grid.grid[$y][$x];  # ))
+                print move-cursor($x + $.x, $y + $.y) ~ $.grid.grid[$y][$x];  # ))
             }
             else {
                 $!on-keyframe.done;
@@ -900,20 +901,19 @@ role TempCompositing {
 
     method composite(:$to = self.target-grid, :$print, |) {
         self.refresh-background(:from($to));
-        my &move := &($.grid.move-cursor);
         for ^$.h -> $y {
             my $grid-row = $.grid.grid[$y];
             my $temp-row = $.temp.grid[$y];
             for ^$.w -> $x {
                 $temp-row[$x] = $grid-row[$x] if $grid-row[$x] ne ' ';
             }
-            print (^$.w .map: { $temp-row[$_] ?? move($_ + $.x, $y + $.y) ~ $temp-row[$_] !! '' }).join if $print;  # )
+            print (^$.w .map: { $temp-row[$_] ?? move-cursor($_ + $.x, $y + $.y) ~ $temp-row[$_] !! '' }).join if $print;  # )
         }
     }
 
     method uncomposite(:$to = self.target-grid, |) {
         self.refresh-background(:from($to));
-        print &($.grid.move-cursor)($.x, $_ + $.y) ~ $.temp.grid[$_].join for ^$.h;  # ))
+        print move-cursor($.x, $_ + $.y) ~ $.temp.grid[$_].join for ^$.h;  # ))
     }
 }
 
@@ -1002,7 +1002,7 @@ class Projectile is Animation
 
         print $to.span-string($.x, $.x + $x - 1 - $x % 2, $y) if $x >= 2;
         print ' ' if $x % 2;
-        print &($.grid.move-cursor)($x + $.x, $y) ~ $glyph if $x < $.w;
+        print move-cursor($x + $.x, $y) ~ $glyph if $x < $.w;
     }
 }
 
