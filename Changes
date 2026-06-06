@@ -1,6 +1,8 @@
 Revision history for Terminal-Print
 
 {{$NEXT}}
+
+0.978  2026-06-06T11:54:35-07:00
   [Examples]
   - Switch `rpg-ui` to use `move-cursor` sub (instead of method)
 

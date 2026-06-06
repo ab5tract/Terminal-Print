@@ -1,6 +1,6 @@
 use v6;
 
-class Terminal::Print:auth<zef:terminal-printers>:api<1>:ver<0.977> {
+class Terminal::Print:auth<zef:terminal-printers>:api<1>:ver<0.978> {
 
     =begin pod
     =title Terminal::Print
