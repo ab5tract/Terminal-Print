@@ -325,6 +325,11 @@ method Str() {
     $!grid-string ||= join '', ^$!h .map({ self.span-string(0, $!w - 1, $_) });
 }
 
+#| Manually reset the grid-string, usually to make abstraction-breaking changes using with-grid-lock
+method reset-grid-string() {
+    $!grid-string = '';
+}
+
 #| Run a Callable with the grid's monitor method lock held
 method with-grid-lock(&code, |c) {
     code(|c)
