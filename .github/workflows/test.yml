@@ -33,4 +33,5 @@ jobs:
       - name: Install App::Prove6
         run: zef install --/test App::Prove6
       - name: Run Tests
+        shell: 'script -q -e -c "bash {0}"'
         run: prove6 -l -v t
